@@ -689,7 +689,7 @@ class MarbleRaceRenderer:
         rows = self.cfg.layout.peg_rows
         top_y = self.cfg.layout.peg_top_y
         peg_radius = self.cfg.physics.peg_radius
-        margin = peg_radius + self.cfg.physics.ball_radius + 12
+        margin = peg_radius + 2 * self.cfg.physics.ball_radius + 2
 
         left_wall = self.cfg.playfield_left + margin
         right_wall = self.cfg.playfield_right - margin

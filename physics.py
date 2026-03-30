@@ -339,7 +339,9 @@ class MarbleRacePhysics:
         rows = self.cfg.layout.peg_rows
         top_y = self.cfg.layout.peg_top_y
         peg_radius = self.cfg.physics.peg_radius
-        margin = peg_radius + self.cfg.physics.ball_radius + 12
+        # Top, çivi ile duvar arasından kılpayı geçebilsin:
+        # boşluk = margin - peg_radius = 2*ball_r + 2  (ball çapı=2*ball_r, +2px pay)
+        margin = peg_radius + 2 * self.cfg.physics.ball_radius + 2
 
         left_wall = self.cfg.playfield_left + margin
         right_wall = self.cfg.playfield_right - margin
@@ -515,16 +517,7 @@ class MarbleRacePhysics:
             else:
                 ball.stall_timer = max(0.0, ball.stall_timer - dt * 0.5)
 
-            # Duvar kenarına çok yakınsa hemen ittir (sıkışma önleme)
-            wall_margin = ball_r + 5
-            if current_x < left_wall + wall_margin:
-                ball.body.position = (left_wall + wall_margin + 10, current_y - 15)
-                ball.body.velocity = (self.rng.uniform(150, 300), ball.body.velocity.y)
-            elif current_x > right_wall - wall_margin:
-                ball.body.position = (right_wall - wall_margin - 10, current_y - 15)
-                ball.body.velocity = (self.rng.uniform(-300, -150), ball.body.velocity.y)
-
-            if ball.stall_timer >= 0.35:
+            if ball.stall_timer >= 0.40:
                 # Topu yukari kaldir ve merkeze dogru ittir
                 lift_y = max(self.cfg.layout.peg_top_y, current_y - 80)
                 ball.body.position = (current_x, lift_y)
