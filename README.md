@@ -1,3 +1,14 @@
+---
+title: Football Race Studio
+emoji: ⚽
+colorFrom: green
+colorTo: blue
+sdk: gradio
+sdk_version: "4.44.0"
+app_file: app.py
+pinned: false
+---
+
 # ⚽ Football Race Studio — Marble Race Video Generator
 
 **YouTube Shorts & TikTok için otomatik futbol maçı simülasyon videoları üreten masaüstü uygulama.**
