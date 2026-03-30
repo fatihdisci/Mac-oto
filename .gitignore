@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Output videos
+output/
+output_sim.mp4
+*_final.mp4
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data (büyük dosyalar — kullanıcı kendisi oluşturur)
+data/all_teams.json
+data/selected_match.json
+data/sync_manifest.json
+data/teams/
+data/logos/
+
+# Ses dosyaları (büyük, repo'ya dahil)
+# data/sounds/ is tracked — ses efektleri repo ile gelir
+
+# Claude / Gemini
+.claude/
+.gemini/
+
+# Misc
+*.log
+maç oto videoları/
+assetst/
+notlar.md
+image.png
