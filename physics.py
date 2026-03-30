@@ -339,7 +339,7 @@ class MarbleRacePhysics:
         rows = self.cfg.layout.peg_rows
         top_y = self.cfg.layout.peg_top_y
         peg_radius = self.cfg.physics.peg_radius
-        margin = peg_radius + 8
+        margin = peg_radius + self.cfg.physics.ball_radius + 12
 
         left_wall = self.cfg.playfield_left + margin
         right_wall = self.cfg.playfield_right - margin
@@ -500,6 +500,9 @@ class MarbleRacePhysics:
 
     def _resolve_stuck_balls(self, dt: float) -> None:
         center_x = self.cfg.playfield_center_x
+        left_wall = self.cfg.playfield_left
+        right_wall = self.cfg.playfield_right
+        ball_r = self.cfg.physics.ball_radius
 
         for ball in self.active_balls:
             current_x = float(ball.body.position.x)
@@ -512,24 +515,33 @@ class MarbleRacePhysics:
             else:
                 ball.stall_timer = max(0.0, ball.stall_timer - dt * 0.5)
 
-            if ball.stall_timer >= 0.55:
+            # Duvar kenarına çok yakınsa hemen ittir (sıkışma önleme)
+            wall_margin = ball_r + 20
+            if current_x < left_wall + wall_margin:
+                ball.body.position = (left_wall + wall_margin + 10, current_y - 15)
+                ball.body.velocity = (self.rng.uniform(150, 300), ball.body.velocity.y)
+            elif current_x > right_wall - wall_margin:
+                ball.body.position = (right_wall - wall_margin - 10, current_y - 15)
+                ball.body.velocity = (self.rng.uniform(-300, -150), ball.body.velocity.y)
+
+            if ball.stall_timer >= 0.35:
                 # Topu yukari kaldir ve merkeze dogru ittir
-                lift_y = max(self.cfg.layout.peg_top_y, current_y - 60)
+                lift_y = max(self.cfg.layout.peg_top_y, current_y - 80)
                 ball.body.position = (current_x, lift_y)
 
                 # Merkeze dogru yonlendir
                 direction_to_center = 1.0 if current_x < center_x else -1.0
                 distance_from_center = abs(current_x - center_x)
-                horizontal_force = direction_to_center * min(250.0, distance_from_center * 0.8)
-                horizontal_force += self.rng.uniform(-80.0, 80.0)
+                horizontal_force = direction_to_center * min(350.0, distance_from_center * 1.2)
+                horizontal_force += self.rng.uniform(-100.0, 100.0)
 
-                ball.body.velocity = (horizontal_force, self.rng.uniform(120.0, 220.0))
-                ball.body.angular_velocity = self.rng.uniform(-6.0, 6.0)
+                ball.body.velocity = (horizontal_force, self.rng.uniform(150.0, 280.0))
+                ball.body.angular_velocity = self.rng.uniform(-8.0, 8.0)
                 ball.stall_timer = 0.0
                 ball.nudge_count += 1
 
-            # Guvvenlik: cok fazla takilirsa direkt asagi birak
-            if ball.nudge_count >= 8:
+            # Guvenlik: cok fazla takilirsa direkt asagi birak
+            if ball.nudge_count >= 5:
                 ball.body.position = (center_x + self.rng.uniform(-100, 100), self.cfg.layout.floor_y - 200)
                 ball.body.velocity = (self.rng.uniform(-50, 50), 300.0)
                 ball.nudge_count = 0
