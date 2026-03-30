@@ -75,8 +75,8 @@ def do_sync():
     return (
         log,
         status,
-        gr.Dropdown(choices=choices),
-        gr.Dropdown(choices=choices),
+        gr.update(choices=choices),
+        gr.update(choices=choices),
     )
 
 
@@ -177,13 +177,11 @@ with gr.Blocks(
         team_a_dd = gr.Dropdown(
             choices=_initial_choices,
             label="Takım A  (Sol)",
-            filterable=True,
             scale=1,
         )
         team_b_dd = gr.Dropdown(
             choices=_initial_choices,
             label="Takım B  (Sağ)",
-            filterable=True,
             scale=1,
         )
 
@@ -198,7 +196,7 @@ with gr.Blocks(
         fn=do_sync,
         outputs=[sync_log, sync_status, team_a_dd, team_b_dd],
     ).then(
-        fn=lambda log: gr.Textbox(value=log, visible=bool(log.strip())),
+        fn=lambda log: gr.update(value=log, visible=bool(log.strip())),
         inputs=[sync_log],
         outputs=[sync_log],
     )
