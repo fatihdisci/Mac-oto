@@ -516,7 +516,7 @@ class MarbleRacePhysics:
                 ball.stall_timer = max(0.0, ball.stall_timer - dt * 0.5)
 
             # Duvar kenarına çok yakınsa hemen ittir (sıkışma önleme)
-            wall_margin = ball_r + 20
+            wall_margin = ball_r + 5
             if current_x < left_wall + wall_margin:
                 ball.body.position = (left_wall + wall_margin + 10, current_y - 15)
                 ball.body.velocity = (self.rng.uniform(150, 300), ball.body.velocity.y)
