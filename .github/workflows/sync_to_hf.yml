@@ -11,20 +11,48 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          fetch-depth: 0
-          lfs: true
+          python-version: '3.11'
+
+      - name: Install huggingface_hub
+        run: pip install huggingface_hub
 
       - name: Prepare requirements.txt for HF
         run: cp hf_requirements.txt requirements.txt
 
-      - name: Push to Hugging Face Space
+      - name: Push to HF Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git config user.email "github-actions@github.com"
-          git config user.name "GitHub Actions"
-          git add requirements.txt
-          git commit -m "hf: add requirements.txt" || echo "nothing to commit"
-          git remote add hf https://fffddd35:$HF_TOKEN@huggingface.co/spaces/fffddd35/Macoto35
-          git push hf main --force
+          python - <<'PYEOF'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_folder(
+              folder_path=".",
+              repo_id="fffddd35/Macoto35",
+              repo_type="space",
+              ignore_patterns=[
+                  ".git",
+                  ".github",
+                  ".gitignore",
+                  "hf_requirements.txt",
+                  "output",
+                  "data/logos",
+                  "data/all_teams.json",
+                  "data/selected_match.json",
+                  "data/sync_manifest.json",
+                  "data/teams",
+                  "__pycache__",
+                  "*.pyc",
+                  ".venv",
+                  "venv",
+                  "*.log",
+              ],
+          )
+          print("HF Space sync tamamlandi!")
+          PYEOF
