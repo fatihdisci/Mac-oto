@@ -1,12 +1,15 @@
 # launcher_gui.py
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
 import threading
 from pathlib import Path
 from tkinter import Listbox, Scrollbar, StringVar, messagebox
+
+import requests
 
 import customtkinter as ctk
 
@@ -335,7 +338,18 @@ class MarbleRaceLauncherApp(ctk.CTk):
             hover_color="#932F3B",
             command=self.run_video_render,
         )
-        self.render_button.pack(fill="x", pady=(8, 12))
+        self.render_button.pack(fill="x", pady=(8, 10))
+
+        self.ai_text_button = ctk.CTkButton(
+            left,
+            text="4)  Aciklama ve Etiket Uret",
+            height=48,
+            font=ctk.CTkFont(size=15, weight="bold"),
+            fg_color="#7A3B99",
+            hover_color="#5D2A75",
+            command=self.run_ai_text_generation,
+        )
+        self.ai_text_button.pack(fill="x", pady=(0, 12))
 
         ctk.CTkLabel(
             left,
@@ -344,7 +358,8 @@ class MarbleRaceLauncherApp(ctk.CTk):
                 "1. Takim havuzunu guncelle\n"
                 "2. Takim Secimi sekmesine git\n"
                 "3. Iki takimi sec ve kaydet\n"
-                "4. Videoyu uret"
+                "4. Videoyu uret\n"
+                "5. Aciklama ve etiket uret"
             ),
             justify="left",
             font=ctk.CTkFont(size=13),
@@ -718,6 +733,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self.sync_button.configure(state=state)
         self.selector_button.configure(state=state)
         self.render_button.configure(state=state)
+        self.ai_text_button.configure(state=state)
         self.refresh_button.configure(state=state)
 
     def _run_python_script_async(
@@ -824,6 +840,242 @@ class MarbleRaceLauncherApp(ctk.CTk):
             subprocess.Popen(["explorer", "/select,", str(finals[0])])
         else:
             open_folder_in_explorer(output_dir)
+
+    # --------------------------------------------------------
+    # AI METIN URETIMI
+    # --------------------------------------------------------
+    _AI_SYSTEM_PROMPT = (
+        "You are a viral social media content strategist specializing in sports "
+        "entertainment and SEO optimization.\n\n"
+        "VIDEO CONCEPT:\n"
+        "- A physics-based simulation decides the outcome of a football match\n"
+        "- The result is determined purely by physics and luck\n"
+        "- Short dramatic video (~55s): intro → live match → final result\n"
+        "- Style: unpredictable, tense, football fan bait\n\n"
+        "STRICT RULES:\n"
+        "- NEVER reveal the score or winner — zero spoilers\n"
+        "- English only, global audience\n"
+        '- End every caption with a "who should play next?" question to drive comments\n'
+        "- Every hashtag must be relevant — no filler tags\n"
+        "- Follow each platform's character limits and best practices exactly\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "1. YOUTUBE SHORTS\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "TITLE (max 100 chars, but front-load keywords in first 40 chars):\n"
+        "- Start with team names or rivalry keyword for SEO\n"
+        "- Create curiosity gap — no spoiler\n\n"
+        "DESCRIPTION (max 5000 chars, use first 150 chars wisely — that's the visible preview):\n"
+        "- Line 1: Hook with keywords (this is what Google indexes)\n"
+        "- Line 2-3: Context about the matchup, build tension\n"
+        '- Line 4: CTA → "Who should play next? Comment below!"\n'
+        "- Line 5+: Hashtags + keyword-rich closing line\n\n"
+        "HASHTAGS (put inside description, 3-5 max — YouTube penalizes tag spam):\n"
+        "- Mix broad (#football #shorts) + niche (#[teamA]vs[teamB])\n\n"
+        'TAGS (separate comma list for YouTube Studio "Tags" field, 8-12):\n'
+        '- Long-tail keywords: "[Team A] vs [Team B]", "football simulation", '
+        '"who wins", team names individually, league names\n\n'
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "2. INSTAGRAM REELS\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        'CAPTION (max 2200 chars, but only first 125 chars show before "...more"):\n'
+        "- First 125 chars = scroll-stopping hook + team names (SEO critical)\n"
+        "- Body: 2-3 short lines building suspense\n"
+        '- CTA: "Which teams should go next? Drop it 👇"\n'
+        "- Then a line break before hashtags\n\n"
+        "HASHTAGS (after caption, 20-25):\n"
+        "- Structure: 5 high-volume (1M+), 10 mid-volume (100K-1M), 5-10 niche (<100K)\n"
+        "- Mix: football terms + satisfying content + team-specific + trending\n"
+        "- Include both #[TeamA] and #[TeamB] as standalone tags\n\n"
+        "ALT TEXT (max 100 chars — for accessibility + Instagram SEO):\n"
+        '- Describe what\'s happening: "[Team A] vs [Team B] football simulation"\n\n'
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "3. TIKTOK\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "CAPTION (max 4000 chars, but only first 80-90 chars show on feed):\n"
+        "- First 80 chars = the entire hook, must work standalone\n"
+        "- Keep total caption under 150 chars for clean look\n"
+        '- End with: "Next match? 👇"\n\n'
+        "HASHTAGS (inline with caption, 4-6 max):\n"
+        "- TikTok SEO = hashtags act as search keywords\n"
+        "- Use 2 broad (#football #fyp) + 2-3 specific (#[teamA]vs[teamB])\n"
+        "- Do NOT use #foryou or #foryoupage — TikTok confirmed they don't help"
+    )
+
+    def run_ai_text_generation(self) -> None:
+        if self.is_busy:
+            self.log("Baska bir islem calisiyor. Once onun bitmesini bekle.")
+            return
+
+        api_key = os.environ.get("OPENROUTER_API_KEY")
+        if not api_key:
+            messagebox.showerror(
+                "API Anahtari Eksik",
+                "OPENROUTER_API_KEY ortam degiskeni bulunamadi.\n"
+                "Lutfen ortam degiskenlerini kontrol et.",
+            )
+            return
+
+        match = REPOSITORY.load_selected_match()
+        if match is None:
+            messagebox.showerror(
+                "Secim Gerekli",
+                "Once takim secim sekmesinden iki takim secip kaydetmelisin.",
+            )
+            return
+
+        self._set_busy(True)
+        self.log("AI metin uretimi baslatiliyor...")
+
+        user_message = (
+            f"Match Info:\n"
+            f"Team A: {match.team_a.name}\n"
+            f"Team B: {match.team_b.name}\n"
+            f"Please generate the content."
+        )
+
+        def worker() -> None:
+            try:
+                response = requests.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": "google/gemini-2.5-flash",
+                        "messages": [
+                            {"role": "system", "content": self._AI_SYSTEM_PROMPT},
+                            {"role": "user", "content": user_message},
+                        ],
+                    },
+                    timeout=120,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                content = data["choices"][0]["message"]["content"]
+                self.after(0, self.log, "AI metin uretimi tamamlandi.")
+                self.after(0, self.show_ai_results_window, content)
+            except requests.exceptions.RequestException as exc:
+                self.after(0, self.log, f"API hatasi: {exc}")
+                self.after(
+                    0,
+                    lambda: messagebox.showerror("API Hatasi", str(exc)),
+                )
+            except (KeyError, IndexError, json.JSONDecodeError) as exc:
+                self.after(0, self.log, f"Yanit parse hatasi: {exc}")
+                self.after(
+                    0,
+                    lambda: messagebox.showerror(
+                        "Yanit Hatasi",
+                        f"API yanitindaki veri beklenmedik formatta:\n{exc}",
+                    ),
+                )
+            finally:
+                self.after(0, self._set_busy, False)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def show_ai_results_window(self, raw_text: str) -> None:
+        win = ctk.CTkToplevel(self)
+        win.title("Sosyal Medya Metinleri")
+        win.geometry("1100x700")
+        win.configure(fg_color="#0C111B")
+        win.transient(self)
+
+        # Parse sections
+        sections = self._parse_ai_sections(raw_text)
+
+        win.grid_columnconfigure((0, 1, 2), weight=1)
+        win.grid_rowconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            win,
+            text="Sosyal Medya Metinleri",
+            font=ctk.CTkFont(size=22, weight="bold"),
+            text_color="#F1F4FA",
+        ).grid(row=0, column=0, columnspan=3, sticky="w", padx=20, pady=(16, 8))
+
+        platform_configs = [
+            ("YouTube Shorts", sections.get("youtube", "")),
+            ("Instagram Reels", sections.get("instagram", "")),
+            ("TikTok", sections.get("tiktok", "")),
+        ]
+
+        for col, (platform_name, text) in enumerate(platform_configs):
+            frame = ctk.CTkFrame(win, corner_radius=14, fg_color="#0D1320")
+            frame.grid(row=1, column=col, sticky="nsew", padx=(20 if col == 0 else 6, 20 if col == 2 else 6), pady=(0, 12))
+            frame.grid_columnconfigure(0, weight=1)
+            frame.grid_rowconfigure(1, weight=1)
+
+            ctk.CTkLabel(
+                frame,
+                text=platform_name,
+                font=ctk.CTkFont(size=16, weight="bold"),
+                text_color="#EEF2FA",
+            ).grid(row=0, column=0, sticky="w", padx=12, pady=(12, 6))
+
+            textbox = ctk.CTkTextbox(
+                frame,
+                corner_radius=10,
+                fg_color="#0A0F18",
+                border_width=1,
+                border_color="#243047",
+                font=ctk.CTkFont(size=12),
+                wrap="word",
+            )
+            textbox.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 8))
+            textbox.insert("1.0", text if text else raw_text)
+
+            copy_btn = ctk.CTkButton(
+                frame,
+                text="Kopyala",
+                height=34,
+                font=ctk.CTkFont(size=13, weight="bold"),
+                fg_color="#7A3B99",
+                hover_color="#5D2A75",
+                command=lambda tb=textbox: self._copy_textbox_to_clipboard(tb),
+            )
+            copy_btn.grid(row=2, column=0, sticky="ew", padx=12, pady=(0, 12))
+
+    def _parse_ai_sections(self, raw_text: str) -> dict[str, str]:
+        sections: dict[str, str] = {}
+        text_upper = raw_text.upper()
+
+        # Try to find section markers
+        yt_markers = ["1. YOUTUBE SHORTS", "1) YOUTUBE SHORTS", "YOUTUBE SHORTS"]
+        ig_markers = ["2. INSTAGRAM REELS", "2) INSTAGRAM REELS", "INSTAGRAM REELS"]
+        tt_markers = ["3. TIKTOK", "3) TIKTOK", "TIKTOK"]
+
+        def find_marker(markers: list[str]) -> int:
+            for m in markers:
+                idx = text_upper.find(m)
+                if idx != -1:
+                    return idx
+            return -1
+
+        yt_idx = find_marker(yt_markers)
+        ig_idx = find_marker(ig_markers)
+        tt_idx = find_marker(tt_markers)
+
+        indices = sorted(
+            [(k, v) for k, v in [("youtube", yt_idx), ("instagram", ig_idx), ("tiktok", tt_idx)] if v != -1],
+            key=lambda x: x[1],
+        )
+
+        if len(indices) < 2:
+            return {}
+
+        for i, (key, start) in enumerate(indices):
+            end = indices[i + 1][1] if i + 1 < len(indices) else len(raw_text)
+            sections[key] = raw_text[start:end].strip()
+
+        return sections
+
+    def _copy_textbox_to_clipboard(self, textbox: ctk.CTkTextbox) -> None:
+        content = textbox.get("1.0", "end").strip()
+        self.clipboard_clear()
+        self.clipboard_append(content)
 
     # --------------------------------------------------------
     # APP KAPANIRKEN
