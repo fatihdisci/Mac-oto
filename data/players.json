@@ -1,0 +1,1635 @@
+{
+  "team_count": 138,
+  "players": {
+    "bundesliga::44": {
+      "name": "1. FC Heidenheim 1846",
+      "players": [
+        "T. Möbius",
+        "Felix Güldner",
+        "Lion Gantzke",
+        "E. StrauÃ",
+        "Conor Güllmeister",
+        "Marcel Zajusch",
+        "M. Kleinschmidt",
+        "I. Mahdhaoui",
+        "L. Gramelsberger",
+        "Alexander Kastanov",
+        "S. Chukwemeka",
+        "M. Adrian",
+        "H. Jakob",
+        "Lucas Barth",
+        "S. Aganmwonyi",
+        "Ian Werner  Scheffler",
+        "Marvin Kadner",
+        "Benan Hamidovic",
+        "Paul Heinrich",
+        "Niklas Eichholz",
+        "T. Ventzke",
+        "M. Siebert",
+        "F. Didoss",
+        "L. Hiller",
+        "Leon Noel Mergner",
+        "C. Czerwenka",
+        "Eddie Siebert",
+        "F. Fuhrmann",
+        "A. Drews",
+        "Magnus Elias Baars",
+        "Ben Ekobena-Seeger",
+        "M. Herrmann",
+        "Kingsley Prince Madumere",
+        "Joonas Joachim Peter Frenzel"
+      ]
+    },
+    "bundesliga::1": {
+      "name": "1. FC Köln",
+      "players": [
+        "M. Köbbing",
+        "M. Schwäbe",
+        "R. Zieler",
+        "D. Heintz",
+        "T. Hübers",
+        "K. Lund",
+        "C. Özkacar",
+        "J. Schmied",
+        "S. Sebulonsen",
+        "Jahmai Simpson-Pusey",
+        "R. van den Berg",
+        "A. Castro-Montes",
+        "F. Chávez",
+        "S. El Mala",
+        "D. Huseinbašić",
+        "Í. Bergmann Jóhannesson",
+        "F. Kainz",
+        "J. Kamiński",
+        "T. Krauß",
+        "E. Martel",
+        "F. Schenten",
+        "R. Ache",
+        "M. Bülter",
+        "L. Maina",
+        "C. Neumann",
+        "J. Thielmann",
+        "L. Waldschmidt"
+      ]
+    },
+    "bundesliga::28": {
+      "name": "1. FC Union Berlin",
+      "players": [
+        "C. Klaus",
+        "M. Raab",
+        "F. Rønnow",
+        "D. Doekhi",
+        "J. Juranović",
+        "D. Köhn",
+        "Diogo Leite",
+        "Andrik Markgraf",
+        "S. Nsoki",
+        "L. Querfeld",
+        "T. Rothe",
+        "C. Trimmel",
+        "J. Haberer",
+        "Jeong Woo-Yeong",
+        "A. Kemlein",
+        "R. Khedira",
+        "A. Král",
+        "David Preu",
+        "A. Schäfer",
+        "S. Ali",
+        "Ilyas  Ansah",
+        "Dmytro Bohdanov",
+        "Livan Burcu",
+        "O. Burke",
+        "A. Ilić",
+        "T. Skarke",
+        "R. Skov"
+      ]
+    },
+    "bundesliga::15": {
+      "name": "1. FSV Mainz 05",
+      "players": [
+        "Louis Babatz",
+        "D. Batz",
+        "L. Rieß",
+        "R. Zentner",
+        "S. Bell",
+        "A. Hanche-Olsen",
+        "M. Leitsch",
+        "L. Maloney",
+        "P. Mwene",
+        "S. Posch",
+        "K. Potulski",
+        "N. Veratschnig",
+        "S. Widmer",
+        "D. da Costa",
+        "N. Amiri",
+        "Daniel Gleiber",
+        "S. Kawasaki",
+        "D. Kohr",
+        "Lee Jae-Sung",
+        "P. Nebel",
+        "K. Sano",
+        "S. Becker",
+        "W. Bøving",
+        "B. Hollerbach",
+        "F. Moreno Fell",
+        "A. Sieb",
+        "S. Katompa Mvumpa",
+        "P. Tietz",
+        "N. Weiper"
+      ]
+    },
+    "bundesliga::3": {
+      "name": "Bayer 04 Leverkusen",
+      "players": [
+        "J. Blaswich",
+        "M. Flekken",
+        "N. Lomb",
+        "J. Omlin",
+        "J. Schlich",
+        "Arthur",
+        "L. Badé",
+        "Álex Grimaldo",
+        "B. Hawighorst",
+        "T. Oermann",
+        "J. Quansah",
+        "E. Tapsoba",
+        "I. Traore",
+        "Lucas Vázquez",
+        "R. Andrich",
+        "M. Culbreath",
+        "E. Fernández",
+        "Aleix García",
+        "J. Hofmann",
+        "I. Maza",
+        "J. Mensah",
+        "E. Palacios",
+        "A. Tape",
+        "N. Tella",
+        "M. Tillman",
+        "E. Ben Seghir",
+        "Christian Kofane",
+        "E. C. Owen",
+        "E. Poku",
+        "P. Schick",
+        "M. Terrier"
+      ]
+    },
+    "champions_league::3": {
+      "name": "Bayer 04 Leverkusen",
+      "players": [
+        "J. Blaswich",
+        "M. Flekken",
+        "N. Lomb",
+        "J. Omlin",
+        "J. Schlich",
+        "Arthur",
+        "L. Badé",
+        "Álex Grimaldo",
+        "B. Hawighorst",
+        "T. Oermann",
+        "J. Quansah",
+        "E. Tapsoba",
+        "I. Traore",
+        "Lucas Vázquez",
+        "R. Andrich",
+        "M. Culbreath",
+        "E. Fernández",
+        "Aleix García",
+        "J. Hofmann",
+        "I. Maza",
+        "J. Mensah",
+        "E. Palacios",
+        "A. Tape",
+        "N. Tella",
+        "M. Tillman",
+        "E. Ben Seghir",
+        "Christian Kofane",
+        "E. C. Owen",
+        "E. Poku",
+        "P. Schick",
+        "M. Terrier"
+      ]
+    },
+    "bundesliga::4": {
+      "name": "Borussia Dortmund",
+      "players": [
+        "P. Drewes",
+        "G. Kobel",
+        "A. Meyer",
+        "S. Ostrzinski",
+        "W. Anton",
+        "Elias  Benkara",
+        "R. Bensebaïni",
+        "Yan Couto",
+        "Almugera Raouf Mohammed Kabar",
+        "F. Mané",
+        "M. Pejazic",
+        "L. Reggiani",
+        "J. Ryerson",
+        "N. Schlotterbeck",
+        "N. Süle",
+        "J. Bellingham",
+        "J. Brandt",
+        "E. Can",
+        "C. Chukwuemeka",
+        "S. Inacio",
+        "Mussa Kaba",
+        "F. Nmecha",
+        "S. Özcan",
+        "M. Sabitzer",
+        "D. Svensson",
+        "K. Adeyemi",
+        "M. Albert",
+        "M. Beier",
+        "S. Guirassy",
+        "Fábio Silva"
+      ]
+    },
+    "champions_league::4": {
+      "name": "Borussia Dortmund",
+      "players": [
+        "P. Drewes",
+        "G. Kobel",
+        "A. Meyer",
+        "S. Ostrzinski",
+        "W. Anton",
+        "Elias  Benkara",
+        "R. Bensebaïni",
+        "Yan Couto",
+        "Almugera Raouf Mohammed Kabar",
+        "F. Mané",
+        "M. Pejazic",
+        "L. Reggiani",
+        "J. Ryerson",
+        "N. Schlotterbeck",
+        "N. Süle",
+        "J. Bellingham",
+        "J. Brandt",
+        "E. Can",
+        "C. Chukwuemeka",
+        "S. Inacio",
+        "Mussa Kaba",
+        "F. Nmecha",
+        "S. Özcan",
+        "M. Sabitzer",
+        "D. Svensson",
+        "K. Adeyemi",
+        "M. Albert",
+        "M. Beier",
+        "S. Guirassy",
+        "Fábio Silva"
+      ]
+    },
+    "bundesliga::18": {
+      "name": "Borussia Mönchengladbach",
+      "players": [
+        "M. Nicolas",
+        "J. Olschowsky",
+        "Tiago Pereira Cardoso",
+        "T. Sippel",
+        "F. Chiarodia",
+        "K. Diks",
+        "N. Elvedi",
+        "E. Fard",
+        "M. Friedrich",
+        "J. Scally",
+        "V. Stange",
+        "K. Takai",
+        "L. Ullrich",
+        "Simon Walde",
+        "H. Bolin",
+        "J. Castrop",
+        "Y. Engelhardt",
+        "N. Horvat",
+        "Wael Mohya",
+        "F. Neuhaus",
+        "R. Reitz",
+        "G. Reyna",
+        "P. Sander",
+        "K. Stöger",
+        "Niklas Swider",
+        "F. Fleck",
+        "R. Hack",
+        "F. Honorat",
+        "T. Kleindienst",
+        "S. Machino",
+        "A. Sarco",
+        "H. Tabaković",
+        "Jan Urbich"
+      ]
+    },
+    "bundesliga::19": {
+      "name": "Eintracht Frankfurt",
+      "players": [
+        "J. Grahl",
+        "Kauã Santos",
+        "M. Zetterer",
+        "A. Amenda",
+        "Elias Baum",
+        "N. Brown",
+        "T. Chandler",
+        "N. Collins",
+        "Fousseny Doumbia",
+        "R. Koch",
+        "K. Kosugi",
+        "R. Kristensen",
+        "A. Theate",
+        "L. Arrhov",
+        "J. Bahoya",
+        "M. Dahoud",
+        "M. Dills",
+        "R. Dōan",
+        "M. Götze",
+        "O. HÃ¸jlund",
+        "H. Larsson",
+        "E. Skhiri",
+        "C. Uzun",
+        "A. Amaimouni",
+        "M. Batshuayi",
+        "J. Burkardt",
+        "F. Chaïbi",
+        "Y. Ebnoutalib",
+        "A. Kalimuendo",
+        "A. Knauff",
+        "A. Staff"
+      ]
+    },
+    "champions_league::19": {
+      "name": "Eintracht Frankfurt",
+      "players": [
+        "J. Grahl",
+        "Kauã Santos",
+        "M. Zetterer",
+        "A. Amenda",
+        "Elias Baum",
+        "N. Brown",
+        "T. Chandler",
+        "N. Collins",
+        "Fousseny Doumbia",
+        "R. Koch",
+        "K. Kosugi",
+        "R. Kristensen",
+        "A. Theate",
+        "L. Arrhov",
+        "J. Bahoya",
+        "M. Dahoud",
+        "M. Dills",
+        "R. Dōan",
+        "M. Götze",
+        "O. HÃ¸jlund",
+        "H. Larsson",
+        "E. Skhiri",
+        "C. Uzun",
+        "A. Amaimouni",
+        "M. Batshuayi",
+        "J. Burkardt",
+        "F. Chaïbi",
+        "Y. Ebnoutalib",
+        "A. Kalimuendo",
+        "A. Knauff",
+        "A. Staff"
+      ]
+    },
+    "bundesliga::16": {
+      "name": "FC Augsburg",
+      "players": [
+        "F. Dahmen",
+        "D. Klein",
+        "N. Labrović",
+        "Arthur Chaves",
+        "Noahkai Kai Daniel Banks",
+        "D. Giannoulis",
+        "J. Gouweleeuw",
+        "C. Matsima",
+        "Felix Meiser",
+        "M. Pedersen",
+        "K. Schlotterbeck",
+        "T. Schnitzer",
+        "O. Sorg",
+        "M. Wolf",
+        "C. Zesiger",
+        "R. Fellhauer",
+        "Ismaël Gharbi",
+        "K. Jakić",
+        "Y. Keitel",
+        "M. Kömür",
+        "H. Massengo",
+        "E. Rexhbeçaj",
+        "A. Claude-Maurice",
+        "M. Gregoritsch",
+        "A. Kade",
+        "K. Motowilczuk",
+        "U. Ogundu",
+        "Rodrigo Ribeiro",
+        "F. Rieder"
+      ]
+    },
+    "bundesliga::5": {
+      "name": "FC Bayern München",
+      "players": [
+        "Jannis Bärtl",
+        "Leon Klanac",
+        "M. Neuer",
+        "L. Prescott",
+        "S. Ulreich",
+        "J. Urbig",
+        "A. Davies",
+        "Raphaël Guerreiro",
+        "H. Ito",
+        "Cassiano Kiala",
+        "Kim Min-Jae",
+        "V. Manuba",
+        "D. Ofli",
+        "F. Pavic",
+        "J. Stanišić",
+        "J. Tah",
+        "D. Upamecano",
+        "T. Bischof",
+        "M. Cardozo",
+        "David Daiber",
+        "G. Della Rovere",
+        "L. Goretzka",
+        "L. Karl",
+        "J. Kimmich",
+        "K. Laimer",
+        "W. Mike",
+        "J. Musiala",
+        "Bara Ndiaye",
+        "M. Olise",
+        "Erblin Osmani",
+        "A. Pavlović",
+        "L. Díaz",
+        "S. Gnabry",
+        "N. Jackson",
+        "H. Kane"
+      ]
+    },
+    "champions_league::5": {
+      "name": "FC Bayern München",
+      "players": [
+        "Jannis Bärtl",
+        "Leon Klanac",
+        "M. Neuer",
+        "L. Prescott",
+        "S. Ulreich",
+        "J. Urbig",
+        "A. Davies",
+        "Raphaël Guerreiro",
+        "H. Ito",
+        "Cassiano Kiala",
+        "Kim Min-Jae",
+        "V. Manuba",
+        "D. Ofli",
+        "F. Pavic",
+        "J. Stanišić",
+        "J. Tah",
+        "D. Upamecano",
+        "T. Bischof",
+        "M. Cardozo",
+        "David Daiber",
+        "G. Della Rovere",
+        "L. Goretzka",
+        "L. Karl",
+        "J. Kimmich",
+        "K. Laimer",
+        "W. Mike",
+        "J. Musiala",
+        "Bara Ndiaye",
+        "M. Olise",
+        "Erblin Osmani",
+        "A. Pavlović",
+        "L. Díaz",
+        "S. Gnabry",
+        "N. Jackson",
+        "H. Kane"
+      ]
+    },
+    "bundesliga::20": {
+      "name": "FC St. Pauli 1910",
+      "players": [
+        "E. Gazdov",
+        "N. Vasilj",
+        "B. Voll",
+        "T. Ando",
+        "K. Mets",
+        "D. Nemeth",
+        "L. Oppie",
+        "L. Ritzka",
+        "J. Robatsch",
+        "M. Saliakas",
+        "F. Stevens",
+        "H. Wahl",
+        "A. Dźwigała",
+        "J. Fujita",
+        "J. Irvine",
+        "Mathias Pereira Lage",
+        "A. Pyrka",
+        "M. Rasmussen",
+        "J. Sands",
+        "E. Smith",
+        "Romeo Aigbekaen",
+        "Abdoulie Ceesay",
+        "T. Hara",
+        "A. Hountondji",
+        "R. Jones",
+        "M. Kaars",
+        "C. Metcalfe",
+        "D. Sinani"
+      ]
+    },
+    "bundesliga::133653": {
+      "name": "Freiburg",
+      "players": []
+    },
+    "europa_league::133653": {
+      "name": "Freiburg",
+      "players": []
+    },
+    "bundesliga::7": {
+      "name": "Hamburger SV",
+      "players": []
+    },
+    "bundesliga::10": {
+      "name": "Hamburger SV",
+      "players": []
+    },
+    "europa_league::10": {
+      "name": "Hamburger SV",
+      "players": []
+    },
+    "bundesliga::721": {
+      "name": "RB Leipzig",
+      "players": []
+    },
+    "bundesliga::12": {
+      "name": "SV Werder Bremen",
+      "players": []
+    },
+    "bundesliga::2": {
+      "name": "TSG 1899 Hoffenheim",
+      "players": []
+    },
+    "bundesliga::11": {
+      "name": "VfL Wolfsburg",
+      "players": []
+    },
+    "champions_league::678": {
+      "name": "AFC Ajax",
+      "players": []
+    },
+    "eredivisie::678": {
+      "name": "AFC Ajax",
+      "players": []
+    },
+    "champions_league::133604": {
+      "name": "Arsenal",
+      "players": []
+    },
+    "premier_league::133604": {
+      "name": "Arsenal",
+      "players": []
+    },
+    "champions_league::548": {
+      "name": "AS Monaco FC",
+      "players": []
+    },
+    "ligue_1::548": {
+      "name": "AS Monaco FC",
+      "players": []
+    },
+    "champions_league::134782": {
+      "name": "Atalanta",
+      "players": []
+    },
+    "serie_a::134782": {
+      "name": "Atalanta",
+      "players": []
+    },
+    "champions_league::77": {
+      "name": "Athletic Club",
+      "players": []
+    },
+    "la_liga::77": {
+      "name": "Athletic Club",
+      "players": []
+    },
+    "champions_league::133729": {
+      "name": "Atlético Madrid",
+      "players": []
+    },
+    "la_liga::133729": {
+      "name": "Atlético Madrid",
+      "players": []
+    },
+    "champions_league::133739": {
+      "name": "Barcelona",
+      "players": []
+    },
+    "la_liga::133739": {
+      "name": "Barcelona",
+      "players": []
+    },
+    "champions_league::134108": {
+      "name": "Benfica",
+      "players": []
+    },
+    "champions_league::135497": {
+      "name": "Bodø/Glimt",
+      "players": []
+    },
+    "champions_league::133610": {
+      "name": "Chelsea",
+      "players": []
+    },
+    "premier_league::133610": {
+      "name": "Chelsea",
+      "players": []
+    },
+    "champions_league::133789": {
+      "name": "Club Brugge",
+      "players": []
+    },
+    "champions_league::133898": {
+      "name": "FC Copenhagen",
+      "players": []
+    },
+    "champions_league::108": {
+      "name": "FC Internazionale Milano",
+      "players": []
+    },
+    "serie_a::108": {
+      "name": "FC Internazionale Milano",
+      "players": []
+    },
+    "champions_league::133804": {
+      "name": "Galatasaray",
+      "players": []
+    },
+    "super_lig::133804": {
+      "name": "Galatasaray",
+      "players": []
+    },
+    "champions_league::109": {
+      "name": "Juventus FC",
+      "players": []
+    },
+    "serie_a::109": {
+      "name": "Juventus FC",
+      "players": []
+    },
+    "champions_league::64": {
+      "name": "Liverpool FC",
+      "players": []
+    },
+    "premier_league::64": {
+      "name": "Liverpool FC",
+      "players": []
+    },
+    "champions_league::65": {
+      "name": "Manchester City FC",
+      "players": []
+    },
+    "premier_league::65": {
+      "name": "Manchester City FC",
+      "players": []
+    },
+    "champions_league::133707": {
+      "name": "Marseille",
+      "players": []
+    },
+    "ligue_1::133707": {
+      "name": "Marseille",
+      "players": []
+    },
+    "champions_league::67": {
+      "name": "Newcastle United FC",
+      "players": []
+    },
+    "premier_league::67": {
+      "name": "Newcastle United FC",
+      "players": []
+    },
+    "champions_league::133754": {
+      "name": "Olympiacos",
+      "players": []
+    },
+    "europa_league::133807": {
+      "name": "Olympiacos",
+      "players": []
+    },
+    "super_lig::local_super_lig_basaksehir": {
+      "name": "Olympiacos",
+      "players": []
+    },
+    "super_lig::133807": {
+      "name": "Olympiacos",
+      "players": []
+    },
+    "champions_league::local_champions_league_pafos": {
+      "name": "Pafos",
+      "players": []
+    },
+    "champions_league::524": {
+      "name": "Paris Saint-Germain FC",
+      "players": []
+    },
+    "ligue_1::524": {
+      "name": "Paris Saint-Germain FC",
+      "players": []
+    },
+    "champions_league::674": {
+      "name": "PSV",
+      "players": []
+    },
+    "eredivisie::674": {
+      "name": "PSV",
+      "players": []
+    },
+    "champions_league::local_champions_league_qarabag": {
+      "name": "Qarabag",
+      "players": []
+    },
+    "champions_league::86": {
+      "name": "Real Madrid CF",
+      "players": []
+    },
+    "la_liga::86": {
+      "name": "Real Madrid CF",
+      "players": []
+    },
+    "champions_league::local_champions_league_slavia_praha": {
+      "name": "Slavia Praha",
+      "players": []
+    },
+    "champions_league::498": {
+      "name": "Sporting Clube de Portugal",
+      "players": []
+    },
+    "champions_league::113": {
+      "name": "SSC Napoli",
+      "players": []
+    },
+    "serie_a::110": {
+      "name": "SSC Napoli",
+      "players": []
+    },
+    "serie_a::113": {
+      "name": "SSC Napoli",
+      "players": []
+    },
+    "champions_league::73": {
+      "name": "Tottenham Hotspur FC",
+      "players": [
+        "B. Austin",
+        "Luca Gunter",
+        "A. Kinský",
+        "G. Vicario",
+        "J. Byfield",
+        "K. Danso",
+        "B. Davies",
+        "R. Drăgușin",
+        "A. Gray",
+        "M. Hardy",
+        "Pedro Porro",
+        "C. Romero",
+        "James Rowswell",
+        "Souza",
+        "D. Spence",
+        "D. Udogie",
+        "M. van de Ven",
+        "R. Bentancur",
+        "L. Bergvall",
+        "Y. Bissouma",
+        "C. Gallagher",
+        "T. Hall",
+        "M. Kudus",
+        "Rio Kyerematen",
+        "C. Olusesi",
+        "João Palhinha",
+        "P. Sarr",
+        "X. Simons",
+        "R. Kolo Muani",
+        "M. Melia",
+        "W. Odobert",
+        "Richarlison",
+        "D. Solanke",
+        "M. Tel",
+        "T. Thompson",
+        "L. Williams-Barnett",
+        "J. Wilson"
+      ]
+    },
+    "premier_league::73": {
+      "name": "Tottenham Hotspur FC",
+      "players": [
+        "B. Austin",
+        "Luca Gunter",
+        "A. Kinský",
+        "G. Vicario",
+        "J. Byfield",
+        "K. Danso",
+        "B. Davies",
+        "R. Drăgușin",
+        "A. Gray",
+        "M. Hardy",
+        "Pedro Porro",
+        "C. Romero",
+        "James Rowswell",
+        "Souza",
+        "D. Spence",
+        "D. Udogie",
+        "M. van de Ven",
+        "R. Bentancur",
+        "L. Bergvall",
+        "Y. Bissouma",
+        "C. Gallagher",
+        "T. Hall",
+        "M. Kudus",
+        "Rio Kyerematen",
+        "C. Olusesi",
+        "João Palhinha",
+        "P. Sarr",
+        "X. Simons",
+        "R. Kolo Muani",
+        "M. Melia",
+        "W. Odobert",
+        "Richarlison",
+        "D. Solanke",
+        "M. Tel",
+        "T. Thompson",
+        "L. Williams-Barnett",
+        "J. Wilson"
+      ]
+    },
+    "champions_league::94": {
+      "name": "Villarreal CF",
+      "players": [
+        "Diego Conde",
+        "Luíz Júnior",
+        "Arnau Tenas",
+        "Daniel Budesca",
+        "Sergi Cardona",
+        "J. Foyth",
+        "A. Freeman",
+        "Willy Kambwala Ndengushi",
+        "Rafa Marín",
+        "S. Mouriño",
+        "Pau Navarro",
+        "Pedraza",
+        "J. Valou",
+        "Renato Veiga",
+        "T. Buchanan",
+        "Santi Comesaña",
+        "A. Diatta",
+        "P. Gueye",
+        "C. Macia",
+        "Alberto Moleiro",
+        "Dani Parejo",
+        "T. Partey",
+        "Ayman Arguigue",
+        "E. Eto'o",
+        "J. A. Gaitan Diaz",
+        "Alfon González",
+        "Hugo López",
+        "G. Mikautadze",
+        "Gerard Moreno",
+        "T. Oluwaseyi",
+        "N. Pépé",
+        "Ayoze Pérez"
+      ]
+    },
+    "la_liga::94": {
+      "name": "Villarreal CF",
+      "players": [
+        "Diego Conde",
+        "Luíz Júnior",
+        "Arnau Tenas",
+        "Daniel Budesca",
+        "Sergi Cardona",
+        "J. Foyth",
+        "A. Freeman",
+        "Willy Kambwala Ndengushi",
+        "Rafa Marín",
+        "S. Mouriño",
+        "Pau Navarro",
+        "Pedraza",
+        "J. Valou",
+        "Renato Veiga",
+        "T. Buchanan",
+        "Santi Comesaña",
+        "A. Diatta",
+        "P. Gueye",
+        "C. Macia",
+        "Alberto Moleiro",
+        "Dani Parejo",
+        "T. Partey",
+        "Ayman Arguigue",
+        "E. Eto'o",
+        "J. A. Gaitan Diaz",
+        "Alfon González",
+        "Hugo López",
+        "G. Mikautadze",
+        "Gerard Moreno",
+        "T. Oluwaseyi",
+        "N. Pépé",
+        "Ayoze Pérez"
+      ]
+    },
+    "eredivisie::133767": {
+      "name": "AZ Alkmaar",
+      "players": [
+        "D. Deen",
+        "R. Owusu-Oduro",
+        "J. Schipper",
+        "H. Verhulst",
+        "J. Zoet",
+        "F. Andersen",
+        "M. Dekker",
+        "E. Dijkstra",
+        "W. Goes",
+        "R. Ichihara",
+        "D. Kasius",
+        "S. Maikuma",
+        "A. Natali",
+        "Alexandre Penetra",
+        "M. de Wit",
+        "B. van Duijl",
+        "K. Boogaard",
+        "M. Chávez",
+        "P. Koopmeiners",
+        "S. Mijnans",
+        "R. Robbemond",
+        "M. Šín",
+        "K. Smit",
+        "N. Twisk",
+        "W. Bouziane",
+        "R. Daal",
+        "J. Hornkamp",
+        "I. Jensen",
+        "M. Meerdink",
+        "A. Oufkir",
+        "T. Parrott",
+        "I. Sadiq",
+        "Weslley Patati"
+      ]
+    },
+    "eredivisie::133757": {
+      "name": "Excelsior",
+      "players": [
+        "A. Bellaarouch",
+        "João Carvalho",
+        "L. Horníček",
+        "Tiago Sá",
+        "B. Arrey-Mbi",
+        "A. Barišić",
+        "Víctor Gómez",
+        "G. Lagerbielke",
+        "Leonardo Lelo",
+        "Nuno Matos",
+        "S. Niakaté",
+        "Paulo Oliveira",
+        "F. Pascoal",
+        "M. Dorgeles",
+        "Gabriel Moscardo",
+        "Jean-Baptiste Gorby",
+        "F. Grillitsch",
+        "João Moutinho",
+        "Diego Rodrigues",
+        "E. Tıknaz",
+        "Vitor Carvalho",
+        "R. Zalazar",
+        "Yanis da Rocha",
+        "João Aragão",
+        "A. El Ouazzani",
+        "Ricardo Horta",
+        "Gabri Martínez",
+        "S. Merheg",
+        "Fran Navarro",
+        "Pau Victor",
+        "Sandro Vidigal"
+      ]
+    },
+    "europa_league::134098": {
+      "name": "Excelsior",
+      "players": [
+        "A. Bellaarouch",
+        "João Carvalho",
+        "L. Horníček",
+        "Tiago Sá",
+        "B. Arrey-Mbi",
+        "A. Barišić",
+        "Víctor Gómez",
+        "G. Lagerbielke",
+        "Leonardo Lelo",
+        "Nuno Matos",
+        "S. Niakaté",
+        "Paulo Oliveira",
+        "F. Pascoal",
+        "M. Dorgeles",
+        "Gabriel Moscardo",
+        "Jean-Baptiste Gorby",
+        "F. Grillitsch",
+        "João Moutinho",
+        "Diego Rodrigues",
+        "E. Tıknaz",
+        "Vitor Carvalho",
+        "R. Zalazar",
+        "Yanis da Rocha",
+        "João Aragão",
+        "A. El Ouazzani",
+        "Ricardo Horta",
+        "Gabri Martínez",
+        "S. Merheg",
+        "Fran Navarro",
+        "Pau Victor",
+        "Sandro Vidigal"
+      ]
+    },
+    "eredivisie::677": {
+      "name": "FC Groningen",
+      "players": [
+        "T. Doornbusch",
+        "Emiel Koops",
+        "Y. Schoonderwaldt",
+        "Z. Taylan",
+        "Pepijn Vallen",
+        "G. Blancquart",
+        "M. Davis",
+        "J. De Graef",
+        "P. Heise",
+        "Jari Horsten",
+        "Tijn Joosten",
+        "Thomas Reinders",
+        "D. Timber",
+        "Luuk Verheij",
+        "Lars de Blok",
+        "D. van Zutphen",
+        "N. Ait Mouhou",
+        "J. Eijgenraam",
+        "N. Foor",
+        "Thomas Janssen",
+        "J. Kluskens",
+        "M. Odriss",
+        "D. Saddiki",
+        "Yousri Sbai",
+        "J. Triep",
+        "Raf Vullers",
+        "Yousri El Anbri",
+        "Roel van den Broek",
+        "D. Hendrix",
+        "L. Kromah",
+        "Naïm Matoug",
+        "L. Wehmeyer",
+        "D. Zandbergen",
+        "D. van Oorschot",
+        "Bjorn van Zijl"
+      ]
+    },
+    "eredivisie::666": {
+      "name": "FC Twente '65",
+      "players": [
+        "Yannick Gerritsen",
+        "S. Karssies",
+        "P. Tytoń",
+        "L. Unnerstall",
+        "M. Bruns",
+        "S. Lemkin",
+        "R. Nijstad",
+        "Guilherme Martinho Peixoto",
+        "R. Pröpper",
+        "M. Rots",
+        "B. van Rooij",
+        "T. Booth",
+        "K. Hlynsson",
+        "M. Kjølø",
+        "A. Verschueren",
+        "D. Weidmann",
+        "R. Zerrouki",
+        "T. van den Belt",
+        "Nigel Groenewald",
+        "S. Lammers",
+        "S. Ørjasæter",
+        "O. Panneflek",
+        "M. Pjaca",
+        "D. Rots",
+        "Lucas Vennegoor of Hesselink",
+        "R. van Wolfswinkel"
+      ]
+    },
+    "eredivisie::676": {
+      "name": "FC Utrecht",
+      "players": [
+        "D. Deen",
+        "K. Schilder",
+        "J. Schipper",
+        "H. Verhulst",
+        "K. Zeggen",
+        "E. Adjedj",
+        "F. Andersen",
+        "R. Atikallah",
+        "M. Dekker",
+        "E. Dijkstra",
+        "Timme Elffers",
+        "J. Esajas",
+        "R. Ichihara",
+        "Amani Imhangbe",
+        "Mathijs Menu",
+        "A. Natali",
+        "Joeri Oud",
+        "V. Promes",
+        "S. Simons",
+        "B. van Duijl",
+        "K. van Ouytsel",
+        "K. Boogaard",
+        "Bohdan Budko",
+        "Y. Hamdi",
+        "Tomas Johannessen",
+        "D. Kwakman",
+        "E. Mastoras",
+        "J. Oerip",
+        "A. Ouaziz",
+        "R. Robbemond",
+        "J. Sijbrands",
+        "M. Šín",
+        "N. Twisk",
+        "Y. Van Der Velde",
+        "O. de Flart",
+        "H. de Wit",
+        "B. van Driel",
+        "Deacon van der Klaauw",
+        "W. Bouziane",
+        "R. Daal",
+        "J. Hartog",
+        "K. Inge",
+        "B. Kovacs",
+        "M. Meerdink",
+        "Sydney Osazuwa",
+        "A. Oufkir",
+        "A. Smits",
+        "K. Toppenberg",
+        "R. Zekri",
+        "T. de Wit",
+        "Y. van den Ban"
+      ]
+    },
+    "europa_league::676": {
+      "name": "FC Utrecht",
+      "players": [
+        "D. Deen",
+        "K. Schilder",
+        "J. Schipper",
+        "H. Verhulst",
+        "K. Zeggen",
+        "E. Adjedj",
+        "F. Andersen",
+        "R. Atikallah",
+        "M. Dekker",
+        "E. Dijkstra",
+        "Timme Elffers",
+        "J. Esajas",
+        "R. Ichihara",
+        "Amani Imhangbe",
+        "Mathijs Menu",
+        "A. Natali",
+        "Joeri Oud",
+        "V. Promes",
+        "S. Simons",
+        "B. van Duijl",
+        "K. van Ouytsel",
+        "K. Boogaard",
+        "Bohdan Budko",
+        "Y. Hamdi",
+        "Tomas Johannessen",
+        "D. Kwakman",
+        "E. Mastoras",
+        "J. Oerip",
+        "A. Ouaziz",
+        "R. Robbemond",
+        "J. Sijbrands",
+        "M. Šín",
+        "N. Twisk",
+        "Y. Van Der Velde",
+        "O. de Flart",
+        "H. de Wit",
+        "B. van Driel",
+        "Deacon van der Klaauw",
+        "W. Bouziane",
+        "R. Daal",
+        "J. Hartog",
+        "K. Inge",
+        "B. Kovacs",
+        "M. Meerdink",
+        "Sydney Osazuwa",
+        "A. Oufkir",
+        "A. Smits",
+        "K. Toppenberg",
+        "R. Zekri",
+        "T. de Wit",
+        "Y. van den Ban"
+      ]
+    },
+    "eredivisie::1919": {
+      "name": "FC Volendam",
+      "players": [
+        "M. Bakker",
+        "T. Bijlsma",
+        "S. Elum",
+        "Daequone Toussaint",
+        "R. van Balsfoort",
+        "Bart van Dee",
+        "P. van de Merbel",
+        "R. Akmum",
+        "Jayden Ettienne",
+        "Jeffry Fortes",
+        "Quintin Hunting",
+        "M. Laros",
+        "S. Maas",
+        "S. Oerlemans",
+        "L. Van Koeverden",
+        "N. de Groot",
+        "Sufyan van Daalen",
+        "Damian van Dijk",
+        "T. van Grunsven",
+        "D. Bodo",
+        "A. Boushaba",
+        "K. Felida",
+        "Zaid el Bakkali",
+        "Filali el Iliass",
+        "T. van Leeuwen",
+        "Sheddy Barglan",
+        "I. Boumassaoudi",
+        "S. Karlsson Grach",
+        "D. Kuijpers",
+        "K. Monzialo",
+        "E. Semedo",
+        "G. Sille",
+        "D. Verbeek",
+        "Wang Bohao",
+        "R. Wolters",
+        "J. De Vries"
+      ]
+    },
+    "eredivisie::133758": {
+      "name": "Feyenoord",
+      "players": [
+        "S. Benda",
+        "M. Berger",
+        "L. Bossin",
+        "I. Ka",
+        "T. Wellenreuther",
+        "H. Agboluaje",
+        "A. Ahmedhodžić",
+        "J. Bos",
+        "M. Deijl",
+        "Lucas Gardenier",
+        "J. Lotomba",
+        "B. Nieuwkoop",
+        "G. Read",
+        "G. Smal",
+        "J. St. Juste",
+        "T. Watanabe",
+        "Hwang In-Beom",
+        "T. Kraaijeveld",
+        "J. Moder",
+        "A. Nahany",
+        "A. Ouarghi",
+        "S. Steijn",
+        "O. Targhalline",
+        "L. Valente",
+        "T. van den Elshout",
+        "Gonçalo Borges",
+        "G. Diarra",
+        "A. Hadj-Moussa",
+        "L. Sauer",
+        "J. Schaken",
+        "A. Sliti",
+        "R. Sterling",
+        "C. Tengstedt",
+        "A. Ueda",
+        "S. van Persie"
+      ]
+    },
+    "europa_league::133758": {
+      "name": "Feyenoord",
+      "players": [
+        "S. Benda",
+        "M. Berger",
+        "L. Bossin",
+        "I. Ka",
+        "T. Wellenreuther",
+        "H. Agboluaje",
+        "A. Ahmedhodžić",
+        "J. Bos",
+        "M. Deijl",
+        "Lucas Gardenier",
+        "J. Lotomba",
+        "B. Nieuwkoop",
+        "G. Read",
+        "G. Smal",
+        "J. St. Juste",
+        "T. Watanabe",
+        "Hwang In-Beom",
+        "T. Kraaijeveld",
+        "J. Moder",
+        "A. Nahany",
+        "A. Ouarghi",
+        "S. Steijn",
+        "O. Targhalline",
+        "L. Valente",
+        "T. van den Elshout",
+        "Gonçalo Borges",
+        "G. Diarra",
+        "A. Hadj-Moussa",
+        "L. Sauer",
+        "J. Schaken",
+        "A. Sliti",
+        "R. Sterling",
+        "C. Tengstedt",
+        "A. Ueda",
+        "S. van Persie"
+      ]
+    },
+    "eredivisie::1920": {
+      "name": "Fortuna Sittard",
+      "players": [
+        "M. Branderhorst",
+        "L. Koopmans",
+        "N. Marsman",
+        "N. Martens",
+        "L. van Parys",
+        "S. Adewoye",
+        "J. Dahlhaus",
+        "Justin Quincy Hubner",
+        "N. Kasanwirjo",
+        "Iván Márquez",
+        "Ivo Pinto",
+        "S. van Ottele",
+        "S. Bastien",
+        "P. Brittijn",
+        "L. Duijvestijn",
+        "W. Elasri",
+        "Moussa Gbemou",
+        "A. Halilović",
+        "M. Ihattaren",
+        "Amin Laoukili",
+        "J. Lonwijk",
+        "É. Michut",
+        "Y. Oukili",
+        "Tristan Schenkhuizen",
+        "Luka Tunjic",
+        "P. Gladon",
+        "O. Johnson",
+        "D. Limnios",
+        "K. Peterson",
+        "K. Sierhuis"
+      ]
+    },
+    "eredivisie::718": {
+      "name": "Go Ahead Eagles",
+      "players": []
+    },
+    "europa_league::718": {
+      "name": "Go Ahead Eagles",
+      "players": []
+    },
+    "eredivisie::133759": {
+      "name": "Heerenveen",
+      "players": []
+    },
+    "eredivisie::671": {
+      "name": "Heracles Almelo",
+      "players": []
+    },
+    "eredivisie::681": {
+      "name": "NAC Breda",
+      "players": []
+    },
+    "eredivisie::1915": {
+      "name": "NEC",
+      "players": []
+    },
+    "eredivisie::684": {
+      "name": "PEC Zwolle",
+      "players": []
+    },
+    "eredivisie::6806": {
+      "name": "Sparta Rotterdam",
+      "players": []
+    },
+    "eredivisie::1912": {
+      "name": "Telstar 1963",
+      "players": []
+    },
+    "europa_league::100": {
+      "name": "AS Roma",
+      "players": []
+    },
+    "serie_a::100": {
+      "name": "AS Roma",
+      "players": []
+    },
+    "europa_league::133601": {
+      "name": "Aston Villa",
+      "players": []
+    },
+    "premier_league::133601": {
+      "name": "Aston Villa",
+      "players": []
+    },
+    "europa_league::133957": {
+      "name": "Basel",
+      "players": []
+    },
+    "europa_league::133970": {
+      "name": "Basel",
+      "players": []
+    },
+    "europa_league::134781": {
+      "name": "Bologna",
+      "players": []
+    },
+    "serie_a::134781": {
+      "name": "Bologna",
+      "players": []
+    },
+    "europa_league::133647": {
+      "name": "Celtic",
+      "players": []
+    },
+    "europa_league::local_europa_league_crvena_zvezda": {
+      "name": "Crvena Zvezda",
+      "players": []
+    },
+    "europa_league::local_europa_league_dinamo_zagreb": {
+      "name": "Dinamo Zagreb",
+      "players": []
+    },
+    "europa_league::133891": {
+      "name": "FC Midtjylland",
+      "players": []
+    },
+    "europa_league::503": {
+      "name": "FC Porto",
+      "players": []
+    },
+    "europa_league::local_europa_league_ferencvaros": {
+      "name": "Ferencvaros",
+      "players": []
+    },
+    "europa_league::133779": {
+      "name": "Genk",
+      "players": []
+    },
+    "europa_league::133711": {
+      "name": "Lille",
+      "players": []
+    },
+    "ligue_1::133711": {
+      "name": "Lille",
+      "players": []
+    },
+    "europa_league::local_europa_league_ludogorets": {
+      "name": "Ludogorets",
+      "players": []
+    },
+    "europa_league::133713": {
+      "name": "Lyon",
+      "players": []
+    },
+    "ligue_1::133713": {
+      "name": "Lyon",
+      "players": []
+    },
+    "europa_league::local_europa_league_maccabi_tel_aviv": {
+      "name": "Maccabi Tel Aviv",
+      "players": []
+    },
+    "europa_league::local_europa_league_malmo": {
+      "name": "Malmo",
+      "players": []
+    },
+    "europa_league::351": {
+      "name": "Nottingham Forest FC",
+      "players": []
+    },
+    "national_teams::134507": {
+      "name": "Nottingham Forest FC",
+      "players": []
+    },
+    "premier_league::351": {
+      "name": "Nottingham Forest FC",
+      "players": []
+    },
+    "europa_league::522": {
+      "name": "OGC Nice",
+      "players": []
+    },
+    "ligue_1::522": {
+      "name": "OGC Nice",
+      "players": []
+    },
+    "europa_league::133746": {
+      "name": "Panathinaikos",
+      "players": []
+    },
+    "europa_league::local_europa_league_paok": {
+      "name": "Paok",
+      "players": []
+    },
+    "europa_league::local_europa_league_rangers": {
+      "name": "Rangers",
+      "players": []
+    },
+    "europa_league::558": {
+      "name": "RC Celta de Vigo",
+      "players": []
+    },
+    "la_liga::558": {
+      "name": "RC Celta de Vigo",
+      "players": []
+    },
+    "la_liga::95": {
+      "name": "RC Celta de Vigo",
+      "players": []
+    },
+    "europa_league::90": {
+      "name": "Real Betis Balompié",
+      "players": []
+    },
+    "la_liga::90": {
+      "name": "Real Betis Balompié",
+      "players": []
+    },
+    "europa_league::137743": {
+      "name": "Sturm Graz",
+      "players": []
+    },
+    "europa_league::local_europa_league_viktoria_plzen": {
+      "name": "Viktoria Plzen",
+      "players": []
+    },
+    "europa_league::local_europa_league_young_boys": {
+      "name": "Young Boys",
+      "players": [
+        "J. Čondrić",
+        "D. Karpikov",
+        "M. Seysen",
+        "S. Anuarov",
+        "K. Bartolec",
+        "A. Beisebekov",
+        "B. Kalaica",
+        "A. Kassym",
+        "D. Shomko",
+        "Aytuar Token",
+        "T. Tokenov",
+        "Y. Vorogovskiy",
+        "I. Bašić",
+        "B. Islamkhan",
+        "Ruslan Valikhan",
+        "N. Ahanonu",
+        "S. Basmanov",
+        "D. Karaman",
+        "R. Karimov",
+        "M. Tomasov",
+        "N. Zhaksylyk"
+      ]
+    },
+    "la_liga::79": {
+      "name": "CA Osasuna",
+      "players": [
+        "Aitor Fernández",
+        "Sergio Herrera",
+        "D. Stamatakis",
+        "F. Boyomo",
+        "Abel Bretones",
+        "Catena",
+        "Juan Cruz",
+        "Javi Galán",
+        "Jon García",
+        "Jorge Herrando",
+        "V. Rosier",
+        "Raúl Chasco",
+        "U. Santos",
+        "M. Serrano",
+        "Mauro Echegoyen",
+        "Moncayola",
+        "Iker Muñoz",
+        "Aimar Oroz",
+        "Asier Osambela",
+        "Lucas Torró",
+        "Íñigo Arguibide",
+        "Roberto Arroyo",
+        "Kike Barja",
+        "Iker Benito",
+        "A. Budimir",
+        "Raúl García",
+        "Rubén García",
+        "Moi Gómez",
+        "Raul Moro",
+        "Víctor Muñoz",
+        "Martin Pedroarena",
+        "Manu Rico"
+      ]
+    }
+  }
+}

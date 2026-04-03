@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual env / local
+.venv/
+.tmp/
+.claude/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Runtime outputs
+output/
+output_sim.mp4
+
+# Large/generated data
+data/logos/
+data/tournaments/
+data/all_teams.json
+data/api_football_teams.json
+data/sync_manifest.json
+data/selected_match.json
+takımlar logoları/
+

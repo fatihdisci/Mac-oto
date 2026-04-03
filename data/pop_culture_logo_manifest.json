@@ -1,0 +1,14 @@
+{
+  "updated_count": 1,
+  "failed_count": 0,
+  "entries": [
+    {
+      "team_name": "OpenAI",
+      "league_name": "Pop Culture / Teknoloji Devleri",
+      "badge_file": "pop_culture__techbrands__openai.png",
+      "source_url": "https://commons.wikimedia.org/wiki/Special:FilePath/OpenAI_Logo_Since_February_2025.png",
+      "wikipedia_title": "OpenAI"
+    }
+  ],
+  "failed_items": []
+}
