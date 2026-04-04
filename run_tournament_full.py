@@ -426,20 +426,34 @@ def _make_landscape_segment(
         right_has_audio = False
 
     bar_text = _ffmpeg_escape_text(top_bar_text)
+    top_bar_h = 92
+    top_bar_bottom_line = top_bar_h - 2
+    content_top = top_bar_h + 12
+    content_bottom_margin = 18
+    content_h = 1080 - content_top - content_bottom_margin
+    half_w = 960
+    divider_x = half_w - 1
+    divider_w = 3
+
+    # 1080x1920 portre videolari kirpmadan tam sigdir:
+    # yukseklik fixed, genislik en-boy oranina gore otomatik.
+    # Boylece ust/alt kesilmez (zoom/crop yok), yanlarda bosluk kalabilir.
+    scaled_h = content_h
+
     base_video_prefix = (
-        "[0:v]scale=959:1080:force_original_aspect_ratio=increase,crop=959:1080,setsar=1[leftv];"
-        "[1:v]scale=959:1080:force_original_aspect_ratio=increase,crop=959:1080,setsar=1[rightv];"
+        f"[0:v]scale=-2:{scaled_h},setsar=1[leftv];"
+        f"[1:v]scale=-2:{scaled_h},setsar=1[rightv];"
         "color=c=#07111f:s=1920x1080:r=60[base];"
-        "[base][leftv]overlay=x=0:y=0[tmp1];"
-        "[tmp1][rightv]overlay=x=961:y=0[tmp2];"
+        f"[base][leftv]overlay=x=({half_w}-w)/2:y={content_top}[tmp1];"
+        f"[tmp1][rightv]overlay=x={half_w}+({half_w}-w)/2:y={content_top}[tmp2];"
     )
     base_video_filter = (
         base_video_prefix
         + "[tmp2]"
-        + "drawbox=x=959:y=0:w=2:h=1080:color=#e7f0ff@0.30:t=fill,"
-        + "drawbox=x=0:y=0:w=1920:h=78:color=#0c1f3f@0.86:t=fill,"
-        + "drawbox=x=0:y=76:w=1920:h=2:color=#6fa3ff@0.55:t=fill,"
-        + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=34:x=(w-text_w)/2:y=20:text='{bar_text}'"
+        + f"drawbox=x={divider_x}:y={content_top - 2}:w={divider_w}:h={content_h + 4}:color=#e7f0ff@0.42:t=fill,"
+        + f"drawbox=x=0:y=0:w=1920:h={top_bar_h}:color=#0c1f3f@0.88:t=fill,"
+        + f"drawbox=x=0:y={top_bar_bottom_line}:w=1920:h=2:color=#6fa3ff@0.60:t=fill,"
+        + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
         + "[v]"
     )
 

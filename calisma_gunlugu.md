@@ -82,3 +82,8 @@ Bu dosya, her mesaj sonrasinda yapilan guncellemeleri tarih-saat ile kaydeder.
 - Turnuva ET/PEN hatalari cozuldu: penalty override dusmesi giderildi, winner belirleme ve scoreline kaydi tutarli hale getirildi.
 - Landscape tournament yayini yeniden tasarlandi: merkez panel kaldirildi, dual match 50/50 + ince divider + ust bar (Turnuva adi | Round | Progress) duzeni uygulandi.
 - Landscape yayininda canli mac skor spoiler'i kapatildi, okunabilirlik ve profesyonel gorunum iyilestirildi.
+
+## 2026-04-05 02:48:21
+- README tamamen guncellendi ve proje akisina hizalandi: kurulum, calistirma, ana scriptler, cikti klasorleri ve sorun giderme adimlari netlestirildi.
+- Yeni `kurum.bat` eklendi: farkli bir PC'de repoyu cektikten sonra cift tikla .venv olusturma + requirements kurulumu + temel import dogrulamasi yapar.
+- Turnuva dual landscape yayinda "tam sigdir" duzeni uygulandi: zoom/crop yerine fit-to-screen, ust/alt kesilme sorunu giderildi, ayirici bosluklari optimize edildi.

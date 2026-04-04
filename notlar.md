@@ -12,3 +12,13 @@
 - Operasyonel not:
   - GUI'den Landscape Broadcast calistirildiginda yeni dual layout gelir.
   - Grand Prix finalinde sampiyon yazisi kutu icinde belirgin overlay olarak gosterilir.
+
+## 2026-04-05 (Dokumantasyon ve Kurulum)
+- README dosyasi yenilendi:
+  - Yeni PC kurulum adimlari
+  - `kurum.bat` ve `00_Launcher.bat` akisi
+  - Turnuva ve Grand Prix calistirma komutlari
+- Yeni kurulum scripti:
+  - `kurum.bat` (cift tikla .venv + pip install + import dogrulama)
+- Turnuva dual view fit notu:
+  - Artık crop yerine fit-to-screen; ust/alt kesilme engellendi.
