@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from PIL import Image, ImageDraw, ImageFont
+
 from config import build_default_config
 from team_repository import TeamRepository
 from tournament_manager import TournamentManager
@@ -192,6 +194,134 @@ def _broadcast_safe_text(value: Any) -> str:
     return text.strip()
 
 
+def _compact_team_name(value: Any, max_len: int = 16) -> str:
+    text = _broadcast_safe_text(value)
+    if len(text) <= max_len:
+        return text
+    return text[: max(1, max_len - 3)].rstrip() + "..."
+
+
+def _format_match_text(rec: dict[str, Any] | None, *, reveal_score: bool) -> str:
+    if rec is None:
+        return "-"
+    team_a = _compact_team_name(rec.get("team_a_name", "A"), max_len=18)
+    team_b = _compact_team_name(rec.get("team_b_name", "B"), max_len=18)
+    if not reveal_score:
+        return f"{team_a} vs {team_b} | LIVE"
+
+    decision = str(rec.get("decided_by") or "normal_time")
+    final_a = int(rec.get("score_a", 0))
+    final_b = int(rec.get("score_b", 0))
+    reg_a = int(rec.get("regular_time_score_a", final_a))
+    reg_b = int(rec.get("regular_time_score_b", final_b))
+
+    if decision == "penalties":
+        pen_a = int(rec.get("penalty_score_a", 0))
+        pen_b = int(rec.get("penalty_score_b", 0))
+        return f"{team_a} {reg_a}-{reg_b} {team_b} | AET {final_a}-{final_b} | PEN {pen_a}-{pen_b}"
+    if decision == "extra_time":
+        return f"{team_a} {reg_a}-{reg_b} {team_b} | AET {final_a}-{final_b}"
+    return f"{team_a} {final_a}-{final_b} {team_b}"
+
+
+def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    candidates = (
+        ["C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/segoeuib.ttf"]
+        if bold
+        else ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/segoeui.ttf"]
+    )
+    for path in candidates:
+        try:
+            return ImageFont.truetype(path, size=size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def _paste_logo(panel: Image.Image, data_dir: Path, badge_file: str, x: int, y: int, size: int) -> None:
+    if not badge_file:
+        return
+    path = data_dir / "logos" / str(badge_file)
+    if not path.exists():
+        return
+    try:
+        logo = Image.open(path).convert("RGBA")
+        logo.thumbnail((size - 6, size - 6), Image.Resampling.LANCZOS)
+    except Exception:
+        return
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(logo, ((size - logo.width) // 2, (size - logo.height) // 2), logo)
+    panel.alpha_composite(canvas, (x, y))
+
+
+def _render_center_panel_image(
+    *,
+    output_path: Path,
+    data_dir: Path,
+    left_record: dict[str, Any],
+    right_record: dict[str, Any] | None,
+    previous_record: dict[str, Any] | None,
+    next_match: dict[str, Any] | None,
+    bracket_progress_line: str,
+    completed_matches: int,
+    total_matches: int,
+) -> Path:
+    width = 640
+    height = 1020
+    panel = Image.new("RGBA", (width, height), (10, 18, 34, 0))
+    draw = ImageDraw.Draw(panel)
+
+    draw.rounded_rectangle(
+        (0, 0, width - 1, height - 1),
+        radius=24,
+        fill=(13, 25, 46, 236),
+        outline=(82, 132, 218, 255),
+        width=3,
+    )
+    draw.rectangle((20, 20, width - 20, 124), fill=(21, 46, 88, 210))
+    title_font = _load_font(42, bold=True)
+    sub_font = _load_font(22, bold=True)
+    draw.text((36, 40), "TOURNAMENT LIVE", font=title_font, fill=(240, 246, 255, 255))
+    draw.text((36, 88), _broadcast_safe_text(left_record.get("round_name") or "Round"), font=sub_font, fill=(180, 208, 255, 255))
+
+    rows: list[tuple[str, str, dict[str, Any] | None, bool]] = [
+        ("PREV", _format_match_text(previous_record, reveal_score=True), previous_record, False),
+        ("NOW L", _format_match_text(left_record, reveal_score=False), left_record, True),
+        ("NOW R", _format_match_text(right_record, reveal_score=False), right_record, True),
+    ]
+    if next_match is None:
+        next_text = "Tournament completed"
+    else:
+        next_text = _format_match_text(next_match, reveal_score=False).replace(" | LIVE", "")
+    rows.append(("NEXT", next_text, next_match, False))
+
+    label_font = _load_font(21, bold=True)
+    text_font = _load_font(24, bold=False)
+    y = 150
+    for label, text, rec, is_live in rows:
+        fill = (23, 39, 69, 222) if not is_live else (24, 64, 67, 230)
+        border = (79, 124, 205, 255) if not is_live else (87, 204, 183, 255)
+        draw.rounded_rectangle((20, y, width - 20, y + 146), radius=18, fill=fill, outline=border, width=2)
+        draw.text((34, y + 16), label, font=label_font, fill=(186, 214, 255, 255))
+        draw.text((34, y + 62), text, font=text_font, fill=(240, 245, 252, 255))
+
+        if isinstance(rec, dict):
+            _paste_logo(panel, data_dir, str(rec.get("team_a_badge_file", "")), 508, y + 22, 52)
+            _paste_logo(panel, data_dir, str(rec.get("team_b_badge_file", "")), 566, y + 22, 52)
+        y += 164
+
+    footer_font = _load_font(22, bold=True)
+    progress_font = _load_font(24, bold=False)
+    draw.rounded_rectangle((20, height - 154, width - 20, height - 20), radius=18, fill=(18, 31, 55, 230), outline=(70, 116, 194, 255), width=2)
+    draw.text((34, height - 136), "BRACKET", font=footer_font, fill=(182, 211, 255, 255))
+    draw.text((34, height - 102), bracket_progress_line, font=progress_font, fill=(235, 241, 252, 255))
+    draw.text((34, height - 64), f"Progress: {completed_matches}/{total_matches}", font=progress_font, fill=(179, 203, 238, 255))
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    panel.save(output_path, format="PNG")
+    return output_path
+
+
 def _build_center_lines(
     left_record: dict[str, Any],
     right_record: dict[str, Any] | None,
@@ -201,36 +331,14 @@ def _build_center_lines(
     completed_matches: int,
     total_matches: int,
 ) -> list[str]:
-    def _fmt_result_line(prefix: str, rec: dict[str, Any] | None) -> str:
-        if rec is None:
-            return f"{prefix}: -"
-        decision = str(rec.get("decided_by") or "normal_time")
-        if decision in {"extra_time", "penalties"}:
-            reg_a = rec.get("regular_time_score_a", rec.get("score_a", 0))
-            reg_b = rec.get("regular_time_score_b", rec.get("score_b", 0))
-            base_text = f"{reg_a}-{reg_b}"
-        else:
-            base_text = f"{rec.get('score_a', 0)}-{rec.get('score_b', 0)}"
-        line = (
-            f"{prefix}: {_broadcast_safe_text(rec.get('team_a_name', 'A'))} "
-            f"{base_text} "
-            f"{_broadcast_safe_text(rec.get('team_b_name', 'B'))}"
-        )
-        if decision == "extra_time":
-            line += f" (ET {rec.get('extra_time_score_a', 0)}-{rec.get('extra_time_score_b', 0)})"
-        elif decision == "penalties":
-            et_a = rec.get("extra_time_score_a")
-            et_b = rec.get("extra_time_score_b")
-            if et_a is not None and et_b is not None:
-                line += f" (AET {et_a}-{et_b})"
-            line += f" (PEN {rec.get('penalty_score_a', 0)}-{rec.get('penalty_score_b', 0)})"
-        return line
+    def _fmt_result_line(prefix: str, rec: dict[str, Any] | None, reveal_score: bool) -> str:
+        return f"{prefix}: {_format_match_text(rec, reveal_score=reveal_score)}"
 
     header_round = _broadcast_safe_text(left_record.get("round_name") or "Round")
     line0 = f"Tournament Live | {header_round}"
-    line1 = _fmt_result_line("PREV", previous_record)
-    line2 = _fmt_result_line("NOW L", left_record)
-    line3 = _fmt_result_line("NOW R", right_record) if right_record else "NOW R: Waiting"
+    line1 = _fmt_result_line("PREV", previous_record, True)
+    line2 = _fmt_result_line("NOW L", left_record, False)
+    line3 = _fmt_result_line("NOW R", right_record, False) if right_record else "NOW R: Waiting"
     if next_match is None:
         line4 = "NEXT: Tournament completed"
     else:
@@ -286,10 +394,25 @@ def _build_bracket_progress_line(
     return text
 
 
+def _build_top_bar_text(
+    *,
+    tournament_name: str,
+    left_record: dict[str, Any],
+    right_record: dict[str, Any] | None,
+    completed_matches: int,
+    total_matches: int,
+) -> str:
+    base_name = _broadcast_safe_text(tournament_name or "Tournament")
+    left_round = _broadcast_safe_text(left_record.get("round_name") or "Round")
+    right_round = _broadcast_safe_text((right_record or {}).get("round_name") or "")
+    round_label = left_round if not right_round or right_round == left_round else f"{left_round} / {right_round}"
+    return f"{base_name} | {round_label} | Progress {completed_matches}/{total_matches}"
+
+
 def _make_landscape_segment(
     left_video: Path,
     right_video: Path | None,
-    lines: list[str],
+    top_bar_text: str,
     output_path: Path,
 ) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -302,37 +425,29 @@ def _make_landscape_segment(
         right_input = ["-f", "lavfi", "-i", "color=c=#101a2b:s=1080x1920:r=60"]
         right_has_audio = False
 
-    panel_draw_chain: list[str] = [
-        "drawbox=x=640:y=30:w=640:h=1020:color=#0f1e36@0.88:t=fill",
-        "drawbox=x=640:y=30:w=640:h=1020:color=#2d4f8f@0.95:t=3",
-    ]
-    text_draw_chain: list[str] = []
-    y = 96
-    font_path = "C\\:/Windows/Fonts/arial.ttf"
-    for idx, line in enumerate(lines):
-        size = 40 if idx == 0 else 30
-        escaped = _ffmpeg_escape_text(line)
-        text_draw_chain.append(
-            f"drawtext=fontfile='{font_path}':fontcolor=white:fontsize={size}:x=670:y={y}:text='{escaped}'"
-        )
-        y += 140 if idx == 0 else 120
-
+    bar_text = _ffmpeg_escape_text(top_bar_text)
     base_video_prefix = (
-        "[0:v]scale=-2:1080,setsar=1[leftv];"
-        "[1:v]scale=-2:1080,setsar=1[rightv];"
+        "[0:v]scale=959:1080:force_original_aspect_ratio=increase,crop=959:1080,setsar=1[leftv];"
+        "[1:v]scale=959:1080:force_original_aspect_ratio=increase,crop=959:1080,setsar=1[rightv];"
         "color=c=#07111f:s=1920x1080:r=60[base];"
-        "[base][leftv]overlay=x=20:y=(H-h)/2[tmp1];"
-        "[tmp1][rightv]overlay=x=W-w-20:y=(H-h)/2[tmp2];"
+        "[base][leftv]overlay=x=0:y=0[tmp1];"
+        "[tmp1][rightv]overlay=x=961:y=0[tmp2];"
     )
-    with_text_chain = panel_draw_chain + text_draw_chain
-    without_text_chain = panel_draw_chain
-    base_video_filter = base_video_prefix + f"[tmp2]{','.join(with_text_chain)}[v]"
+    base_video_filter = (
+        base_video_prefix
+        + "[tmp2]"
+        + "drawbox=x=959:y=0:w=2:h=1080:color=#e7f0ff@0.30:t=fill,"
+        + "drawbox=x=0:y=0:w=1920:h=78:color=#0c1f3f@0.86:t=fill,"
+        + "drawbox=x=0:y=76:w=1920:h=2:color=#6fa3ff@0.55:t=fill,"
+        + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=34:x=(w-text_w)/2:y=20:text='{bar_text}'"
+        + "[v]"
+    )
 
     if right_has_audio:
         filter_complex = (
             base_video_filter
             + ";"
-            + "[0:a]volume=0.65[a0];[1:a]volume=0.65[a1];[a0][a1]amix=inputs=2:duration=shortest[a]"
+            + "[0:a]volume=0.95[a0];[1:a]volume=0.95[a1];[a0][a1]amix=inputs=2:duration=shortest:dropout_transition=2:normalize=0[a]"
         )
         cmd = ["ffmpeg", "-y", *left_input, *right_input, "-filter_complex", filter_complex]
         cmd.extend(
@@ -351,31 +466,7 @@ def _make_landscape_segment(
 
     run = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if run.returncode != 0 or not output_path.exists():
-        _safe_print("LANDSCAPE_TEXT_RENDER_WARN: text overlay failed, retrying without center text.")
-        fallback_base_video_filter = base_video_prefix + f"[tmp2]{','.join(without_text_chain)}[v]"
-        if right_has_audio:
-            fallback_filter_complex = (
-                fallback_base_video_filter
-                + ";"
-                + "[0:a]volume=0.65[a0];[1:a]volume=0.65[a1];[a0][a1]amix=inputs=2:duration=shortest[a]"
-            )
-            fallback_cmd = ["ffmpeg", "-y", *left_input, *right_input, "-filter_complex", fallback_filter_complex]
-            fallback_cmd.extend(["-map", "[v]", "-map", "[a]"])
-        else:
-            fallback_cmd = ["ffmpeg", "-y", *left_input, *right_input, "-filter_complex", fallback_base_video_filter]
-            fallback_cmd.extend(["-map", "[v]", "-map", "0:a?"])
-        fallback_cmd.extend(
-            ["-shortest", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "160k", str(output_path)]
-        )
-        fallback_run = subprocess.run(
-            fallback_cmd,
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-        )
-        if fallback_run.returncode != 0 or not output_path.exists():
-            raise RuntimeError(f"landscape segment render failed: {fallback_run.stderr[-700:]}")
+        raise RuntimeError(f"landscape segment render failed: {run.stderr[-700:]}")
     return output_path
 
 
@@ -385,6 +476,8 @@ def _build_landscape_broadcast_video(
     schedule: list[dict[str, Any]],
     output_path: Path,
     total_matches: int,
+    data_dir: Path,
+    tournament_name: str,
 ) -> Path:
     if not videos:
         raise ValueError("No videos to build landscape broadcast.")
@@ -399,15 +492,10 @@ def _build_landscape_broadcast_video(
         left_record = records[i]
         right_record = records[i + 1] if i + 1 < len(records) else None
         completed = min(i + (2 if right_video else 1), len(records))
-        previous_record = records[i - 1] if i - 1 >= 0 else None
-        next_match = schedule[completed] if completed < len(schedule) else None
-        bracket_progress_line = _build_bracket_progress_line(schedule=schedule, completed_count=completed)
-        lines = _build_center_lines(
+        top_bar_text = _build_top_bar_text(
+            tournament_name=tournament_name,
             left_record=left_record,
             right_record=right_record,
-            previous_record=previous_record,
-            next_match=next_match,
-            bracket_progress_line=bracket_progress_line,
             completed_matches=completed,
             total_matches=total_matches,
         )
@@ -416,7 +504,7 @@ def _build_landscape_broadcast_video(
         _make_landscape_segment(
             left_video=left_video,
             right_video=right_video,
-            lines=lines,
+            top_bar_text=top_bar_text,
             output_path=seg_path,
         )
         segments.append(seg_path)
@@ -482,6 +570,14 @@ def run_full_tournament(
         team_b_key = str(nxt.get("team_b_key") or "")
         team_a_name = runner_tm.get_team_name(team_a_key)
         team_b_name = runner_tm.get_team_name(team_b_key)
+        team_a_badge = ""
+        team_b_badge = ""
+        team_a_record = repo.get_team_by_key(team_a_key)
+        team_b_record = repo.get_team_by_key(team_b_key)
+        if team_a_record is not None:
+            team_a_badge = str(team_a_record.badge_file or "")
+        if team_b_record is not None:
+            team_b_badge = str(team_b_record.badge_file or "")
         round_name = str(nxt.get("round_name") or "Round")
         print(f"[{match_counter}] {round_name} | {team_a_name} vs {team_b_name} ({match_id})")
         match_schedule.append(
@@ -490,6 +586,8 @@ def run_full_tournament(
                 "round_name": round_name,
                 "team_a_name": team_a_name,
                 "team_b_name": team_b_name,
+                "team_a_badge_file": team_a_badge,
+                "team_b_badge_file": team_b_badge,
             }
         )
 
@@ -588,13 +686,21 @@ def run_full_tournament(
         regular_b = int((updated_match or {}).get("regular_time_score_b") or regular_b)
         decided_by = str((updated_match or {}).get("decided_by") or "normal_time")
         print(f"RECORDED_RESULT: {regular_a}-{regular_b} -> {final_a}-{final_b} ({decided_by})")
-        winner_name = team_a_name if final_a > final_b else team_b_name
+        winner_key = str((updated_match or {}).get("winner_team_key") or "")
+        if winner_key == team_a_key:
+            winner_name = team_a_name
+        elif winner_key == team_b_key:
+            winner_name = team_b_name
+        else:
+            winner_name = team_a_name if final_a > final_b else team_b_name
         match_records.append(
             {
                 "match_id": match_id,
                 "round_name": round_name,
                 "team_a_name": team_a_name,
                 "team_b_name": team_b_name,
+                "team_a_badge_file": team_a_badge,
+                "team_b_badge_file": team_b_badge,
                 "score_a": final_a,
                 "score_b": final_b,
                 "winner_name": winner_name,
@@ -637,6 +743,8 @@ def run_full_tournament(
             schedule=match_schedule,
             output_path=landscape_target,
             total_matches=len(state.get("matches", [])),
+            data_dir=cfg.data_dir,
+            tournament_name=str(state.get("name", "Tournament")),
         )
         print(f"TOURNAMENT_BROADCAST_OUTPUT:{landscape_final}")
         return landscape_final
@@ -649,6 +757,8 @@ def run_full_tournament(
             schedule=match_schedule,
             output_path=landscape_target,
             total_matches=len(state.get("matches", [])),
+            data_dir=cfg.data_dir,
+            tournament_name=str(state.get("name", "Tournament")),
         )
         print(f"TOURNAMENT_BROADCAST_OUTPUT:{landscape_final}")
         return landscape_final

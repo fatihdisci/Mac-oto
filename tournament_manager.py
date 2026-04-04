@@ -331,9 +331,6 @@ class TournamentManager:
         except Exception:
             return fallback
 
-        if final_a == final_b:
-            return fallback
-
         decided_by = str(override.get("decided_by") or fallback.get("decided_by") or "normal_time")
         if decided_by not in {"normal_time", "extra_time", "penalties"}:
             decided_by = str(fallback.get("decided_by") or "normal_time")
@@ -348,6 +345,8 @@ class TournamentManager:
         pen_b = int(pen_b) if pen_b is not None else None
 
         if decided_by == "normal_time":
+            if final_a == final_b:
+                return fallback
             regular_a = final_a
             regular_b = final_b
             extra_a = None
@@ -355,17 +354,21 @@ class TournamentManager:
             pen_a = None
             pen_b = None
         elif decided_by == "extra_time":
+            if final_a == final_b:
+                return fallback
             if extra_a is None or extra_b is None:
                 extra_a = max(0, final_a - regular_a)
                 extra_b = max(0, final_b - regular_b)
             pen_a = None
             pen_b = None
         elif decided_by == "penalties":
+            # Penaltida final skor AET toplami oldugu icin esit olabilir.
             if extra_a is None or extra_b is None:
-                base_total = min(final_a, final_b)
-                extra_a = max(0, base_total - regular_a)
-                extra_b = max(0, base_total - regular_b)
+                extra_a = max(0, final_a - regular_a)
+                extra_b = max(0, final_b - regular_b)
             if pen_a is None or pen_b is None:
+                return fallback
+            if pen_a == pen_b:
                 return fallback
 
         return {

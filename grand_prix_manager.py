@@ -12,7 +12,8 @@ from team_repository import TeamRepository
 class GrandPrixManager:
     SUPPORTED_TEAM_COUNTS = {4, 8}
     SUPPORTED_ROUND_COUNTS = {5, 10, 15, 20, 25, 30}
-    HOLE_VALUE_POOL = (-1, 0, 1, 2, 3, 5, 7, 10)
+    HOLE_COUNT = 12
+    HOLE_VALUE_TEMPLATE = (-5, -3, -2, -1, 0, 1, 2, 3, 4, 5, 7, 10)
 
     def __init__(self, data_dir: Path, repository: TeamRepository) -> None:
         self.repository = repository
@@ -80,14 +81,24 @@ class GrandPrixManager:
         if not path.exists():
             return None
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
-        return payload if isinstance(payload, dict) else None
+        if not isinstance(payload, dict):
+            return None
+        upgraded, changed = self._upgrade_state(payload)
+        if changed:
+            self.save_state(upgraded)
+        return upgraded
 
     def load_latest_state(self) -> dict[str, Any] | None:
         files = sorted(self.grand_prix_dir.glob("*.json"), key=lambda item: item.stat().st_mtime, reverse=True)
         if not files:
             return None
         payload = json.loads(files[0].read_text(encoding="utf-8-sig"))
-        return payload if isinstance(payload, dict) else None
+        if not isinstance(payload, dict):
+            return None
+        upgraded, changed = self._upgrade_state(payload)
+        if changed:
+            self.save_state(upgraded)
+        return upgraded
 
     def list_states(self) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
@@ -98,7 +109,10 @@ class GrandPrixManager:
             except Exception:
                 continue
             if isinstance(payload, dict):
-                rows.append(payload)
+                upgraded, changed = self._upgrade_state(payload)
+                if changed:
+                    self.save_state(upgraded)
+                rows.append(upgraded)
         return rows
 
     def reset_runtime(self, state: dict[str, Any]) -> dict[str, Any]:
@@ -180,9 +194,62 @@ class GrandPrixManager:
 
     def _build_hole_values(self, seed: int) -> list[int]:
         rng = random.Random(seed)
-        values = list(self.HOLE_VALUE_POOL)
+        values = list(self.HOLE_VALUE_TEMPLATE)
         rng.shuffle(values)
         return values
+
+    def _upgrade_state(self, state: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+        changed = False
+
+        seed = state.get("random_seed")
+        try:
+            random_seed = int(seed)
+        except Exception:
+            random_seed = random.randint(100_000, 999_999_999)
+            state["random_seed"] = random_seed
+            changed = True
+
+        hole_values = self._normalize_hole_values(state.get("hole_values", []), random_seed)
+        if list(state.get("hole_values", [])) != hole_values:
+            state["hole_values"] = hole_values
+            changed = True
+
+        team_keys = [str(key) for key in state.get("team_keys", []) if str(key).strip()]
+        points = state.get("team_points", {})
+        normalized_points = {key: int(points.get(key, 0)) for key in team_keys}
+        if points != normalized_points:
+            state["team_points"] = normalized_points
+            changed = True
+
+        rounds = state.get("rounds", [])
+        if not isinstance(rounds, list):
+            state["rounds"] = []
+            changed = True
+
+        return state, changed
+
+    def _normalize_hole_values(self, values: Any, seed: int) -> list[int]:
+        parsed: list[int] = []
+        if isinstance(values, list):
+            for value in values:
+                try:
+                    parsed.append(int(value))
+                except Exception:
+                    continue
+
+        if len(parsed) == self.HOLE_COUNT:
+            return parsed
+
+        generated = self._build_hole_values(seed)
+        merged = list(parsed[: self.HOLE_COUNT])
+        for candidate in generated:
+            if len(merged) >= self.HOLE_COUNT:
+                break
+            if candidate not in merged:
+                merged.append(candidate)
+        while len(merged) < self.HOLE_COUNT:
+            merged.append(generated[len(merged) % len(generated)])
+        return merged[: self.HOLE_COUNT]
 
     def _resolve_champion_key(self, state: dict[str, Any], team_points: dict[str, int]) -> str | None:
         best_key: str | None = None

@@ -29,6 +29,8 @@ class GrandPrixRenderer:
         self._draw_board(surface, snapshot)
         self._draw_side_panel(surface, snapshot)
         self._draw_active_balls(surface, snapshot)
+        if bool(snapshot.get("show_intro_overlay", False)):
+            self._draw_intro_overlay(surface, snapshot)
         if bool(snapshot.get("show_final_overlay", False)):
             self._draw_final_overlay(surface, snapshot)
 
@@ -56,11 +58,12 @@ class GrandPrixRenderer:
         surface.blit(subtitle, (board_rect.x + 24, board_rect.y + 58))
 
         peg_layer = pygame.Surface((board_rect.width, board_rect.height), pygame.SRCALPHA)
+        peg_radius = max(6, int(snapshot.get("peg_radius", 7)))
         for x, y in snapshot.get("peg_positions", []):
             local_x = int(x) - board_rect.x
             local_y = int(y) - board_rect.y
-            pygame.draw.circle(peg_layer, (14, 18, 28, 255), (local_x + 2, local_y + 3), 7)
-            pygame.draw.circle(peg_layer, (196, 204, 220, 255), (local_x, local_y), 7)
+            pygame.draw.circle(peg_layer, (14, 18, 28, 255), (local_x + 2, local_y + 3), peg_radius)
+            pygame.draw.circle(peg_layer, (196, 204, 220, 255), (local_x, local_y), peg_radius)
         surface.blit(peg_layer, board_rect.topleft)
 
         for item in snapshot.get("hole_values", []):
@@ -71,24 +74,41 @@ class GrandPrixRenderer:
                 int(rect.get("width", 0)),
                 int(rect.get("height", 0)),
             )
+            if slot_rect.width < 10 or slot_rect.height < 10:
+                continue
+
             points = int(item.get("points", 0))
-            fill = (41, 57, 82)
+            fill = (40, 54, 78)
             if points < 0:
-                fill = (101, 42, 48)
+                fill = (118, 46, 54)
             elif points == 0:
-                fill = (78, 84, 98)
+                fill = (86, 92, 108)
             elif points >= 7:
-                fill = (31, 106, 75)
+                fill = (28, 114, 78)
             elif points >= 3:
-                fill = (45, 86, 138)
-            pygame.draw.rect(surface, fill, slot_rect, border_radius=18)
-            pygame.draw.rect(surface, (231, 236, 246), slot_rect, width=2, border_radius=18)
+                fill = (42, 90, 145)
+
+            pit_poly = [
+                (slot_rect.left, slot_rect.top),
+                (slot_rect.right, slot_rect.top),
+                (slot_rect.right - 8, slot_rect.bottom),
+                (slot_rect.left + 8, slot_rect.bottom),
+            ]
+            pygame.draw.polygon(surface, fill, pit_poly)
+            pygame.draw.polygon(surface, (232, 238, 248), pit_poly, width=2)
+            pygame.draw.line(
+                surface,
+                (245, 248, 252),
+                (slot_rect.left, slot_rect.top),
+                (slot_rect.right, slot_rect.top),
+                3,
+            )
+
             label = f"{points:+d}"
-            text = self.section_font.render(label, True, (246, 248, 252))
-            text_rect = text.get_rect(center=(slot_rect.centerx, slot_rect.centery - 8))
+            font = self.info_font if slot_rect.width < 76 else self.section_font
+            text = font.render(label, True, (246, 248, 252))
+            text_rect = text.get_rect(center=(slot_rect.centerx, slot_rect.centery - 2))
             surface.blit(text, text_rect)
-            hole_text = self.micro_font.render(f"H{int(item.get('slot_index', 0)) + 1}", True, (205, 214, 232))
-            surface.blit(hole_text, hole_text.get_rect(center=(slot_rect.centerx, slot_rect.bottom - 18)))
 
         round_label = self.section_font.render(
             f"ROUND {int(snapshot.get('current_round', 0))} / {int(snapshot.get('round_count', 0))}",
@@ -96,8 +116,6 @@ class GrandPrixRenderer:
             (248, 249, 252),
         )
         surface.blit(round_label, (board_rect.x + 24, board_rect.bottom - 58))
-        status_label = self.info_font.render(str(snapshot.get("round_status_text", "Round live")), True, (164, 206, 255))
-        surface.blit(status_label, (board_rect.x + 360, board_rect.bottom - 52))
 
     def _draw_side_panel(self, surface: pygame.Surface, snapshot: dict[str, Any]) -> None:
         panel = snapshot.get("side_panel_rect", {})
@@ -172,11 +190,38 @@ class GrandPrixRenderer:
         panel = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
         panel.fill((8, 12, 20, 132))
         surface.blit(panel, (0, 0))
+
+        box_w = 980
+        box_h = 300
+        box_rect = pygame.Rect(
+            (surface.get_width() - box_w) // 2,
+            (surface.get_height() - box_h) // 2 - 20,
+            box_w,
+            box_h,
+        )
+        glow = pygame.Surface((box_rect.width + 60, box_rect.height + 60), pygame.SRCALPHA)
+        pygame.draw.rect(glow, (255, 214, 132, 44), glow.get_rect(), border_radius=36)
+        surface.blit(glow, (box_rect.x - 30, box_rect.y - 30))
+        pygame.draw.rect(surface, (15, 24, 40), box_rect, border_radius=26)
+        pygame.draw.rect(surface, (255, 223, 149), box_rect, width=3, border_radius=26)
+
         champion = str(snapshot.get("champion_name", "Champion"))
         title = self.overlay_font.render("CHAMPION", True, (255, 244, 194))
         sub = self.overlay_sub_font.render(champion, True, (248, 249, 252))
-        surface.blit(title, title.get_rect(center=(surface.get_width() // 2, 420)))
-        surface.blit(sub, sub.get_rect(center=(surface.get_width() // 2, 500)))
+        surface.blit(title, title.get_rect(center=(box_rect.centerx, box_rect.y + 108)))
+        surface.blit(sub, sub.get_rect(center=(box_rect.centerx, box_rect.y + 194)))
+
+    def _draw_intro_overlay(self, surface: pygame.Surface, snapshot: dict[str, Any]) -> None:
+        panel = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        panel.fill((6, 10, 20, 128))
+        surface.blit(panel, (0, 0))
+
+        title = self.overlay_sub_font.render("GRAND PRIX START", True, (255, 244, 194))
+        surface.blit(title, title.get_rect(center=(surface.get_width() // 2, 410)))
+
+        countdown = int(snapshot.get("intro_countdown", 1))
+        countdown_text = self.overlay_font.render(str(max(1, countdown)), True, (248, 249, 252))
+        surface.blit(countdown_text, countdown_text.get_rect(center=(surface.get_width() // 2, 510)))
 
     def _draw_glass_panel(
         self,

@@ -1454,17 +1454,19 @@ class MarbleRaceLauncherApp(ctk.CTk):
                 if match.get("score_a") is not None and match.get("score_b") is not None:
                     decided_by = str(match.get("decided_by") or "normal_time")
                     if decided_by == "penalties":
+                        reg_a = int(match.get("regular_time_score_a", match.get("score_a", 0)))
+                        reg_b = int(match.get("regular_time_score_b", match.get("score_b", 0)))
                         aet_a = int(match.get("score_a", 0))
                         aet_b = int(match.get("score_b", 0))
                         pen_a = int(match.get("penalty_score_a", 0))
                         pen_b = int(match.get("penalty_score_b", 0))
-                        score_text = f"{aet_a}-{aet_b}(AET) P{pen_a}-{pen_b}"
+                        score_text = f"FT {reg_a}-{reg_b} | AET {aet_a}-{aet_b} | P {pen_a}-{pen_b}"
                     elif decided_by == "extra_time":
                         reg_a = int(match.get("regular_time_score_a", 0))
                         reg_b = int(match.get("regular_time_score_b", 0))
                         et_a = int(match.get("extra_time_score_a", 0))
                         et_b = int(match.get("extra_time_score_b", 0))
-                        score_text = f"{reg_a}-{reg_b} ET{et_a}-{et_b}"
+                        score_text = f"FT {reg_a}-{reg_b} | AET {reg_a + et_a}-{reg_b + et_b}"
                     else:
                         score_text = f"{int(match.get('score_a', 0))}-{int(match.get('score_b', 0))}"
                 else:
@@ -1494,7 +1496,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
         clean = (text or "").strip()
         if len(clean) <= limit:
             return clean
-        return clean[: max(1, limit - 1)] + "…"
+        return clean[: max(1, limit - 3)] + "..."
 
     # --------------------------------------------------------
     # TAB 4: GRAND PRIX

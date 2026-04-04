@@ -73,3 +73,12 @@ Bu dosya, her mesaj sonrasinda yapilan guncellemeleri tarih-saat ile kaydeder.
 - Tum guncel degisiklikler GitHub'a pushlandi (master -> origin/master, commit: 792ff93).
 - Push kapsaminda: data/all_pop_culture.json, data/logosuz_pop_culture.json, data/logos/* (328 dosya) ve .gitignore takibe alma duzeni yer aldi.
 - data/sounds dosyalari repo tarafinda zaten takipte oldugu dogrulandi.
+
+## 2026-04-05 02:42:33
+- .venv sorunu cozuldu: Blender Python bagli bozuk ortam yerine Python 3.12 tabanli temiz .venv ile launcher acilisi stabil hale getirildi.
+- Grand Prix modu olgunlastirildi: 4/8 takim, 5/10/15/20/25/30 raunt, turnuva basi sabit delik puanlari, 12 cukur yapisi, yeni arena yerlesimi.
+- Grand Prix render ve geometri revize edildi: intro countdown, arena daraltma, yan peg hizasi, cukur boyu/konumu, finalde sampiyon kutu overlay.
+- Grand Prix fizigi normal maca yaklastirildi: dusus hizi yavaslatildi, kenar sikisma durumlari icin anti-stuck nudge akisi eklendi.
+- Turnuva ET/PEN hatalari cozuldu: penalty override dusmesi giderildi, winner belirleme ve scoreline kaydi tutarli hale getirildi.
+- Landscape tournament yayini yeniden tasarlandi: merkez panel kaldirildi, dual match 50/50 + ince divider + ust bar (Turnuva adi | Round | Progress) duzeni uygulandi.
+- Landscape yayininda canli mac skor spoiler'i kapatildi, okunabilirlik ve profesyonel gorunum iyilestirildi.
