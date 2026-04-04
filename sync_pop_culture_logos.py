@@ -106,6 +106,72 @@ TEAM_SOURCE_MAP: dict[str, LogoSource] = {
     "Dota 2": LogoSource(wikipedia_title="Dota 2"),
     "Minecraft": LogoSource(wikipedia_title="Minecraft"),
     "GTA V": LogoSource(wikipedia_title="Grand Theft Auto V"),
+    # Music bands
+    "Metallica": LogoSource(wikipedia_title="Metallica"),
+    "Linkin Park": LogoSource(wikipedia_title="Linkin Park"),
+    "Nirvana": LogoSource(wikipedia_title="Nirvana (band)"),
+    "Queen": LogoSource(wikipedia_title="Queen (band)"),
+    "Coldplay": LogoSource(wikipedia_title="Coldplay"),
+    "BTS": LogoSource(wikipedia_title="BTS"),
+    "Imagine Dragons": LogoSource(wikipedia_title="Imagine Dragons"),
+    "Pink Floyd": LogoSource(wikipedia_title="Pink Floyd"),
+    # Movies
+    "The Godfather": LogoSource(wikipedia_title="The Godfather"),
+    "Titanic": LogoSource(wikipedia_title="Titanic (1997 film)"),
+    "Inception": LogoSource(wikipedia_title="Inception"),
+    "Interstellar": LogoSource(wikipedia_title="Interstellar (film)"),
+    "The Dark Knight": LogoSource(wikipedia_title="The Dark Knight"),
+    "Avatar": LogoSource(wikipedia_title="Avatar (2009 film)"),
+    "The Matrix": LogoSource(wikipedia_title="The Matrix"),
+    "Gladiator": LogoSource(wikipedia_title="Gladiator (2000 film)"),
+    # Fashion brands
+    "Nike": LogoSource(wikipedia_title="Nike, Inc.", direct_url="https://logo.clearbit.com/nike.com"),
+    "Adidas": LogoSource(wikipedia_title="Adidas", direct_url="https://logo.clearbit.com/adidas.com"),
+    "Puma": LogoSource(wikipedia_title="Puma (brand)", direct_url="https://logo.clearbit.com/puma.com"),
+    "Zara": LogoSource(wikipedia_title="Zara (retailer)", direct_url="https://logo.clearbit.com/zara.com"),
+    "HM": LogoSource(wikipedia_title="H&M", direct_url="https://logo.clearbit.com/hm.com"),
+    "Gucci": LogoSource(wikipedia_title="Gucci", direct_url="https://logo.clearbit.com/gucci.com"),
+    "Louis Vuitton": LogoSource(
+        wikipedia_title="Louis Vuitton",
+        direct_url="https://logo.clearbit.com/louisvuitton.com",
+    ),
+    "Prada": LogoSource(wikipedia_title="Prada", direct_url="https://logo.clearbit.com/prada.com"),
+    # Coffee brands
+    "Starbucks": LogoSource(wikipedia_title="Starbucks", direct_url="https://logo.clearbit.com/starbucks.com"),
+    "Nespresso": LogoSource(wikipedia_title="Nespresso", direct_url="https://logo.clearbit.com/nespresso.com"),
+    "Lavazza": LogoSource(wikipedia_title="Lavazza", direct_url="https://logo.clearbit.com/lavazza.com"),
+    "Illy": LogoSource(wikipedia_title="Illy", direct_url="https://logo.clearbit.com/illy.com"),
+    "Costa Coffee": LogoSource(
+        wikipedia_title="Costa Coffee",
+        direct_url="https://logo.clearbit.com/costa.co.uk",
+    ),
+    "Dunkin": LogoSource(
+        wikipedia_title="Dunkin'",
+        direct_url="https://logo.clearbit.com/dunkindonuts.com",
+    ),
+    "Tim Hortons": LogoSource(
+        wikipedia_title="Tim Hortons",
+        direct_url="https://logo.clearbit.com/timhortons.com",
+    ),
+    "Peets Coffee": LogoSource(
+        wikipedia_title="Peet's Coffee",
+        direct_url="https://logo.clearbit.com/peets.com",
+    ),
+    # Car brands
+    "Ferrari": LogoSource(wikipedia_title="Ferrari", direct_url="https://logo.clearbit.com/ferrari.com"),
+    "Lamborghini": LogoSource(
+        wikipedia_title="Lamborghini",
+        direct_url="https://logo.clearbit.com/lamborghini.com",
+    ),
+    "Porsche": LogoSource(wikipedia_title="Porsche", direct_url="https://logo.clearbit.com/porsche.com"),
+    "BMW": LogoSource(wikipedia_title="BMW", direct_url="https://logo.clearbit.com/bmw.com"),
+    "Mercedes Benz": LogoSource(
+        wikipedia_title="Mercedes-Benz",
+        direct_url="https://logo.clearbit.com/mercedes-benz.com",
+    ),
+    "Audi": LogoSource(wikipedia_title="Audi", direct_url="https://logo.clearbit.com/audi.com"),
+    "Toyota": LogoSource(wikipedia_title="Toyota", direct_url="https://logo.clearbit.com/toyota.com"),
+    "Tesla": LogoSource(wikipedia_title="Tesla, Inc.", direct_url="https://logo.clearbit.com/tesla.com"),
 }
 
 

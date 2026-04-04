@@ -42,8 +42,36 @@ def _parse_result_from_line(line: str) -> dict | None:
     return payload if isinstance(payload, dict) else None
 
 
-def _run_single_match(script_path: Path) -> tuple[dict | None, Path | None]:
-    cmd = [sys.executable, "-u", str(script_path), "--no-messagebox"]
+def _as_int_or_none(value: Any) -> int | None:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def _run_single_match(
+    script_path: Path,
+    *,
+    tournament_match_id: str,
+    tournament_progress: str,
+) -> tuple[dict | None, Path | None]:
+    cmd = [
+        sys.executable,
+        "-u",
+        str(script_path),
+        "--no-messagebox",
+        "--headless",
+        "--fps-override",
+        "30",
+        "--progress-every",
+        "90",
+        "--tournament-match-id",
+        tournament_match_id,
+        "--tournament-progress",
+        tournament_progress,
+    ]
     process = subprocess.Popen(
         cmd,
         cwd=str(script_path.parent),
@@ -146,47 +174,106 @@ def _ffmpeg_escape_text(value: str) -> str:
     text = text.replace(":", r"\:")
     text = text.replace("'", r"\'")
     text = text.replace("%", r"\%")
+    text = text.replace(",", r"\,")
+    text = text.replace(";", r"\;")
+    text = text.replace("[", r"\[")
+    text = text.replace("]", r"\]")
+    text = text.replace("|", r"\|")
     return text
+
+
+def _broadcast_safe_text(value: Any) -> str:
+    text = str(value or "")
+    text = text.replace("\r", " ").replace("\n", " ")
+    # drawtext filterinde sorun cikarabilen karakterleri sadeleştir.
+    text = text.replace("'", "")
+    text = text.replace("|", " / ")
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
 
 
 def _build_center_lines(
     left_record: dict[str, Any],
     right_record: dict[str, Any] | None,
+    previous_record: dict[str, Any] | None,
+    next_match: dict[str, Any] | None,
+    bracket_progress_line: str,
     completed_matches: int,
     total_matches: int,
 ) -> list[str]:
-    header_round = str(left_record.get("round_name") or "Round")
-    line0 = f"Tournament Live | {header_round}"
-
-    left_line = (
-        f"L: {left_record.get('team_a_name', 'A')} "
-        f"{left_record.get('score_a', 0)}-{left_record.get('score_b', 0)} "
-        f"{left_record.get('team_b_name', 'B')}"
-    )
-    left_decision = str(left_record.get("decided_by") or "normal_time")
-    if left_decision == "extra_time":
-        left_line += " (ET)"
-    elif left_decision == "penalties":
-        left_line += " (PEN)"
-    if right_record is None:
-        right_line = "R: Waiting for next match"
-    else:
-        right_line = (
-            f"R: {right_record.get('team_a_name', 'A')} "
-            f"{right_record.get('score_a', 0)}-{right_record.get('score_b', 0)} "
-            f"{right_record.get('team_b_name', 'B')}"
+    def _fmt_result_line(prefix: str, rec: dict[str, Any] | None) -> str:
+        if rec is None:
+            return f"{prefix}: -"
+        line = (
+            f"{prefix}: {_broadcast_safe_text(rec.get('team_a_name', 'A'))} "
+            f"{rec.get('score_a', 0)}-{rec.get('score_b', 0)} "
+            f"{_broadcast_safe_text(rec.get('team_b_name', 'B'))}"
         )
-        right_decision = str(right_record.get("decided_by") or "normal_time")
-        if right_decision == "extra_time":
-            right_line += " (ET)"
-        elif right_decision == "penalties":
-            right_line += " (PEN)"
-    line3 = f"Progress: {completed_matches}/{total_matches} matches"
-    line4 = f"Winners: {left_record.get('winner_name', '-')}" + (
-        f" | {right_record.get('winner_name', '-')}" if right_record else ""
-    )
-    line5 = "Bracket auto-updated"
-    return [line0, left_line, right_line, line3, line4, line5]
+        decision = str(rec.get("decided_by") or "normal_time")
+        if decision == "extra_time":
+            line += f" (ET {rec.get('extra_time_score_a', 0)}-{rec.get('extra_time_score_b', 0)})"
+        elif decision == "penalties":
+            line += f" (PEN {rec.get('penalty_score_a', 0)}-{rec.get('penalty_score_b', 0)})"
+        return line
+
+    header_round = _broadcast_safe_text(left_record.get("round_name") or "Round")
+    line0 = f"Tournament Live | {header_round}"
+    line1 = _fmt_result_line("PREV", previous_record)
+    line2 = _fmt_result_line("NOW L", left_record)
+    line3 = _fmt_result_line("NOW R", right_record) if right_record else "NOW R: Waiting"
+    if next_match is None:
+        line4 = "NEXT: Tournament completed"
+    else:
+        line4 = (
+            f"NEXT: {_broadcast_safe_text(next_match.get('team_a_name', 'TBD'))} vs "
+            f"{_broadcast_safe_text(next_match.get('team_b_name', 'TBD'))} "
+            f"({_broadcast_safe_text(next_match.get('round_name', 'Round'))})"
+        )
+    line5 = bracket_progress_line
+    line6 = f"Progress: {completed_matches}/{total_matches} matches"
+    return [line0, line1, line2, line3, line4, line5, line6]
+
+
+def _short_round_name(round_name: str) -> str:
+    clean = str(round_name or "").strip()
+    if not clean:
+        return "R?"
+    lowered = clean.lower()
+    if lowered == "play-in":
+        return "PI"
+    if lowered == "quarter finals":
+        return "QF"
+    if lowered == "semi finals":
+        return "SF"
+    if lowered == "final":
+        return "F"
+    m = re.match(r"round of\s+(\d+)", lowered)
+    if m:
+        return f"R{m.group(1)}"
+    return clean[:4].upper()
+
+
+def _build_bracket_progress_line(
+    schedule: list[dict[str, Any]],
+    completed_count: int,
+) -> str:
+    total_by_round: dict[str, int] = {}
+    done_by_round: dict[str, int] = {}
+    ordered_rounds: list[str] = []
+    for idx, row in enumerate(schedule):
+        rn = str(row.get("round_name") or "Round")
+        if rn not in total_by_round:
+            ordered_rounds.append(rn)
+            total_by_round[rn] = 0
+            done_by_round[rn] = 0
+        total_by_round[rn] += 1
+        if idx < completed_count:
+            done_by_round[rn] += 1
+    parts = [f"{_short_round_name(rn)} {done_by_round[rn]}/{total_by_round[rn]}" for rn in ordered_rounds]
+    text = "Bracket: " + " | ".join(parts)
+    if len(text) > 94:
+        text = text[:91] + "..."
+    return text
 
 
 def _make_landscape_segment(
@@ -205,28 +292,31 @@ def _make_landscape_segment(
         right_input = ["-f", "lavfi", "-i", "color=c=#101a2b:s=1080x1920:r=60"]
         right_has_audio = False
 
-    draw_chain: list[str] = [
+    panel_draw_chain: list[str] = [
         "drawbox=x=640:y=30:w=640:h=1020:color=#0f1e36@0.88:t=fill",
         "drawbox=x=640:y=30:w=640:h=1020:color=#2d4f8f@0.95:t=3",
     ]
+    text_draw_chain: list[str] = []
     y = 96
     font_path = "C\\:/Windows/Fonts/arial.ttf"
     for idx, line in enumerate(lines):
         size = 40 if idx == 0 else 30
         escaped = _ffmpeg_escape_text(line)
-        draw_chain.append(
+        text_draw_chain.append(
             f"drawtext=fontfile='{font_path}':fontcolor=white:fontsize={size}:x=670:y={y}:text='{escaped}'"
         )
         y += 140 if idx == 0 else 120
 
-    base_video_filter = (
+    base_video_prefix = (
         "[0:v]scale=-2:1080,setsar=1[leftv];"
         "[1:v]scale=-2:1080,setsar=1[rightv];"
         "color=c=#07111f:s=1920x1080:r=60[base];"
         "[base][leftv]overlay=x=20:y=(H-h)/2[tmp1];"
         "[tmp1][rightv]overlay=x=W-w-20:y=(H-h)/2[tmp2];"
-        f"[tmp2]{','.join(draw_chain)}[v]"
     )
+    with_text_chain = panel_draw_chain + text_draw_chain
+    without_text_chain = panel_draw_chain
+    base_video_filter = base_video_prefix + f"[tmp2]{','.join(with_text_chain)}[v]"
 
     if right_has_audio:
         filter_complex = (
@@ -251,13 +341,38 @@ def _make_landscape_segment(
 
     run = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if run.returncode != 0 or not output_path.exists():
-        raise RuntimeError(f"landscape segment render failed: {run.stderr[-700:]}")
+        _safe_print("LANDSCAPE_TEXT_RENDER_WARN: text overlay failed, retrying without center text.")
+        fallback_base_video_filter = base_video_prefix + f"[tmp2]{','.join(without_text_chain)}[v]"
+        if right_has_audio:
+            fallback_filter_complex = (
+                fallback_base_video_filter
+                + ";"
+                + "[0:a]volume=0.65[a0];[1:a]volume=0.65[a1];[a0][a1]amix=inputs=2:duration=shortest[a]"
+            )
+            fallback_cmd = ["ffmpeg", "-y", *left_input, *right_input, "-filter_complex", fallback_filter_complex]
+            fallback_cmd.extend(["-map", "[v]", "-map", "[a]"])
+        else:
+            fallback_cmd = ["ffmpeg", "-y", *left_input, *right_input, "-filter_complex", fallback_base_video_filter]
+            fallback_cmd.extend(["-map", "[v]", "-map", "0:a?"])
+        fallback_cmd.extend(
+            ["-shortest", "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-c:a", "aac", "-b:a", "160k", str(output_path)]
+        )
+        fallback_run = subprocess.run(
+            fallback_cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        if fallback_run.returncode != 0 or not output_path.exists():
+            raise RuntimeError(f"landscape segment render failed: {fallback_run.stderr[-700:]}")
     return output_path
 
 
 def _build_landscape_broadcast_video(
     videos: list[Path],
     records: list[dict[str, Any]],
+    schedule: list[dict[str, Any]],
     output_path: Path,
     total_matches: int,
 ) -> Path:
@@ -274,9 +389,15 @@ def _build_landscape_broadcast_video(
         left_record = records[i]
         right_record = records[i + 1] if i + 1 < len(records) else None
         completed = min(i + (2 if right_video else 1), len(records))
+        previous_record = records[i - 1] if i - 1 >= 0 else None
+        next_match = schedule[completed] if completed < len(schedule) else None
+        bracket_progress_line = _build_bracket_progress_line(schedule=schedule, completed_count=completed)
         lines = _build_center_lines(
             left_record=left_record,
             right_record=right_record,
+            previous_record=previous_record,
+            next_match=next_match,
+            bracket_progress_line=bracket_progress_line,
             completed_matches=completed,
             total_matches=total_matches,
         )
@@ -338,6 +459,7 @@ def run_full_tournament(
     main_script = Path(__file__).resolve().parent / "main.py"
     produced_videos: list[Path] = []
     match_records: list[dict[str, Any]] = []
+    match_schedule: list[dict[str, Any]] = []
     match_counter = 0
 
     while True:
@@ -352,6 +474,14 @@ def run_full_tournament(
         team_b_name = runner_tm.get_team_name(team_b_key)
         round_name = str(nxt.get("round_name") or "Round")
         print(f"[{match_counter}] {round_name} | {team_a_name} vs {team_b_name} ({match_id})")
+        match_schedule.append(
+            {
+                "match_id": match_id,
+                "round_name": round_name,
+                "team_a_name": team_a_name,
+                "team_b_name": team_b_name,
+            }
+        )
 
         if dry_run:
             score_a = random.randint(0, 4)
@@ -371,7 +501,12 @@ def run_full_tournament(
         repo.save_selected_match(selection)
         print(f"SELECTED_MATCH: {selection.title}")
 
-        result_payload, output_path = _run_single_match(main_script)
+        total_matches = len(state.get("matches", []))
+        result_payload, output_path = _run_single_match(
+            main_script,
+            tournament_match_id=match_id,
+            tournament_progress=f"{match_counter}/{total_matches}",
+        )
         if output_path is not None and output_path.exists():
             produced_videos.append(output_path)
 
@@ -381,29 +516,68 @@ def run_full_tournament(
         r_team_a = str(result_payload.get("team_a_key") or "")
         r_team_b = str(result_payload.get("team_b_key") or "")
         try:
-            raw_a = int(result_payload.get("score_a"))
-            raw_b = int(result_payload.get("score_b"))
+            raw_final_a = int(result_payload.get("score_a"))
+            raw_final_b = int(result_payload.get("score_b"))
         except Exception as exc:
             raise RuntimeError(f"Invalid score payload: {result_payload}") from exc
 
+        raw_regular_a = _as_int_or_none(result_payload.get("regular_time_score_a"))
+        raw_regular_b = _as_int_or_none(result_payload.get("regular_time_score_b"))
+        if raw_regular_a is None:
+            raw_regular_a = raw_final_a
+        if raw_regular_b is None:
+            raw_regular_b = raw_final_b
+        raw_et_a = _as_int_or_none(result_payload.get("extra_time_score_a"))
+        raw_et_b = _as_int_or_none(result_payload.get("extra_time_score_b"))
+        raw_pen_a = _as_int_or_none(result_payload.get("penalty_score_a"))
+        raw_pen_b = _as_int_or_none(result_payload.get("penalty_score_b"))
+        raw_decided_by = str(result_payload.get("decided_by") or "normal_time")
+
+        swap_payload = False
         if r_team_a == team_a_key and r_team_b == team_b_key:
-            score_a, score_b = raw_a, raw_b
+            swap_payload = False
         elif r_team_a == team_b_key and r_team_b == team_a_key:
-            score_a, score_b = raw_b, raw_a
+            swap_payload = True
         else:
             raise RuntimeError("Rendered teams do not match tournament next-match teams.")
+
+        if swap_payload:
+            final_a, final_b = raw_final_b, raw_final_a
+            regular_a, regular_b = raw_regular_b, raw_regular_a
+            et_a, et_b = raw_et_b, raw_et_a
+            pen_a, pen_b = raw_pen_b, raw_pen_a
+        else:
+            final_a, final_b = raw_final_a, raw_final_b
+            regular_a, regular_b = raw_regular_a, raw_regular_b
+            et_a, et_b = raw_et_a, raw_et_b
+            pen_a, pen_b = raw_pen_a, raw_pen_b
+
+        resolution_override = {
+            "score_a": int(final_a),
+            "score_b": int(final_b),
+            "decided_by": raw_decided_by,
+            "regular_time_score_a": int(regular_a),
+            "regular_time_score_b": int(regular_b),
+            "extra_time_score_a": et_a,
+            "extra_time_score_b": et_b,
+            "penalty_score_a": pen_a,
+            "penalty_score_b": pen_b,
+        }
 
         state = runner_tm.record_match_result_with_knockout_rules(
             state=state,
             match_id=match_id,
-            score_a=score_a,
-            score_b=score_b,
+            score_a=int(regular_a),
+            score_b=int(regular_b),
+            resolution_override=resolution_override,
         )
         updated_match = next((m for m in state.get("matches", []) if str(m.get("id")) == match_id), None)
-        final_a = int((updated_match or {}).get("score_a") or score_a)
-        final_b = int((updated_match or {}).get("score_b") or score_b)
+        final_a = int((updated_match or {}).get("score_a") or final_a)
+        final_b = int((updated_match or {}).get("score_b") or final_b)
+        regular_a = int((updated_match or {}).get("regular_time_score_a") or regular_a)
+        regular_b = int((updated_match or {}).get("regular_time_score_b") or regular_b)
         decided_by = str((updated_match or {}).get("decided_by") or "normal_time")
-        print(f"RECORDED_RESULT: {score_a}-{score_b} -> {final_a}-{final_b} ({decided_by})")
+        print(f"RECORDED_RESULT: {regular_a}-{regular_b} -> {final_a}-{final_b} ({decided_by})")
         winner_name = team_a_name if final_a > final_b else team_b_name
         match_records.append(
             {
@@ -415,6 +589,12 @@ def run_full_tournament(
                 "score_b": final_b,
                 "winner_name": winner_name,
                 "decided_by": decided_by,
+                "regular_time_score_a": regular_a,
+                "regular_time_score_b": regular_b,
+                "extra_time_score_a": (updated_match or {}).get("extra_time_score_a"),
+                "extra_time_score_b": (updated_match or {}).get("extra_time_score_b"),
+                "penalty_score_a": (updated_match or {}).get("penalty_score_a"),
+                "penalty_score_b": (updated_match or {}).get("penalty_score_b"),
             }
         )
 
@@ -444,6 +624,7 @@ def run_full_tournament(
         landscape_final = _build_landscape_broadcast_video(
             videos=produced_videos,
             records=match_records,
+            schedule=match_schedule,
             output_path=landscape_target,
             total_matches=len(state.get("matches", [])),
         )
@@ -455,6 +636,7 @@ def run_full_tournament(
         landscape_final = _build_landscape_broadcast_video(
             videos=produced_videos,
             records=match_records,
+            schedule=match_schedule,
             output_path=landscape_target,
             total_matches=len(state.get("matches", [])),
         )
