@@ -1377,8 +1377,49 @@ class MarbleRaceLauncherApp(ctk.CTk):
         col_count = max(1, len(rounds))
         col_w = max(140, int((width - margin_x * 2) / col_count))
 
+        # --- 1. Geçiş: Pozisyon hesapla ---
+        # Önce parent→children haritasını oluştur
+        all_matches_by_id: dict[str, dict] = {str(m.get("id")): m for m in state.get("matches", [])}
+        parent_to_child_ids: dict[str, list[str]] = {}
+        for m in state.get("matches", []):
+            pid = str(m.get("winner_to_match_id") or "")
+            cid = str(m.get("id"))
+            if pid:
+                parent_to_child_ids.setdefault(pid, []).append(cid)
+
         pos: dict[str, tuple[float, float, float, float]] = {}
 
+        # Round 0: eşit spacing
+        first_col_idx, (_first_ridx, first_matches) = next(
+            ((ci, rv) for ci, rv in enumerate(rounds)), (0, (0, []))
+        )
+        if first_matches:
+            spacing0 = (height - margin_y * 2) / (len(first_matches) + 1)
+            for midx, match in enumerate(first_matches):
+                col_idx = first_col_idx
+                x1 = margin_x + col_idx * col_w + 6
+                x2 = x1 + col_w - 18
+                cy = margin_y + (midx + 1) * spacing0
+                pos[str(match.get("id"))] = (x1, x2, cy, cy)
+
+        # Sonraki turlar: child'ların ortası
+        for col_idx, (_round_idx, matches) in enumerate(rounds[1:], start=1):
+            for match in matches:
+                mid = str(match.get("id"))
+                x1 = margin_x + col_idx * col_w + 6
+                x2 = x1 + col_w - 18
+                children = parent_to_child_ids.get(mid, [])
+                child_cys = [pos[cid][2] for cid in children if cid in pos]
+                if child_cys:
+                    cy = sum(child_cys) / len(child_cys)
+                else:
+                    # Fallback: eşit spacing
+                    spacing_fb = (height - margin_y * 2) / (len(matches) + 1)
+                    order = int(match.get("order", 0))
+                    cy = margin_y + (order + 1) * spacing_fb
+                pos[mid] = (x1, x2, cy, cy)
+
+        # --- 2. Geçiş: Maç kutularını çiz ---
         for col_idx, (_round_idx, matches) in enumerate(rounds):
             if not matches:
                 continue
@@ -1386,11 +1427,11 @@ class MarbleRaceLauncherApp(ctk.CTk):
             tx = margin_x + col_idx * col_w + col_w / 2
             canvas.create_text(tx, 18, text=title, fill="#AFC1E8", font=("Segoe UI", 10, "bold"))
 
-            spacing = (height - margin_y * 2) / (len(matches) + 1)
-            for midx, match in enumerate(matches):
-                x1 = margin_x + col_idx * col_w + 6
-                x2 = x1 + col_w - 18
-                cy = margin_y + (midx + 1) * spacing
+            for match in matches:
+                mid = str(match.get("id"))
+                if mid not in pos:
+                    continue
+                x1, x2, cy, _ = pos[mid]
                 y1 = cy - 24
                 y2 = cy + 24
 
@@ -1408,45 +1449,43 @@ class MarbleRaceLauncherApp(ctk.CTk):
 
                 team_a = TOURNAMENT_MANAGER.get_team_name(match.get("team_a_key"))
                 team_b = TOURNAMENT_MANAGER.get_team_name(match.get("team_b_key"))
-                wins_needed = int(match.get("wins_needed", 1))
-                if wins_needed > 1:
-                    score_text = f"{int(match.get('wins_a', 0))}-{int(match.get('wins_b', 0))}"
-                else:
-                    if match.get("score_a") is not None and match.get("score_b") is not None:
-                        decided_by = str(match.get("decided_by") or "normal_time")
-                        if decided_by == "penalties":
-                            reg_a = int(match.get("regular_time_score_a", match.get("score_a", 0)))
-                            reg_b = int(match.get("regular_time_score_b", match.get("score_b", 0)))
-                            pen_a = int(match.get("penalty_score_a", 0))
-                            pen_b = int(match.get("penalty_score_b", 0))
-                            score_text = f"{reg_a}-{reg_b} P{pen_a}-{pen_b}"
-                        elif decided_by == "extra_time":
-                            reg_a = int(match.get("regular_time_score_a", 0))
-                            reg_b = int(match.get("regular_time_score_b", 0))
-                            et_a = int(match.get("extra_time_score_a", 0))
-                            et_b = int(match.get("extra_time_score_b", 0))
-                            score_text = f"{reg_a}-{reg_b} ET{et_a}-{et_b}"
-                        else:
-                            score_text = f"{int(match.get('score_a', 0))}-{int(match.get('score_b', 0))}"
+                if match.get("score_a") is not None and match.get("score_b") is not None:
+                    decided_by = str(match.get("decided_by") or "normal_time")
+                    if decided_by == "penalties":
+                        aet_a = int(match.get("score_a", 0))
+                        aet_b = int(match.get("score_b", 0))
+                        pen_a = int(match.get("penalty_score_a", 0))
+                        pen_b = int(match.get("penalty_score_b", 0))
+                        score_text = f"{aet_a}-{aet_b}(AET) P{pen_a}-{pen_b}"
+                    elif decided_by == "extra_time":
+                        reg_a = int(match.get("regular_time_score_a", 0))
+                        reg_b = int(match.get("regular_time_score_b", 0))
+                        et_a = int(match.get("extra_time_score_a", 0))
+                        et_b = int(match.get("extra_time_score_b", 0))
+                        score_text = f"{reg_a}-{reg_b} ET{et_a}-{et_b}"
                     else:
-                        score_text = "-:-"
+                        score_text = f"{int(match.get('score_a', 0))}-{int(match.get('score_b', 0))}"
+                else:
+                    score_text = "-:-"
 
                 canvas.create_text(x1 + 8, y1 + 13, text=self._clip_text(team_a, 18), anchor="w", fill="#EEF2FA", font=("Segoe UI", 9, "bold"))
                 canvas.create_text(x1 + 8, y2 - 13, text=self._clip_text(team_b, 18), anchor="w", fill="#D9E2F2", font=("Segoe UI", 9))
                 canvas.create_text(x2 - 8, cy, text=score_text, anchor="e", fill="#BFD2F6", font=("Consolas", 10, "bold"))
-                pos[str(match.get("id"))] = (x1, x2, cy, cy)
 
-        for match in state.get("matches", []):
-            child_id = str(match.get("id"))
-            parent_id = str(match.get("winner_to_match_id") or "")
-            if not parent_id:
+        # --- 3. Geçiş: Bağlantı çizgileri (staple şekli) ---
+        for parent_id, children in parent_to_child_ids.items():
+            if parent_id not in pos:
                 continue
-            if child_id not in pos or parent_id not in pos:
-                continue
-            cx1, cx2, cy, _ = pos[child_id]
             px1, _px2, py, _ = pos[parent_id]
+            child_cys = [pos[cid][2] for cid in children if cid in pos]
+            if not child_cys:
+                continue
+            cx2 = pos[children[0]][1]
             midx = (cx2 + px1) / 2.0
-            canvas.create_line(cx2, cy, midx, cy, midx, py, px1, py, fill="#4F6EA0", width=2)
+            for cy in child_cys:
+                canvas.create_line(cx2, cy, midx, cy, fill="#4F6EA0", width=2)
+            canvas.create_line(midx, min(child_cys), midx, max(child_cys), fill="#4F6EA0", width=2)
+            canvas.create_line(midx, py, px1, py, fill="#4F6EA0", width=2)
 
     @staticmethod
     def _clip_text(text: str, limit: int) -> str:
