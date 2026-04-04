@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -20,11 +20,17 @@ output/
 output_sim.mp4
 
 # Large/generated data
-data/logos/
 data/tournaments/
 data/all_teams.json
 data/api_football_teams.json
 data/sync_manifest.json
 data/selected_match.json
-takımlar logoları/
 
+# Must be tracked
+!data/all_pop_culture.json
+!data/logosuz_pop_culture.json
+!data/logos/
+!data/logos/**
+!data/sounds/
+!data/sounds/**
+takımlar logoları/

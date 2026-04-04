@@ -1,0 +1,1648 @@
+﻿{
+    "generated_at":  "2026-04-04T03:39:08+03:00",
+    "source":  "pop_culture_catalog.py",
+    "category_count":  12,
+    "team_count":  77,
+    "categories":  [
+                       {
+                           "id":  "superheroes",
+                           "name":  "Superkahramanlar",
+                           "display_title":  "SUPERHERO BATTLE",
+                           "theme_primary":  [
+                                                 139,
+                                                 92,
+                                                 246
+                                             ],
+                           "theme_secondary":  [
+                                                   0,
+                                                   212,
+                                                   255
+                                               ],
+                           "background_color":  [
+                                                    13,
+                                                    5,
+                                                    32
+                                                ],
+                           "contestant_count":  4
+                       },
+                       {
+                           "id":  "starwars",
+                           "name":  "Star Wars Karakterleri",
+                           "display_title":  "STAR WARS BATTLE",
+                           "theme_primary":  [
+                                                 255,
+                                                 232,
+                                                 31
+                                             ],
+                           "theme_secondary":  [
+                                                   20,
+                                                   20,
+                                                   20
+                                               ],
+                           "background_color":  [
+                                                    5,
+                                                    5,
+                                                    10
+                                                ],
+                           "contestant_count":  5
+                       },
+                       {
+                           "id":  "got",
+                           "name":  "Game of Thrones Haneleri",
+                           "display_title":  "WESTEROS BATTLE",
+                           "theme_primary":  [
+                                                 150,
+                                                 0,
+                                                 0
+                                             ],
+                           "theme_secondary":  [
+                                                   200,
+                                                   150,
+                                                   50
+                                               ],
+                           "background_color":  [
+                                                    20,
+                                                    10,
+                                                    10
+                                                ],
+                           "contestant_count":  5
+                       },
+                       {
+                           "id":  "techbrands",
+                           "name":  "Teknoloji Devleri",
+                           "display_title":  "TECH BRAND WARS",
+                           "theme_primary":  [
+                                                 0,
+                                                 150,
+                                                 255
+                                             ],
+                           "theme_secondary":  [
+                                                   200,
+                                                   200,
+                                                   200
+                                               ],
+                           "background_color":  [
+                                                    15,
+                                                    20,
+                                                    30
+                                                ],
+                           "contestant_count":  6
+                       },
+                       {
+                           "id":  "fastfood",
+                           "name":  "Fast Food Markalari",
+                           "display_title":  "FAST FOOD WARS",
+                           "theme_primary":  [
+                                                 255,
+                                                 100,
+                                                 0
+                                             ],
+                           "theme_secondary":  [
+                                                   255,
+                                                   200,
+                                                   0
+                                               ],
+                           "background_color":  [
+                                                    30,
+                                                    15,
+                                                    5
+                                                ],
+                           "contestant_count":  5
+                       },
+                       {
+                           "id":  "football_legends",
+                           "name":  "Futbol Efsaneleri",
+                           "display_title":  "FOOTBALL LEGENDS",
+                           "theme_primary":  [
+                                                 40,
+                                                 200,
+                                                 80
+                                             ],
+                           "theme_secondary":  [
+                                                   255,
+                                                   255,
+                                                   255
+                                               ],
+                           "background_color":  [
+                                                    10,
+                                                    30,
+                                                    15
+                                                ],
+                           "contestant_count":  6
+                       },
+                       {
+                           "id":  "games",
+                           "name":  "Video Oyunlari",
+                           "display_title":  "GAMING WARS",
+                           "theme_primary":  [
+                                                 138,
+                                                 43,
+                                                 226
+                                             ],
+                           "theme_secondary":  [
+                                                   0,
+                                                   255,
+                                                   255
+                                               ],
+                           "background_color":  [
+                                                    20,
+                                                    20,
+                                                    40
+                                                ],
+                           "contestant_count":  6
+                       },
+                       {
+                           "id":  "music_bands",
+                           "name":  "Muzik Gruplari",
+                           "display_title":  "BAND WARS",
+                           "theme_primary":  [
+                                                 222,
+                                                 78,
+                                                 128
+                                             ],
+                           "theme_secondary":  [
+                                                   78,
+                                                   170,
+                                                   242
+                                               ],
+                           "background_color":  [
+                                                    20,
+                                                    12,
+                                                    30
+                                                ],
+                           "contestant_count":  8
+                       },
+                       {
+                           "id":  "movies",
+                           "name":  "Filmler",
+                           "display_title":  "CINEMA WARS",
+                           "theme_primary":  [
+                                                 255,
+                                                 199,
+                                                 66
+                                             ],
+                           "theme_secondary":  [
+                                                   82,
+                                                   142,
+                                                   255
+                                               ],
+                           "background_color":  [
+                                                    14,
+                                                    14,
+                                                    20
+                                                ],
+                           "contestant_count":  8
+                       },
+                       {
+                           "id":  "fashion_brands",
+                           "name":  "Giyim Markalari",
+                           "display_title":  "FASHION BRAND WARS",
+                           "theme_primary":  [
+                                                 248,
+                                                 248,
+                                                 248
+                                             ],
+                           "theme_secondary":  [
+                                                   120,
+                                                   128,
+                                                   142
+                                               ],
+                           "background_color":  [
+                                                    24,
+                                                    24,
+                                                    28
+                                                ],
+                           "contestant_count":  8
+                       },
+                       {
+                           "id":  "coffee_brands",
+                           "name":  "Kahve Markalari",
+                           "display_title":  "COFFEE BRAND WARS",
+                           "theme_primary":  [
+                                                 130,
+                                                 78,
+                                                 44
+                                             ],
+                           "theme_secondary":  [
+                                                   226,
+                                                   178,
+                                                   118
+                                               ],
+                           "background_color":  [
+                                                    26,
+                                                    14,
+                                                    8
+                                                ],
+                           "contestant_count":  8
+                       },
+                       {
+                           "id":  "car_brands",
+                           "name":  "Araba Markalari",
+                           "display_title":  "AUTO BRAND WARS",
+                           "theme_primary":  [
+                                                 220,
+                                                 52,
+                                                 52
+                                             ],
+                           "theme_secondary":  [
+                                                   126,
+                                                   146,
+                                                   172
+                                               ],
+                           "background_color":  [
+                                                    12,
+                                                    16,
+                                                    22
+                                                ],
+                           "contestant_count":  8
+                       }
+                   ],
+    "teams":  [
+                  {
+                      "team_id":  "pc_superheroes_spider_man",
+                      "category_id":  "superheroes",
+                      "category_name":  "Superkahramanlar",
+                      "name":  "Spider-Man",
+                      "short_name":  "SPDY",
+                      "universe":  "Marvel",
+                      "league_name":  "Pop Culture / Superkahramanlar",
+                      "league_slug":  "pop_culture_superheroes",
+                      "badge_file":  "pop_culture__superheroes__spider_man.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    227,
+                                    37,
+                                    37
+                                ],
+                      "display_title":  "SUPERHERO BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_superheroes_batman",
+                      "category_id":  "superheroes",
+                      "category_name":  "Superkahramanlar",
+                      "name":  "Batman",
+                      "short_name":  "BTMN",
+                      "universe":  "DC",
+                      "league_name":  "Pop Culture / Superkahramanlar",
+                      "league_slug":  "pop_culture_superheroes",
+                      "badge_file":  "pop_culture__superheroes__batman.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    40,
+                                    40,
+                                    40
+                                ],
+                      "display_title":  "SUPERHERO BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_superheroes_iron_man",
+                      "category_id":  "superheroes",
+                      "category_name":  "Superkahramanlar",
+                      "name":  "Iron Man",
+                      "short_name":  "IRON",
+                      "universe":  "Marvel",
+                      "league_name":  "Pop Culture / Superkahramanlar",
+                      "league_slug":  "pop_culture_superheroes",
+                      "badge_file":  "pop_culture__superheroes__iron_man.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    200,
+                                    50,
+                                    30
+                                ],
+                      "display_title":  "SUPERHERO BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_superheroes_superman",
+                      "category_id":  "superheroes",
+                      "category_name":  "Superkahramanlar",
+                      "name":  "Superman",
+                      "short_name":  "SUPE",
+                      "universe":  "DC",
+                      "league_name":  "Pop Culture / Superkahramanlar",
+                      "league_slug":  "pop_culture_superheroes",
+                      "badge_file":  "pop_culture__superheroes__superman.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    30,
+                                    80,
+                                    180
+                                ],
+                      "display_title":  "SUPERHERO BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_starwars_darth_vader",
+                      "category_id":  "starwars",
+                      "category_name":  "Star Wars Karakterleri",
+                      "name":  "Darth Vader",
+                      "short_name":  "VADR",
+                      "universe":  "Empire",
+                      "league_name":  "Pop Culture / Star Wars Karakterleri",
+                      "league_slug":  "pop_culture_starwars",
+                      "badge_file":  "pop_culture__starwars__darth_vader.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    220,
+                                    20,
+                                    20
+                                ],
+                      "display_title":  "STAR WARS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_starwars_luke_skywalker",
+                      "category_id":  "starwars",
+                      "category_name":  "Star Wars Karakterleri",
+                      "name":  "Luke Skywalker",
+                      "short_name":  "LUKE",
+                      "universe":  "Jedi",
+                      "league_name":  "Pop Culture / Star Wars Karakterleri",
+                      "league_slug":  "pop_culture_starwars",
+                      "badge_file":  "pop_culture__starwars__luke_skywalker.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    50,
+                                    200,
+                                    50
+                                ],
+                      "display_title":  "STAR WARS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_starwars_yoda",
+                      "category_id":  "starwars",
+                      "category_name":  "Star Wars Karakterleri",
+                      "name":  "Yoda",
+                      "short_name":  "YODA",
+                      "universe":  "Jedi",
+                      "league_name":  "Pop Culture / Star Wars Karakterleri",
+                      "league_slug":  "pop_culture_starwars",
+                      "badge_file":  "pop_culture__starwars__yoda.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    100,
+                                    220,
+                                    80
+                                ],
+                      "display_title":  "STAR WARS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_starwars_obi_wan_kenobi",
+                      "category_id":  "starwars",
+                      "category_name":  "Star Wars Karakterleri",
+                      "name":  "Obi-Wan Kenobi",
+                      "short_name":  "MSTR",
+                      "universe":  "Jedi",
+                      "league_name":  "Pop Culture / Star Wars Karakterleri",
+                      "league_slug":  "pop_culture_starwars",
+                      "badge_file":  "pop_culture__starwars__obi_wan_kenobi.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    50,
+                                    100,
+                                    220
+                                ],
+                      "display_title":  "STAR WARS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_starwars_kylo_ren",
+                      "category_id":  "starwars",
+                      "category_name":  "Star Wars Karakterleri",
+                      "name":  "Kylo Ren",
+                      "short_name":  "KYLO",
+                      "universe":  "First Order",
+                      "league_name":  "Pop Culture / Star Wars Karakterleri",
+                      "league_slug":  "pop_culture_starwars",
+                      "badge_file":  "pop_culture__starwars__kylo_ren.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    50,
+                                    50
+                                ],
+                      "display_title":  "STAR WARS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_got_jon_snow",
+                      "category_id":  "got",
+                      "category_name":  "Game of Thrones Haneleri",
+                      "name":  "Jon Snow",
+                      "short_name":  "SNOW",
+                      "universe":  "Stark",
+                      "league_name":  "Pop Culture / Game of Thrones Haneleri",
+                      "league_slug":  "pop_culture_got",
+                      "badge_file":  "pop_culture__got__jon_snow.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    100,
+                                    110,
+                                    120
+                                ],
+                      "display_title":  "WESTEROS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_got_daenerys_targaryen",
+                      "category_id":  "got",
+                      "category_name":  "Game of Thrones Haneleri",
+                      "name":  "Daenerys Targaryen",
+                      "short_name":  "DANY",
+                      "universe":  "Targaryen",
+                      "league_name":  "Pop Culture / Game of Thrones Haneleri",
+                      "league_slug":  "pop_culture_got",
+                      "badge_file":  "pop_culture__got__daenerys_targaryen.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    180,
+                                    30,
+                                    30
+                                ],
+                      "display_title":  "WESTEROS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_got_tyrion_lannister",
+                      "category_id":  "got",
+                      "category_name":  "Game of Thrones Haneleri",
+                      "name":  "Tyrion Lannister",
+                      "short_name":  "TYRN",
+                      "universe":  "Lannister",
+                      "league_name":  "Pop Culture / Game of Thrones Haneleri",
+                      "league_slug":  "pop_culture_got",
+                      "badge_file":  "pop_culture__got__tyrion_lannister.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    210,
+                                    180,
+                                    40
+                                ],
+                      "display_title":  "WESTEROS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_got_arya_stark",
+                      "category_id":  "got",
+                      "category_name":  "Game of Thrones Haneleri",
+                      "name":  "Arya Stark",
+                      "short_name":  "ARYA",
+                      "universe":  "Stark",
+                      "league_name":  "Pop Culture / Game of Thrones Haneleri",
+                      "league_slug":  "pop_culture_got",
+                      "badge_file":  "pop_culture__got__arya_stark.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    90,
+                                    90,
+                                    100
+                                ],
+                      "display_title":  "WESTEROS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_got_night_king",
+                      "category_id":  "got",
+                      "category_name":  "Game of Thrones Haneleri",
+                      "name":  "Night King",
+                      "short_name":  "NITE",
+                      "universe":  "White Walkers",
+                      "league_name":  "Pop Culture / Game of Thrones Haneleri",
+                      "league_slug":  "pop_culture_got",
+                      "badge_file":  "pop_culture__got__night_king.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    40,
+                                    120,
+                                    255
+                                ],
+                      "display_title":  "WESTEROS BATTLE"
+                  },
+                  {
+                      "team_id":  "pc_techbrands_apple",
+                      "category_id":  "techbrands",
+                      "category_name":  "Teknoloji Devleri",
+                      "name":  "Apple",
+                      "short_name":  "APPL",
+                      "universe":  "Tech",
+                      "league_name":  "Pop Culture / Teknoloji Devleri",
+                      "league_slug":  "pop_culture_techbrands",
+                      "badge_file":  "pop_culture__techbrands__apple.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    150,
+                                    150,
+                                    150
+                                ],
+                      "display_title":  "TECH BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_techbrands_google",
+                      "category_id":  "techbrands",
+                      "category_name":  "Teknoloji Devleri",
+                      "name":  "Google",
+                      "short_name":  "GOOG",
+                      "universe":  "Tech",
+                      "league_name":  "Pop Culture / Teknoloji Devleri",
+                      "league_slug":  "pop_culture_techbrands",
+                      "badge_file":  "pop_culture__techbrands__google.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    66,
+                                    133,
+                                    244
+                                ],
+                      "display_title":  "TECH BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_techbrands_microsoft",
+                      "category_id":  "techbrands",
+                      "category_name":  "Teknoloji Devleri",
+                      "name":  "Microsoft",
+                      "short_name":  "MSFT",
+                      "universe":  "Tech",
+                      "league_name":  "Pop Culture / Teknoloji Devleri",
+                      "league_slug":  "pop_culture_techbrands",
+                      "badge_file":  "pop_culture__techbrands__microsoft.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    242,
+                                    80,
+                                    34
+                                ],
+                      "display_title":  "TECH BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_techbrands_amazon",
+                      "category_id":  "techbrands",
+                      "category_name":  "Teknoloji Devleri",
+                      "name":  "Amazon",
+                      "short_name":  "AMZN",
+                      "universe":  "Tech",
+                      "league_name":  "Pop Culture / Teknoloji Devleri",
+                      "league_slug":  "pop_culture_techbrands",
+                      "badge_file":  "pop_culture__techbrands__amazon.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    153,
+                                    0
+                                ],
+                      "display_title":  "TECH BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_techbrands_meta",
+                      "category_id":  "techbrands",
+                      "category_name":  "Teknoloji Devleri",
+                      "name":  "Meta",
+                      "short_name":  "META",
+                      "universe":  "Tech",
+                      "league_name":  "Pop Culture / Teknoloji Devleri",
+                      "league_slug":  "pop_culture_techbrands",
+                      "badge_file":  "pop_culture__techbrands__meta.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    6,
+                                    104,
+                                    225
+                                ],
+                      "display_title":  "TECH BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_techbrands_openai",
+                      "category_id":  "techbrands",
+                      "category_name":  "Teknoloji Devleri",
+                      "name":  "OpenAI",
+                      "short_name":  "O-AI",
+                      "universe":  "Tech",
+                      "league_name":  "Pop Culture / Teknoloji Devleri",
+                      "league_slug":  "pop_culture_techbrands",
+                      "badge_file":  "pop_culture__techbrands__openai.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    16,
+                                    163,
+                                    127
+                                ],
+                      "display_title":  "TECH BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fastfood_mcdonalds",
+                      "category_id":  "fastfood",
+                      "category_name":  "Fast Food Markalari",
+                      "name":  "McDonalds",
+                      "short_name":  "MCD",
+                      "universe":  "Fast Food",
+                      "league_name":  "Pop Culture / Fast Food Markalari",
+                      "league_slug":  "pop_culture_fastfood",
+                      "badge_file":  "pop_culture__fastfood__mcdonalds.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    199,
+                                    44
+                                ],
+                      "display_title":  "FAST FOOD WARS"
+                  },
+                  {
+                      "team_id":  "pc_fastfood_burger_king",
+                      "category_id":  "fastfood",
+                      "category_name":  "Fast Food Markalari",
+                      "name":  "Burger King",
+                      "short_name":  "BK",
+                      "universe":  "Fast Food",
+                      "league_name":  "Pop Culture / Fast Food Markalari",
+                      "league_slug":  "pop_culture_fastfood",
+                      "badge_file":  "pop_culture__fastfood__burger_king.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    215,
+                                    35,
+                                    0
+                                ],
+                      "display_title":  "FAST FOOD WARS"
+                  },
+                  {
+                      "team_id":  "pc_fastfood_kfc",
+                      "category_id":  "fastfood",
+                      "category_name":  "Fast Food Markalari",
+                      "name":  "KFC",
+                      "short_name":  "KFC",
+                      "universe":  "Fast Food",
+                      "league_name":  "Pop Culture / Fast Food Markalari",
+                      "league_slug":  "pop_culture_fastfood",
+                      "badge_file":  "pop_culture__fastfood__kfc.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    163,
+                                    20,
+                                    32
+                                ],
+                      "display_title":  "FAST FOOD WARS"
+                  },
+                  {
+                      "team_id":  "pc_fastfood_wendys",
+                      "category_id":  "fastfood",
+                      "category_name":  "Fast Food Markalari",
+                      "name":  "Wendys",
+                      "short_name":  "WNDY",
+                      "universe":  "Fast Food",
+                      "league_name":  "Pop Culture / Fast Food Markalari",
+                      "league_slug":  "pop_culture_fastfood",
+                      "badge_file":  "pop_culture__fastfood__wendys.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    225,
+                                    40,
+                                    40
+                                ],
+                      "display_title":  "FAST FOOD WARS"
+                  },
+                  {
+                      "team_id":  "pc_fastfood_taco_bell",
+                      "category_id":  "fastfood",
+                      "category_name":  "Fast Food Markalari",
+                      "name":  "Taco Bell",
+                      "short_name":  "TACO",
+                      "universe":  "Fast Food",
+                      "league_name":  "Pop Culture / Fast Food Markalari",
+                      "league_slug":  "pop_culture_fastfood",
+                      "badge_file":  "pop_culture__fastfood__taco_bell.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    112,
+                                    32,
+                                    130
+                                ],
+                      "display_title":  "FAST FOOD WARS"
+                  },
+                  {
+                      "team_id":  "pc_football_legends_lionel_messi",
+                      "category_id":  "football_legends",
+                      "category_name":  "Futbol Efsaneleri",
+                      "name":  "Lionel Messi",
+                      "short_name":  "MESI",
+                      "universe":  "Argentina / Barca",
+                      "league_name":  "Pop Culture / Futbol Efsaneleri",
+                      "league_slug":  "pop_culture_football_legends",
+                      "badge_file":  "pop_culture__football_legends__lionel_messi.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    100,
+                                    180,
+                                    255
+                                ],
+                      "display_title":  "FOOTBALL LEGENDS"
+                  },
+                  {
+                      "team_id":  "pc_football_legends_cristiano_ronaldo",
+                      "category_id":  "football_legends",
+                      "category_name":  "Futbol Efsaneleri",
+                      "name":  "Cristiano Ronaldo",
+                      "short_name":  "CR7",
+                      "universe":  "Portugal / RM",
+                      "league_name":  "Pop Culture / Futbol Efsaneleri",
+                      "league_slug":  "pop_culture_football_legends",
+                      "badge_file":  "pop_culture__football_legends__cristiano_ronaldo.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    220,
+                                    20,
+                                    40
+                                ],
+                      "display_title":  "FOOTBALL LEGENDS"
+                  },
+                  {
+                      "team_id":  "pc_football_legends_diego_maradona",
+                      "category_id":  "football_legends",
+                      "category_name":  "Futbol Efsaneleri",
+                      "name":  "Diego Maradona",
+                      "short_name":  "D10S",
+                      "universe":  "Argentina / Napoli",
+                      "league_name":  "Pop Culture / Futbol Efsaneleri",
+                      "league_slug":  "pop_culture_football_legends",
+                      "badge_file":  "pop_culture__football_legends__diego_maradona.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    80,
+                                    160,
+                                    240
+                                ],
+                      "display_title":  "FOOTBALL LEGENDS"
+                  },
+                  {
+                      "team_id":  "pc_football_legends_pele",
+                      "category_id":  "football_legends",
+                      "category_name":  "Futbol Efsaneleri",
+                      "name":  "Pele",
+                      "short_name":  "PELE",
+                      "universe":  "Brazil / Santos",
+                      "league_name":  "Pop Culture / Futbol Efsaneleri",
+                      "league_slug":  "pop_culture_football_legends",
+                      "badge_file":  "pop_culture__football_legends__pele.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    220,
+                                    0
+                                ],
+                      "display_title":  "FOOTBALL LEGENDS"
+                  },
+                  {
+                      "team_id":  "pc_football_legends_zinedine_zidane",
+                      "category_id":  "football_legends",
+                      "category_name":  "Futbol Efsaneleri",
+                      "name":  "Zinedine Zidane",
+                      "short_name":  "ZIZU",
+                      "universe":  "France / RM",
+                      "league_name":  "Pop Culture / Futbol Efsaneleri",
+                      "league_slug":  "pop_culture_football_legends",
+                      "badge_file":  "pop_culture__football_legends__zinedine_zidane.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    0,
+                                    85,
+                                    164
+                                ],
+                      "display_title":  "FOOTBALL LEGENDS"
+                  },
+                  {
+                      "team_id":  "pc_football_legends_ronaldinho",
+                      "category_id":  "football_legends",
+                      "category_name":  "Futbol Efsaneleri",
+                      "name":  "Ronaldinho",
+                      "short_name":  "R10",
+                      "universe":  "Brazil / Barca",
+                      "league_name":  "Pop Culture / Futbol Efsaneleri",
+                      "league_slug":  "pop_culture_football_legends",
+                      "badge_file":  "pop_culture__football_legends__ronaldinho.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    200,
+                                    50
+                                ],
+                      "display_title":  "FOOTBALL LEGENDS"
+                  },
+                  {
+                      "team_id":  "pc_games_league_of_legends",
+                      "category_id":  "games",
+                      "category_name":  "Video Oyunlari",
+                      "name":  "League of Legends",
+                      "short_name":  "LOL",
+                      "universe":  "Riot Games",
+                      "league_name":  "Pop Culture / Video Oyunlari",
+                      "league_slug":  "pop_culture_games",
+                      "badge_file":  "pop_culture__games__league_of_legends.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    200,
+                                    170,
+                                    70
+                                ],
+                      "display_title":  "GAMING WARS"
+                  },
+                  {
+                      "team_id":  "pc_games_valorant",
+                      "category_id":  "games",
+                      "category_name":  "Video Oyunlari",
+                      "name":  "Valorant",
+                      "short_name":  "VALO",
+                      "universe":  "Riot Games",
+                      "league_name":  "Pop Culture / Video Oyunlari",
+                      "league_slug":  "pop_culture_games",
+                      "badge_file":  "pop_culture__games__valorant.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    70,
+                                    85
+                                ],
+                      "display_title":  "GAMING WARS"
+                  },
+                  {
+                      "team_id":  "pc_games_csgo",
+                      "category_id":  "games",
+                      "category_name":  "Video Oyunlari",
+                      "name":  "CS:GO",
+                      "short_name":  "CSGO",
+                      "universe":  "Valve",
+                      "league_name":  "Pop Culture / Video Oyunlari",
+                      "league_slug":  "pop_culture_games",
+                      "badge_file":  "pop_culture__games__csgo.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    200,
+                                    0
+                                ],
+                      "display_title":  "GAMING WARS"
+                  },
+                  {
+                      "team_id":  "pc_games_dota_2",
+                      "category_id":  "games",
+                      "category_name":  "Video Oyunlari",
+                      "name":  "Dota 2",
+                      "short_name":  "DOTA",
+                      "universe":  "Valve",
+                      "league_name":  "Pop Culture / Video Oyunlari",
+                      "league_slug":  "pop_culture_games",
+                      "badge_file":  "pop_culture__games__dota_2.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    220,
+                                    60,
+                                    40
+                                ],
+                      "display_title":  "GAMING WARS"
+                  },
+                  {
+                      "team_id":  "pc_games_minecraft",
+                      "category_id":  "games",
+                      "category_name":  "Video Oyunlari",
+                      "name":  "Minecraft",
+                      "short_name":  "MC",
+                      "universe":  "Mojang",
+                      "league_name":  "Pop Culture / Video Oyunlari",
+                      "league_slug":  "pop_culture_games",
+                      "badge_file":  "pop_culture__games__minecraft.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    80,
+                                    200,
+                                    80
+                                ],
+                      "display_title":  "GAMING WARS"
+                  },
+                  {
+                      "team_id":  "pc_games_gta_v",
+                      "category_id":  "games",
+                      "category_name":  "Video Oyunlari",
+                      "name":  "GTA V",
+                      "short_name":  "GTA5",
+                      "universe":  "Rockstar",
+                      "league_name":  "Pop Culture / Video Oyunlari",
+                      "league_slug":  "pop_culture_games",
+                      "badge_file":  "pop_culture__games__gta_v.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    80,
+                                    180,
+                                    90
+                                ],
+                      "display_title":  "GAMING WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_metallica",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Metallica",
+                      "short_name":  "MTLC",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__metallica.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    45,
+                                    45,
+                                    45
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_linkin_park",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Linkin Park",
+                      "short_name":  "LINK",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__linkin_park.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    205,
+                                    52,
+                                    52
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_nirvana",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Nirvana",
+                      "short_name":  "NIRV",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__nirvana.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    240,
+                                    205,
+                                    55
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_queen",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Queen",
+                      "short_name":  "QN",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__queen.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    190,
+                                    150,
+                                    65
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_coldplay",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Coldplay",
+                      "short_name":  "COLD",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__coldplay.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    55,
+                                    115,
+                                    235
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_bts",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "BTS",
+                      "short_name":  "BTS",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__bts.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    132,
+                                    86,
+                                    220
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_imagine_dragons",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Imagine Dragons",
+                      "short_name":  "DRGN",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__imagine_dragons.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    228,
+                                    108,
+                                    50
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_music_bands_pink_floyd",
+                      "category_id":  "music_bands",
+                      "category_name":  "Muzik Gruplari",
+                      "name":  "Pink Floyd",
+                      "short_name":  "PFLD",
+                      "universe":  "Music",
+                      "league_name":  "Pop Culture / Muzik Gruplari",
+                      "league_slug":  "pop_culture_music_bands",
+                      "badge_file":  "pop_culture__music_bands__pink_floyd.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    245,
+                                    118,
+                                    195
+                                ],
+                      "display_title":  "BAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_the_godfather",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "The Godfather",
+                      "short_name":  "GODF",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__the_godfather.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    62,
+                                    62,
+                                    62
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_titanic",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "Titanic",
+                      "short_name":  "TITN",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__titanic.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    88,
+                                    170,
+                                    242
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_inception",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "Inception",
+                      "short_name":  "INCP",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__inception.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    88,
+                                    128,
+                                    222
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_interstellar",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "Interstellar",
+                      "short_name":  "INTS",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__interstellar.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    98,
+                                    148,
+                                    255
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_the_dark_knight",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "The Dark Knight",
+                      "short_name":  "TDK",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__the_dark_knight.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    42,
+                                    42,
+                                    52
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_avatar",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "Avatar",
+                      "short_name":  "AVTR",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__avatar.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    62,
+                                    176,
+                                    255
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_the_matrix",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "The Matrix",
+                      "short_name":  "MTRX",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__the_matrix.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    52,
+                                    188,
+                                    112
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_movies_gladiator",
+                      "category_id":  "movies",
+                      "category_name":  "Filmler",
+                      "name":  "Gladiator",
+                      "short_name":  "GLAD",
+                      "universe":  "Movie",
+                      "league_name":  "Pop Culture / Filmler",
+                      "league_slug":  "pop_culture_movies",
+                      "badge_file":  "pop_culture__movies__gladiator.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    218,
+                                    156,
+                                    74
+                                ],
+                      "display_title":  "CINEMA WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_nike",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Nike",
+                      "short_name":  "NIKE",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__nike.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    245,
+                                    245,
+                                    245
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_adidas",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Adidas",
+                      "short_name":  "ADID",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__adidas.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    225,
+                                    225,
+                                    225
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_puma",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Puma",
+                      "short_name":  "PUMA",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__puma.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    245,
+                                    245,
+                                    245
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_zara",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Zara",
+                      "short_name":  "ZARA",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__zara.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    225,
+                                    225,
+                                    225
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_hm",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "HM",
+                      "short_name":  "HM",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__hm.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    230,
+                                    230,
+                                    230
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_gucci",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Gucci",
+                      "short_name":  "GCCI",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__gucci.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    68,
+                                    124,
+                                    72
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_louis_vuitton",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Louis Vuitton",
+                      "short_name":  "LV",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__louis_vuitton.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    186,
+                                    142,
+                                    84
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_fashion_brands_prada",
+                      "category_id":  "fashion_brands",
+                      "category_name":  "Giyim Markalari",
+                      "name":  "Prada",
+                      "short_name":  "PRDA",
+                      "universe":  "Fashion",
+                      "league_name":  "Pop Culture / Giyim Markalari",
+                      "league_slug":  "pop_culture_fashion_brands",
+                      "badge_file":  "pop_culture__fashion_brands__prada.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    240,
+                                    240,
+                                    240
+                                ],
+                      "display_title":  "FASHION BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_starbucks",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Starbucks",
+                      "short_name":  "STRB",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__starbucks.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    0,
+                                    112,
+                                    74
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_nespresso",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Nespresso",
+                      "short_name":  "NESP",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__nespresso.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    206,
+                                    206,
+                                    206
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_lavazza",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Lavazza",
+                      "short_name":  "LAVA",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__lavazza.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    24,
+                                    68,
+                                    148
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_illy",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Illy",
+                      "short_name":  "ILLY",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__illy.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    212,
+                                    46,
+                                    46
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_costa_coffee",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Costa Coffee",
+                      "short_name":  "COST",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__costa_coffee.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    140,
+                                    20,
+                                    46
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_dunkin",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Dunkin",
+                      "short_name":  "DNKN",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__dunkin.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    255,
+                                    105,
+                                    0
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_tim_hortons",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Tim Hortons",
+                      "short_name":  "TIMH",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__tim_hortons.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    186,
+                                    26,
+                                    26
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_coffee_brands_peets_coffee",
+                      "category_id":  "coffee_brands",
+                      "category_name":  "Kahve Markalari",
+                      "name":  "Peets Coffee",
+                      "short_name":  "PEET",
+                      "universe":  "Coffee",
+                      "league_name":  "Pop Culture / Kahve Markalari",
+                      "league_slug":  "pop_culture_coffee_brands",
+                      "badge_file":  "pop_culture__coffee_brands__peets_coffee.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    118,
+                                    92,
+                                    56
+                                ],
+                      "display_title":  "COFFEE BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_ferrari",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Ferrari",
+                      "short_name":  "FER",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__ferrari.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    208,
+                                    36,
+                                    36
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_lamborghini",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Lamborghini",
+                      "short_name":  "LAMB",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__lamborghini.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    224,
+                                    180,
+                                    44
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_porsche",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Porsche",
+                      "short_name":  "PORS",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__porsche.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    182,
+                                    52,
+                                    52
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_bmw",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "BMW",
+                      "short_name":  "BMW",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__bmw.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    58,
+                                    138,
+                                    238
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_mercedes_benz",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Mercedes Benz",
+                      "short_name":  "MB",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__mercedes_benz.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    186,
+                                    194,
+                                    210
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_audi",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Audi",
+                      "short_name":  "AUDI",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__audi.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    208,
+                                    208,
+                                    208
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_toyota",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Toyota",
+                      "short_name":  "TYTA",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__toyota.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    206,
+                                    34,
+                                    34
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  },
+                  {
+                      "team_id":  "pc_car_brands_tesla",
+                      "category_id":  "car_brands",
+                      "category_name":  "Araba Markalari",
+                      "name":  "Tesla",
+                      "short_name":  "TSLA",
+                      "universe":  "Automotive",
+                      "league_name":  "Pop Culture / Araba Markalari",
+                      "league_slug":  "pop_culture_car_brands",
+                      "badge_file":  "pop_culture__car_brands__tesla.png",
+                      "logo_exists":  true,
+                      "color":  [
+                                    210,
+                                    26,
+                                    26
+                                ],
+                      "display_title":  "AUTO BRAND WARS"
+                  }
+              ]
+}

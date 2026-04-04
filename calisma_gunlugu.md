@@ -64,3 +64,8 @@ Bu dosya, her mesaj sonrasinda yapilan guncellemeleri tarih-saat ile kaydeder.
 - Kullanici geri bildirimi: Turnuva tarafinda uzatma/penalti akisinin yatay videoda gorunmedigi veya tutarsiz calistigi raporlandi.
 - Acik sorun notu: ET/PEN gorunurlugu ve tetikleme davranisi turnuva run senaryolarinda guvenilir degil.
 - Istenen durum: Kod degisikligi yapmadan once bu sorunlarin acikca kayda alinmasi ve mevcut projenin GitHub'a guncellenmesi.
+## 2026-04-04 03:40:28
+- Pop culture verisi icin iki yeni JSON uretildi: data/all_pop_culture.json (tum guncel pop culture takimlari) ve data/logosuz_pop_culture.json (logosu olmayanlar listesi).
+- Guncel tarama sonucu logosuz kayit sayisi: 0.
+- .gitignore guncellendi: yeni JSON dosyalari ve data/logos + data/sounds takipte olacak sekilde ayarlandi.
+- data/logos klasoru versiyon kontrolune dahil edilmek uzere hazirlandi; data/sounds zaten takipte dogrulandi.
