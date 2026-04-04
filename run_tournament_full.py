@@ -402,11 +402,8 @@ def _build_top_bar_text(
     completed_matches: int,
     total_matches: int,
 ) -> str:
-    base_name = _broadcast_safe_text(tournament_name or "Tournament")
-    left_round = _broadcast_safe_text(left_record.get("round_name") or "Round")
-    right_round = _broadcast_safe_text((right_record or {}).get("round_name") or "")
-    round_label = left_round if not right_round or right_round == left_round else f"{left_round} / {right_round}"
-    return f"{base_name} | {round_label} | Progress {completed_matches}/{total_matches}"
+    _ = left_record, right_record, completed_matches, total_matches
+    return _broadcast_safe_text(tournament_name or "Tournament")
 
 
 def _make_landscape_segment(
@@ -440,22 +437,37 @@ def _make_landscape_segment(
     # Boylece ust/alt kesilmez (zoom/crop yok), yanlarda bosluk kalabilir.
     scaled_h = content_h
 
-    base_video_prefix = (
-        f"[0:v]scale=-2:{scaled_h},setsar=1[leftv];"
-        f"[1:v]scale=-2:{scaled_h},setsar=1[rightv];"
-        "color=c=#07111f:s=1920x1080:r=60[base];"
-        f"[base][leftv]overlay=x=({half_w}-w)/2:y={content_top}[tmp1];"
-        f"[tmp1][rightv]overlay=x={half_w}+({half_w}-w)/2:y={content_top}[tmp2];"
-    )
-    base_video_filter = (
-        base_video_prefix
-        + "[tmp2]"
-        + f"drawbox=x={divider_x}:y={content_top - 2}:w={divider_w}:h={content_h + 4}:color=#e7f0ff@0.42:t=fill,"
-        + f"drawbox=x=0:y=0:w=1920:h={top_bar_h}:color=#0c1f3f@0.88:t=fill,"
-        + f"drawbox=x=0:y={top_bar_bottom_line}:w=1920:h=2:color=#6fa3ff@0.60:t=fill,"
-        + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
-        + "[v]"
-    )
+    if right_video is not None:
+        base_video_prefix = (
+            f"[0:v]scale=-2:{scaled_h},setsar=1[leftv];"
+            f"[1:v]scale=-2:{scaled_h},setsar=1[rightv];"
+            "color=c=#07111f:s=1920x1080:r=60[base];"
+            f"[base][leftv]overlay=x=({half_w}-w)/2:y={content_top}[tmp1];"
+            f"[tmp1][rightv]overlay=x={half_w}+({half_w}-w)/2:y={content_top}[tmp2];"
+        )
+        base_video_filter = (
+            base_video_prefix
+            + "[tmp2]"
+            + f"drawbox=x={divider_x}:y={content_top - 2}:w={divider_w}:h={content_h + 4}:color=#e7f0ff@0.42:t=fill,"
+            + f"drawbox=x=0:y=0:w=1920:h={top_bar_h}:color=#0c1f3f@0.88:t=fill,"
+            + f"drawbox=x=0:y={top_bar_bottom_line}:w=1920:h=2:color=#6fa3ff@0.60:t=fill,"
+            + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
+            + "[v]"
+        )
+    else:
+        base_video_prefix = (
+            f"[0:v]scale=-2:{scaled_h},setsar=1[leftv];"
+            "color=c=#07111f:s=1920x1080:r=60[base];"
+            f"[base][leftv]overlay=x=(1920-w)/2:y={content_top}[tmp2];"
+        )
+        base_video_filter = (
+            base_video_prefix
+            + "[tmp2]"
+            + f"drawbox=x=0:y=0:w=1920:h={top_bar_h}:color=#0c1f3f@0.88:t=fill,"
+            + f"drawbox=x=0:y={top_bar_bottom_line}:w=1920:h=2:color=#6fa3ff@0.60:t=fill,"
+            + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
+            + "[v]"
+        )
 
     if right_has_audio:
         filter_complex = (
