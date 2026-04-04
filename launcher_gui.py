@@ -15,6 +15,7 @@ import requests
 import customtkinter as ctk
 
 from config import build_default_config
+from grand_prix_manager import GrandPrixManager
 from models import MatchSelection, TeamRecord
 from team_repository import TeamRepository
 from tournament_manager import TournamentManager
@@ -31,6 +32,7 @@ BASE_DIR = Path(__file__).resolve().parent
 CFG = build_default_config()
 REPOSITORY = TeamRepository(CFG.data_dir)
 TOURNAMENT_MANAGER = TournamentManager(CFG.data_dir, REPOSITORY)
+GRAND_PRIX_MANAGER = GrandPrixManager(CFG.data_dir, REPOSITORY)
 
 ENGINE_MODE_LABEL_TO_VALUE: dict[str, str] = {
     "1) Football SlowFast (1st/2nd Half HUD, Kirmizi-Yesil Civili)": "power_pegs",
@@ -79,6 +81,8 @@ TOURNAMENT_MODE_LABEL_TO_VALUE = {
     "Eleme Usulu": "elimination",
     "Playoff (Tek Ayak + ET/PEN)": "playoff",
 }
+GRAND_PRIX_TEAM_COUNT_VALUES = ["4", "8"]
+GRAND_PRIX_ROUND_COUNT_VALUES = ["5", "10", "15", "20", "25", "30"]
 
 
 # ============================================================
@@ -264,6 +268,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self._tournament_available_keys: list[str] = []
         self._tournament_selected_keys_view: list[str] = []
         self._tournament_next_match_id: str | None = None
+        self.current_grand_prix_state: dict | None = None
+        self.grand_prix_selected_team_keys: list[str] = []
+        self._grand_prix_available_keys: list[str] = []
+        self._grand_prix_selected_keys_view: list[str] = []
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -322,11 +330,13 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self.tab_main = self.tabview.add("Ana Panel")
         self.tab_teams = self.tabview.add("Takim Secimi")
         self.tab_tournament = self.tabview.add("Turnuva")
+        self.tab_grand_prix = self.tabview.add("Grand Prix")
         self.tab_log = self.tabview.add("Islem Logu")
 
         self._build_main_tab()
         self._build_teams_tab()
         self._build_tournament_tab()
+        self._build_grand_prix_tab()
         self._build_log_tab()
 
     # --------------------------------------------------------
@@ -1216,14 +1226,6 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self._update_tournament_status_box()
         self._update_tournament_next_match_panel()
         self._render_tournament_bracket()
-        match_row = next((m for m in state.get("matches", []) if str(m.get("id")) == str(match_id)), None)
-        decided_by = str((match_row or {}).get("decided_by") or "normal_time")
-        final_a = int((match_row or {}).get("score_a") or score_a)
-        final_b = int((match_row or {}).get("score_b") or score_b)
-        self.log(
-            f"Turnuva sonucu islendi: {score_a}-{score_b} -> {final_a}-{final_b} "
-            f"({decided_by}, mac: {match_id})"
-        )
         self.log(f"Turnuva olusturuldu: {state.get('name')} ({required} takim)")
 
     def _load_latest_tournament_into_ui(self) -> None:
@@ -1495,7 +1497,427 @@ class MarbleRaceLauncherApp(ctk.CTk):
         return clean[: max(1, limit - 1)] + "…"
 
     # --------------------------------------------------------
-    # TAB 4: ISLEM LOGU
+    # TAB 4: GRAND PRIX
+    # --------------------------------------------------------
+    def _build_grand_prix_tab(self) -> None:
+        tab = self.tab_grand_prix
+        tab.grid_columnconfigure(0, weight=0)
+        tab.grid_columnconfigure(1, weight=1)
+        tab.grid_rowconfigure(0, weight=1)
+
+        left = ctk.CTkFrame(tab, corner_radius=12, fg_color="#0D1320", width=370)
+        left.grid(row=0, column=0, sticky="nsw", padx=(8, 6), pady=8)
+        left.grid_propagate(False)
+        left.grid_columnconfigure(0, weight=1)
+        left.grid_rowconfigure(8, weight=1)
+
+        ctk.CTkLabel(
+            left,
+            text="Grand Prix Kurulumu",
+            font=ctk.CTkFont(size=18, weight="bold"),
+            text_color="#F1F4FA",
+        ).grid(row=0, column=0, sticky="w", padx=12, pady=(12, 8))
+
+        self.grand_prix_name_var = StringVar(value="Yeni Grand Prix")
+        ctk.CTkEntry(
+            left,
+            textvariable=self.grand_prix_name_var,
+            height=32,
+            fg_color="#0A111D",
+            border_color="#243047",
+            placeholder_text="Grand Prix adi",
+        ).grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 8))
+
+        settings_row = ctk.CTkFrame(left, fg_color="transparent")
+        settings_row.grid(row=2, column=0, sticky="ew", padx=12, pady=(0, 6))
+        settings_row.grid_columnconfigure((1, 3), weight=1)
+
+        ctk.CTkLabel(settings_row, text="Takim:", text_color="#D9E2F2").grid(row=0, column=0, sticky="w")
+        self.grand_prix_team_count_var = StringVar(value="4")
+        ctk.CTkOptionMenu(
+            settings_row,
+            values=GRAND_PRIX_TEAM_COUNT_VALUES,
+            variable=self.grand_prix_team_count_var,
+            command=lambda _v: self._refresh_grand_prix_selected_list(),
+            height=30,
+            fg_color="#1A2336",
+            button_color="#2457F5",
+        ).grid(row=0, column=1, sticky="ew", padx=(8, 10))
+
+        ctk.CTkLabel(settings_row, text="Raunt:", text_color="#D9E2F2").grid(row=0, column=2, sticky="w")
+        self.grand_prix_round_count_var = StringVar(value="5")
+        ctk.CTkOptionMenu(
+            settings_row,
+            values=GRAND_PRIX_ROUND_COUNT_VALUES,
+            variable=self.grand_prix_round_count_var,
+            height=30,
+            fg_color="#1A2336",
+            button_color="#2457F5",
+        ).grid(row=0, column=3, sticky="ew", padx=(8, 0))
+
+        filter_row = ctk.CTkFrame(left, fg_color="transparent")
+        filter_row.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 6))
+        filter_row.grid_columnconfigure(1, weight=1)
+        ctk.CTkLabel(filter_row, text="Lig:", text_color="#D9E2F2").grid(row=0, column=0, sticky="w")
+        self.grand_prix_league_var = StringVar(value="All Leagues")
+        self.grand_prix_league_menu = ctk.CTkOptionMenu(
+            filter_row,
+            values=["All Leagues"],
+            variable=self.grand_prix_league_var,
+            command=lambda _v: self._refresh_grand_prix_available_list(),
+            height=30,
+            fg_color="#1A2336",
+            button_color="#2457F5",
+        )
+        self.grand_prix_league_menu.grid(row=0, column=1, sticky="ew", padx=(8, 0))
+
+        self.grand_prix_search_entry = ctk.CTkEntry(
+            left,
+            placeholder_text="Takim ara...",
+            height=30,
+            fg_color="#0A111D",
+            border_color="#243047",
+        )
+        self.grand_prix_search_entry.grid(row=4, column=0, sticky="ew", padx=12, pady=(0, 8))
+        self.grand_prix_search_entry.bind("<KeyRelease>", lambda _e: self._refresh_grand_prix_available_list())
+
+        list_row = ctk.CTkFrame(left, fg_color="transparent")
+        list_row.grid(row=5, column=0, sticky="nsew", padx=12, pady=(0, 8))
+        list_row.grid_columnconfigure((0, 2), weight=1)
+        list_row.grid_rowconfigure(0, weight=1)
+
+        self.grand_prix_available_listbox = Listbox(
+            list_row,
+            selectmode="extended",
+            bg="#0A111D",
+            fg="#F1F4FA",
+            selectbackground="#2457F5",
+            selectforeground="#FFFFFF",
+            exportselection=False,
+            relief="flat",
+            highlightthickness=0,
+            font=("Segoe UI", 10),
+            height=12,
+        )
+        self.grand_prix_available_listbox.grid(row=0, column=0, sticky="nsew")
+
+        transfer_col = ctk.CTkFrame(list_row, fg_color="transparent", width=58)
+        transfer_col.grid(row=0, column=1, sticky="ns", padx=8)
+        ctk.CTkButton(
+            transfer_col,
+            text=">>",
+            width=54,
+            height=34,
+            fg_color="#2457F5",
+            hover_color="#1B46C7",
+            command=self._add_grand_prix_selected_from_available,
+        ).pack(pady=(8, 6))
+        ctk.CTkButton(
+            transfer_col,
+            text="<<",
+            width=54,
+            height=34,
+            fg_color="#3E4C66",
+            hover_color="#2E3A51",
+            command=self._remove_grand_prix_selected,
+        ).pack(pady=6)
+
+        self.grand_prix_selected_listbox = Listbox(
+            list_row,
+            selectmode="extended",
+            bg="#0A111D",
+            fg="#F1F4FA",
+            selectbackground="#2457F5",
+            selectforeground="#FFFFFF",
+            exportselection=False,
+            relief="flat",
+            highlightthickness=0,
+            font=("Segoe UI", 10),
+            height=12,
+        )
+        self.grand_prix_selected_listbox.grid(row=0, column=2, sticky="nsew")
+
+        self.grand_prix_selected_count_label = ctk.CTkLabel(
+            left,
+            text="Secilen takim: 0 / 4",
+            text_color="#AFC1E8",
+            font=ctk.CTkFont(size=12, weight="bold"),
+        )
+        self.grand_prix_selected_count_label.grid(row=6, column=0, sticky="w", padx=12, pady=(0, 8))
+
+        setup_btn_row = ctk.CTkFrame(left, fg_color="transparent")
+        setup_btn_row.grid(row=7, column=0, sticky="ew", padx=12, pady=(0, 10))
+        setup_btn_row.grid_columnconfigure((0, 1), weight=1)
+        ctk.CTkButton(
+            setup_btn_row,
+            text="Rastgele Doldur",
+            fg_color="#1D7A5A",
+            hover_color="#165E45",
+            command=self._autofill_grand_prix_selection,
+        ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(
+            setup_btn_row,
+            text="Secimi Temizle",
+            fg_color="#3E4C66",
+            hover_color="#2E3A51",
+            command=self._clear_grand_prix_selection,
+        ).grid(row=0, column=1, sticky="ew", padx=(6, 0))
+
+        ctk.CTkButton(
+            left,
+            text="Grand Prix Olustur",
+            height=42,
+            font=ctk.CTkFont(size=14, weight="bold"),
+            fg_color="#2457F5",
+            hover_color="#1B46C7",
+            command=self._create_grand_prix_from_ui,
+        ).grid(row=8, column=0, sticky="ew", padx=12, pady=(0, 8))
+
+        action_row = ctk.CTkFrame(left, fg_color="transparent")
+        action_row.grid(row=9, column=0, sticky="ew", padx=12, pady=(0, 12))
+        action_row.grid_columnconfigure((0, 1), weight=1)
+        ctk.CTkButton(
+            action_row,
+            text="Son Grand Prix",
+            height=36,
+            fg_color="#1A2336",
+            hover_color="#253352",
+            command=self._load_latest_grand_prix_into_ui,
+        ).grid(row=0, column=0, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(
+            action_row,
+            text="Run",
+            height=36,
+            fg_color="#B63D4B",
+            hover_color="#932F3B",
+            command=self._run_grand_prix_mode,
+        ).grid(row=0, column=1, sticky="ew", padx=(6, 0))
+
+        right = ctk.CTkFrame(tab, corner_radius=12, fg_color="#0D1320")
+        right.grid(row=0, column=1, sticky="nsew", padx=(6, 8), pady=8)
+        right.grid_columnconfigure(0, weight=1)
+        right.grid_rowconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            right,
+            text="Grand Prix Durumu",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color="#F1F4FA",
+        ).grid(row=0, column=0, sticky="w", padx=12, pady=(12, 8))
+
+        self.grand_prix_status_box = ctk.CTkTextbox(
+            right,
+            fg_color="#0A0F18",
+            border_width=1,
+            border_color="#243047",
+            font=ctk.CTkFont(size=12),
+        )
+        self.grand_prix_status_box.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 12))
+        self.grand_prix_status_box.insert("1.0", "Grand Prix henuz olusturulmadi.")
+        self.grand_prix_status_box.configure(state="disabled")
+
+        self._refresh_grand_prix_team_filters()
+        self._refresh_grand_prix_available_list()
+        self._refresh_grand_prix_selected_list()
+        self._update_grand_prix_status_box()
+
+    def _required_grand_prix_team_count(self) -> int:
+        try:
+            return int(self.grand_prix_team_count_var.get())
+        except Exception:
+            return 4
+
+    def _refresh_grand_prix_team_filters(self) -> None:
+        try:
+            leagues = REPOSITORY.get_league_names()
+        except Exception:
+            leagues = ["All Leagues"]
+        self.grand_prix_league_menu.configure(values=leagues)
+        if self.grand_prix_league_var.get() not in leagues:
+            self.grand_prix_league_var.set("All Leagues")
+
+    def _refresh_grand_prix_available_list(self) -> None:
+        league = self.grand_prix_league_var.get()
+        query = self.grand_prix_search_entry.get().strip()
+        try:
+            teams = REPOSITORY.filter_teams(league_name=league, query=query)
+        except Exception:
+            teams = []
+
+        selected = set(self.grand_prix_selected_team_keys)
+        self._grand_prix_available_keys = [team.team_key for team in teams if team.team_key not in selected]
+        self.grand_prix_available_listbox.delete(0, "end")
+        for team in teams:
+            if team.team_key in selected:
+                continue
+            self.grand_prix_available_listbox.insert("end", f"{team.name}  |  {team.league_name}")
+
+    def _refresh_grand_prix_selected_list(self) -> None:
+        required = self._required_grand_prix_team_count()
+        self._grand_prix_selected_keys_view = list(self.grand_prix_selected_team_keys)
+        self.grand_prix_selected_listbox.delete(0, "end")
+        for key in self._grand_prix_selected_keys_view:
+            team = REPOSITORY.get_team_by_key(key)
+            if team is None:
+                continue
+            self.grand_prix_selected_listbox.insert("end", f"{team.name}  |  {team.league_name}")
+
+        self.grand_prix_selected_count_label.configure(
+            text=f"Secilen takim: {len(self.grand_prix_selected_team_keys)} / {required}"
+        )
+        self._refresh_grand_prix_available_list()
+
+    def _add_grand_prix_selected_from_available(self) -> None:
+        required = self._required_grand_prix_team_count()
+        indices = self.grand_prix_available_listbox.curselection()
+        if not indices:
+            return
+        for idx in indices:
+            if len(self.grand_prix_selected_team_keys) >= required:
+                break
+            i = int(idx)
+            if 0 <= i < len(self._grand_prix_available_keys):
+                key = self._grand_prix_available_keys[i]
+                if key not in self.grand_prix_selected_team_keys:
+                    self.grand_prix_selected_team_keys.append(key)
+        self._refresh_grand_prix_selected_list()
+
+    def _remove_grand_prix_selected(self) -> None:
+        indices = sorted((int(i) for i in self.grand_prix_selected_listbox.curselection()), reverse=True)
+        if not indices:
+            return
+        for idx in indices:
+            if 0 <= idx < len(self._grand_prix_selected_keys_view):
+                key = self._grand_prix_selected_keys_view[idx]
+                self.grand_prix_selected_team_keys = [k for k in self.grand_prix_selected_team_keys if k != key]
+        self._refresh_grand_prix_selected_list()
+
+    def _autofill_grand_prix_selection(self) -> None:
+        required = self._required_grand_prix_team_count()
+        query = self.grand_prix_search_entry.get().strip()
+        league = self.grand_prix_league_var.get()
+        pool = REPOSITORY.filter_teams(league_name=league, query=query)
+        keys = [team.team_key for team in pool if team.team_key]
+        if len(keys) < required:
+            keys = [team.team_key for team in REPOSITORY.load_teams() if team.team_key]
+        self.grand_prix_selected_team_keys = keys[:required]
+        self._refresh_grand_prix_selected_list()
+
+    def _clear_grand_prix_selection(self) -> None:
+        self.grand_prix_selected_team_keys = []
+        self._refresh_grand_prix_selected_list()
+
+    def _create_grand_prix_from_ui(self) -> None:
+        if not REPOSITORY.exists():
+            messagebox.showerror("Takim Havuzu Gerekli", "Once takim havuzunu guncellemelisin.")
+            return
+
+        required = self._required_grand_prix_team_count()
+        if len(self.grand_prix_selected_team_keys) != required:
+            messagebox.showerror(
+                "Eksik Takim",
+                f"Grand Prix olusturmak icin tam {required} takim secmelisin.",
+            )
+            return
+
+        try:
+            state = GRAND_PRIX_MANAGER.create_grand_prix(
+                name=self.grand_prix_name_var.get().strip(),
+                team_keys=list(self.grand_prix_selected_team_keys),
+                round_count=int(self.grand_prix_round_count_var.get()),
+            )
+        except Exception as exc:
+            messagebox.showerror("Grand Prix Olusturma Hatasi", str(exc))
+            return
+
+        self.current_grand_prix_state = state
+        self._update_grand_prix_status_box()
+        self.log(
+            f"Grand Prix olusturuldu: {state.get('name')} | "
+            f"takim={len(state.get('team_keys', []))} | raunt={state.get('round_count')} | "
+            f"delikler={state.get('hole_values')}"
+        )
+
+    def _load_latest_grand_prix_into_ui(self) -> None:
+        state = GRAND_PRIX_MANAGER.load_latest_state()
+        if state is None:
+            messagebox.showinfo("Grand Prix", "Kayitli Grand Prix bulunamadi.")
+            return
+
+        self.current_grand_prix_state = state
+        self.grand_prix_name_var.set(str(state.get("name", "Grand Prix")))
+        self.grand_prix_team_count_var.set(str(len(state.get("team_keys", [])) or 4))
+        self.grand_prix_round_count_var.set(str(state.get("round_count", 5)))
+        self.grand_prix_selected_team_keys = list(state.get("team_keys", []))
+        self._refresh_grand_prix_selected_list()
+        self._update_grand_prix_status_box()
+        self.log(f"Grand Prix yuklendi: {state.get('name')}")
+
+    def _update_grand_prix_status_box(self) -> None:
+        if not self.current_grand_prix_state:
+            text = "Grand Prix henuz olusturulmadi."
+        else:
+            state = self.current_grand_prix_state
+            champion_key = state.get("champion_team_key")
+            champion = GRAND_PRIX_MANAGER.get_team_name(champion_key) if champion_key else "-"
+            hole_values = list(state.get("hole_values", []))
+            hole_line = " | ".join(f"H{idx + 1}:{int(value):+d}" for idx, value in enumerate(hole_values))
+            standings = GRAND_PRIX_MANAGER.get_team_rows(state)
+            team_lines = [f"{row['rank']}. {row['name']}  {int(row['points'])}p" for row in standings]
+            if not team_lines:
+                team_lines = [f"- {GRAND_PRIX_MANAGER.get_team_name(key)}" for key in state.get("team_keys", [])]
+            text = (
+                f"Grand Prix: {state.get('name', '-')}\n"
+                f"Takim: {len(state.get('team_keys', []))}  |  Raunt: {state.get('round_count', '-')}\n"
+                f"Durum: {state.get('status', '-')}\n"
+                f"Tamamlanan: {state.get('completed_rounds', 0)} / {state.get('round_count', 0)}\n"
+                f"Sampiyon: {champion}\n\n"
+                f"Sabit Delik Puanlari:\n{hole_line}\n\n"
+                f"Standings:\n" + "\n".join(team_lines)
+            )
+        self.grand_prix_status_box.configure(state="normal")
+        self.grand_prix_status_box.delete("1.0", "end")
+        self.grand_prix_status_box.insert("1.0", text)
+        self.grand_prix_status_box.configure(state="disabled")
+
+    def _run_grand_prix_mode(self) -> None:
+        grand_prix_id: str | None = None
+        if self.current_grand_prix_state:
+            grand_prix_id = str(self.current_grand_prix_state.get("id") or "")
+        if not grand_prix_id:
+            latest = GRAND_PRIX_MANAGER.load_latest_state()
+            if latest is None:
+                messagebox.showerror("Grand Prix Yok", "Once bir Grand Prix olustur veya yukle.")
+                return
+            grand_prix_id = str(latest.get("id") or "")
+            self.current_grand_prix_state = latest
+
+        if not grand_prix_id:
+            messagebox.showerror("Grand Prix Yok", "Gecerli Grand Prix id bulunamadi.")
+            return
+
+        def _on_success() -> None:
+            updated = GRAND_PRIX_MANAGER.load_state(grand_prix_id)
+            if updated is not None:
+                self.current_grand_prix_state = updated
+                self._update_grand_prix_status_box()
+
+        self._run_python_script_async(
+            script_name="run_grand_prix.py",
+            success_message="Grand Prix run tamamlandi.",
+            refresh_after=True,
+            script_args=[
+                "--grand-prix-id",
+                grand_prix_id,
+                "--headless",
+                "--progress-every",
+                "300",
+            ],
+            on_success=_on_success,
+        )
+
+    # --------------------------------------------------------
+    # TAB 5: ISLEM LOGU
     # --------------------------------------------------------
     def _build_log_tab(self) -> None:
         tab = self.tab_log
