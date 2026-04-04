@@ -204,15 +204,25 @@ def _build_center_lines(
     def _fmt_result_line(prefix: str, rec: dict[str, Any] | None) -> str:
         if rec is None:
             return f"{prefix}: -"
+        decision = str(rec.get("decided_by") or "normal_time")
+        if decision in {"extra_time", "penalties"}:
+            reg_a = rec.get("regular_time_score_a", rec.get("score_a", 0))
+            reg_b = rec.get("regular_time_score_b", rec.get("score_b", 0))
+            base_text = f"{reg_a}-{reg_b}"
+        else:
+            base_text = f"{rec.get('score_a', 0)}-{rec.get('score_b', 0)}"
         line = (
             f"{prefix}: {_broadcast_safe_text(rec.get('team_a_name', 'A'))} "
-            f"{rec.get('score_a', 0)}-{rec.get('score_b', 0)} "
+            f"{base_text} "
             f"{_broadcast_safe_text(rec.get('team_b_name', 'B'))}"
         )
-        decision = str(rec.get("decided_by") or "normal_time")
         if decision == "extra_time":
             line += f" (ET {rec.get('extra_time_score_a', 0)}-{rec.get('extra_time_score_b', 0)})"
         elif decision == "penalties":
+            et_a = rec.get("extra_time_score_a")
+            et_b = rec.get("extra_time_score_b")
+            if et_a is not None and et_b is not None:
+                line += f" (AET {et_a}-{et_b})"
             line += f" (PEN {rec.get('penalty_score_a', 0)}-{rec.get('penalty_score_b', 0)})"
         return line
 
