@@ -1436,17 +1436,28 @@ class MarbleRaceLauncherApp(ctk.CTk):
                 canvas.create_text(x2 - 8, cy, text=score_text, anchor="e", fill="#BFD2F6", font=("Consolas", 10, "bold"))
                 pos[str(match.get("id"))] = (x1, x2, cy, cy)
 
+        parent_to_children: dict[str, list[str]] = {}
         for match in state.get("matches", []):
             child_id = str(match.get("id"))
             parent_id = str(match.get("winner_to_match_id") or "")
-            if not parent_id:
+            if not parent_id or child_id not in pos or parent_id not in pos:
                 continue
-            if child_id not in pos or parent_id not in pos:
-                continue
-            cx1, cx2, cy, _ = pos[child_id]
+            parent_to_children.setdefault(parent_id, []).append(child_id)
+
+        for parent_id, children in parent_to_children.items():
             px1, _px2, py, _ = pos[parent_id]
+            child_cys = [pos[cid][2] for cid in children if cid in pos]
+            if not child_cys:
+                continue
+            cx2 = pos[children[0]][1]
             midx = (cx2 + px1) / 2.0
-            canvas.create_line(cx2, cy, midx, cy, midx, py, px1, py, fill="#4F6EA0", width=2)
+            # Her child'dan midx'e yatay çizgi
+            for cy in child_cys:
+                canvas.create_line(cx2, cy, midx, cy, fill="#4F6EA0", width=2)
+            # midx'te dikey birleştirici (min child'dan max child'a)
+            canvas.create_line(midx, min(child_cys), midx, max(child_cys), fill="#4F6EA0", width=2)
+            # midx'ten parent'a yatay çizgi (parent'ın cy'sinde)
+            canvas.create_line(midx, py, px1, py, fill="#4F6EA0", width=2)
 
     @staticmethod
     def _clip_text(text: str, limit: int) -> str:
