@@ -8,7 +8,7 @@ import sys
 import threading
 from pathlib import Path
 from tkinter import Canvas, Listbox, Scrollbar, StringVar, messagebox
-from typing import Callable
+from typing import Any, Callable
 
 import requests
 
@@ -2316,10 +2316,27 @@ class MarbleRaceLauncherApp(ctk.CTk):
         def _on_success() -> None:
             self._try_auto_record_tournament_result(auto_context, render_result)
 
+        script_args: list[str] = []
+        if auto_context is not None:
+            match_id = str(auto_context.get("match_id") or "")
+            if match_id:
+                script_args.extend(["--tournament-match-id", match_id])
+                matches = list((self.current_tournament_state or {}).get("matches", []))
+                total_matches = len(matches)
+                completed_matches = sum(
+                    1 for row in matches if str(row.get("status") or "") == "completed"
+                )
+                if total_matches > 0:
+                    current_index = min(total_matches, completed_matches + 1)
+                    script_args.extend(
+                        ["--tournament-progress", f"{current_index}/{total_matches}"]
+                    )
+
         self._run_python_script_async(
             script_name="main.py",
             success_message="Video export tamamlandi.",
             refresh_after=True,
+            script_args=script_args,
             on_stdout_line=_on_stdout_line,
             on_success=_on_success,
         )
@@ -2427,20 +2444,59 @@ class MarbleRaceLauncherApp(ctk.CTk):
             self.log("Turnuva otomatik sonuc atlandi: skor parse edilemedi.")
             return
 
+        def _to_int_or_none(value: Any) -> int | None:
+            if value is None:
+                return None
+            try:
+                return int(value)
+            except Exception:
+                return None
+
+        raw_regular_a = _to_int_or_none(result.get("regular_time_score_a"))
+        raw_regular_b = _to_int_or_none(result.get("regular_time_score_b"))
+        raw_extra_a = _to_int_or_none(result.get("extra_time_score_a"))
+        raw_extra_b = _to_int_or_none(result.get("extra_time_score_b"))
+        raw_pen_a = _to_int_or_none(result.get("penalty_score_a"))
+        raw_pen_b = _to_int_or_none(result.get("penalty_score_b"))
+        raw_decided_by = str(result.get("decided_by") or "normal_time")
+        if raw_regular_a is None:
+            raw_regular_a = raw_score_a
+        if raw_regular_b is None:
+            raw_regular_b = raw_score_b
+
         if result_team_a == expected_a and result_team_b == expected_b:
-            score_a, score_b = raw_score_a, raw_score_b
+            final_a, final_b = raw_score_a, raw_score_b
+            regular_a, regular_b = raw_regular_a, raw_regular_b
+            extra_a, extra_b = raw_extra_a, raw_extra_b
+            pen_a, pen_b = raw_pen_a, raw_pen_b
         elif result_team_a == expected_b and result_team_b == expected_a:
-            score_a, score_b = raw_score_b, raw_score_a
+            final_a, final_b = raw_score_b, raw_score_a
+            regular_a, regular_b = raw_regular_b, raw_regular_a
+            extra_a, extra_b = raw_extra_b, raw_extra_a
+            pen_a, pen_b = raw_pen_b, raw_pen_a
         else:
             self.log("Turnuva otomatik sonuc atlandi: takim sirasi dogrulanamadi.")
             return
+
+        resolution_override = {
+            "score_a": int(final_a),
+            "score_b": int(final_b),
+            "decided_by": raw_decided_by,
+            "regular_time_score_a": int(regular_a),
+            "regular_time_score_b": int(regular_b),
+            "extra_time_score_a": extra_a,
+            "extra_time_score_b": extra_b,
+            "penalty_score_a": pen_a,
+            "penalty_score_b": pen_b,
+        }
 
         try:
             state = TOURNAMENT_MANAGER.record_match_result_with_knockout_rules(
                 state=self.current_tournament_state,
                 match_id=match_id,
-                score_a=score_a,
-                score_b=score_b,
+                score_a=int(regular_a),
+                score_b=int(regular_b),
+                resolution_override=resolution_override,
             )
         except Exception as exc:
             self.log(f"Turnuva otomatik sonuc islenemedi: {exc}")
@@ -2456,10 +2512,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self._render_tournament_bracket()
         match_row = next((m for m in state.get("matches", []) if str(m.get("id")) == str(match_id)), None)
         decided_by = str((match_row or {}).get("decided_by") or "normal_time")
-        final_a = int((match_row or {}).get("score_a") or score_a)
-        final_b = int((match_row or {}).get("score_b") or score_b)
+        saved_final_a = int((match_row or {}).get("score_a") or final_a)
+        saved_final_b = int((match_row or {}).get("score_b") or final_b)
         self.log(
-            f"Turnuva sonucu otomatik islendi: {score_a}-{score_b} -> {final_a}-{final_b} "
+            f"Turnuva sonucu otomatik islendi: {regular_a}-{regular_b} -> {saved_final_a}-{saved_final_b} "
             f"({decided_by}, mac: {match_id})"
         )
 

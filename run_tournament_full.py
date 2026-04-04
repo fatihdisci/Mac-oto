@@ -473,7 +473,7 @@ def _make_landscape_segment(
         filter_complex = (
             base_video_filter
             + ";"
-            + "[0:a]volume=0.95[a0];[1:a]volume=0.95[a1];[a0][a1]amix=inputs=2:duration=shortest:dropout_transition=2:normalize=0[a]"
+            + "[0:a]volume=0.95[a0];[1:a]volume=0.95[a1];[a0][a1]amix=inputs=2:duration=longest:dropout_transition=2:normalize=0[a]"
         )
         cmd = ["ffmpeg", "-y", *left_input, *right_input, "-filter_complex", filter_complex]
         cmd.extend(
