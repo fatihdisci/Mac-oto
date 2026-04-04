@@ -208,7 +208,13 @@ class TournamentManager:
 
         wins_needed = max(1, int(match.get("wins_needed", 1)))
         if wins_needed == 1:
-            winner_key = str(match.get("team_a_key")) if score_a > score_b else str(match.get("team_b_key"))
+            decided_by = str(resolved.get("decided_by", "normal_time"))
+            if decided_by == "penalties":
+                pen_a = int(resolved.get("penalty_score_a") or 0)
+                pen_b = int(resolved.get("penalty_score_b") or 0)
+                winner_key = str(match.get("team_a_key")) if pen_a > pen_b else str(match.get("team_b_key"))
+            else:
+                winner_key = str(match.get("team_a_key")) if score_a > score_b else str(match.get("team_b_key"))
             match["score_a"] = int(score_a)
             match["score_b"] = int(score_b)
             match["winner_team_key"] = winner_key

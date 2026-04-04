@@ -92,16 +92,9 @@ def resolve_single_leg_knockout(
             penalty_kicks.append({"team": "A", "round": "SDX", "scored": False})
             penalty_kicks.append({"team": "B", "round": "SDX", "scored": True})
 
-    if pen_a > pen_b:
-        resolved_a = total_a + 1
-        resolved_b = total_b
-    else:
-        resolved_a = total_a
-        resolved_b = total_b + 1
-
     return {
-        "score_a": int(resolved_a),
-        "score_b": int(resolved_b),
+        "score_a": int(total_a),
+        "score_b": int(total_b),
         "decided_by": "penalties",
         "regular_time_score_a": score_a,
         "regular_time_score_b": score_b,
