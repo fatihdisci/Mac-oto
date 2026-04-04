@@ -21,6 +21,7 @@ output_sim.mp4
 
 # Large/generated data
 data/tournaments/
+data/grand_prix/
 data/all_teams.json
 data/api_football_teams.json
 data/sync_manifest.json
