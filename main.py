@@ -723,6 +723,9 @@ def run_simulation(
                     decided_by_now = str(knockout_resolution.get("decided_by") or "normal_time")
                     if decided_by_now in {"extra_time", "penalties"}:
                         extra_time_video_seconds = configured_extra_time_video_seconds
+                        # Regular time bitişinde anında snapshot al (else branch sıfırlamadan önce değil,
+                        # ama bu frame'de knockout hesaplandıktan hemen sonra — bir frame gecikmeyi önler)
+                        extra_time_frozen_snapshot = physics.get_state_snapshot()
                         et_goal_offset = regular_phase_end
                         et_goal_next_idx = 0
                         et_goal_triggers = _plan_extra_time_goal_triggers(
