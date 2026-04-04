@@ -87,6 +87,7 @@ class MarbleRaceRenderer:
         self._draw_confetti(target_surface, 1.0 / self.cfg.video.fps)
         self._draw_goal_flash(target_surface)
         self._draw_var_review_overlay(target_surface, state_snapshot)
+        self._draw_penalty_overlay(target_surface, state_snapshot)
 
         if state_snapshot.get("show_hook_overlay", False):
             self._draw_hook_overlay(target_surface, state_snapshot)
@@ -322,6 +323,8 @@ class MarbleRaceRenderer:
         match_clock_text = snapshot.get("match_clock_text", "00:00")
         progress_ratio = float(snapshot.get("match_progress_ratio", 0.0))
         show_full_time = bool(snapshot.get("show_final_result_overlay", False))
+        match_phase = str(snapshot.get("match_phase", "regular_time"))
+        knockout_decided_by = str(snapshot.get("knockout_decided_by", "normal_time"))
 
         # --- Ana skor paneli ---
         panel_w = 940
@@ -382,8 +385,19 @@ class MarbleRaceRenderer:
         surface.blit(live_chip, live_chip.get_rect(center=chip_bg.center))
 
         if show_full_time:
-            phase_text = "FULL TIME"
+            if knockout_decided_by == "penalties":
+                phase_text = "FULL TIME (PEN)"
+            elif knockout_decided_by == "extra_time":
+                phase_text = "FULL TIME (AET)"
+            else:
+                phase_text = "FULL TIME"
             phase_color = (255, 227, 120)
+        elif match_phase == "extra_time":
+            phase_text = "EXTRA TIME"
+            phase_color = (255, 210, 120)
+        elif match_phase == "penalties":
+            phase_text = "PENALTIES"
+            phase_color = (255, 196, 128)
         else:
             phase_text = "1ST HALF" if progress_ratio < 0.5 else "2ND HALF"
             phase_color = (175, 185, 205)
@@ -560,6 +574,57 @@ class MarbleRaceRenderer:
 
         pygame.draw.rect(surface, (214, 222, 240), rail_rect, width=2, border_radius=13)
 
+    def _draw_penalty_overlay(self, surface: pygame.Surface, snapshot: dict) -> None:
+        if not bool(snapshot.get("penalty_overlay_active", False)):
+            return
+
+        teams = snapshot.get("teams", [])
+        if len(teams) < 2:
+            return
+
+        team_a = next((team for team in teams if team.get("role") == "A"), teams[0])
+        team_b = next((team for team in teams if team.get("role") == "B"), teams[1])
+        pen_a = int(snapshot.get("penalty_display_score_a", 0))
+        pen_b = int(snapshot.get("penalty_display_score_b", 0))
+        marks_a = list(snapshot.get("penalty_marks_a", []))
+        marks_b = list(snapshot.get("penalty_marks_b", []))
+        total_shown = int(snapshot.get("penalty_shown_kicks", 0))
+        total_all = int(snapshot.get("penalty_total_kicks", 0))
+
+        panel = pygame.Rect(120, 360, self.cfg.video.width - 240, 250)
+        self._draw_glass_panel(surface, panel, (8, 14, 24, 220), (248, 200, 110, 235), 28)
+
+        title = self.team_font.render("PENALTY SHOOTOUT", True, (255, 223, 138))
+        surface.blit(title, title.get_rect(center=(panel.centerx, panel.y + 36)))
+
+        team_name_a = self._fit_text(self.team_font, self._display_score_team_name(team_a), 280, (245, 246, 250))
+        team_name_b = self._fit_text(self.team_font, self._display_score_team_name(team_b), 280, (245, 246, 250))
+        surface.blit(team_name_a, team_name_a.get_rect(center=(panel.x + 205, panel.y + 82)))
+        surface.blit(team_name_b, team_name_b.get_rect(center=(panel.right - 205, panel.y + 82)))
+
+        score_text = self.score_font.render(f"{pen_a}  -  {pen_b}", True, (255, 246, 230))
+        surface.blit(score_text, score_text.get_rect(center=(panel.centerx, panel.y + 126)))
+
+        box_w = 30
+        box_h = 18
+        gap = 8
+        row_y_a = panel.y + 182
+        row_y_b = panel.y + 212
+        max_marks = max(len(marks_a), len(marks_b), 10)
+        row_w = max_marks * box_w + max(0, max_marks - 1) * gap
+        row_x = panel.centerx - row_w // 2
+        for i in range(max_marks):
+            x = row_x + i * (box_w + gap)
+            mark_a = marks_a[i] if i < len(marks_a) else ""
+            mark_b = marks_b[i] if i < len(marks_b) else ""
+            color_a = (95, 198, 122) if mark_a == "GOAL" else ((206, 82, 82) if mark_a == "MISS" else (58, 70, 98))
+            color_b = (95, 198, 122) if mark_b == "GOAL" else ((206, 82, 82) if mark_b == "MISS" else (58, 70, 98))
+            pygame.draw.rect(surface, color_a, pygame.Rect(x, row_y_a, box_w, box_h), border_radius=6)
+            pygame.draw.rect(surface, color_b, pygame.Rect(x, row_y_b, box_w, box_h), border_radius=6)
+
+        status = self.micro_font.render(f"Kicks shown: {total_shown}/{total_all}", True, (196, 206, 226))
+        surface.blit(status, status.get_rect(center=(panel.centerx, panel.bottom - 14)))
+
     def _draw_finish_overlay(self, surface: pygame.Surface, snapshot: dict) -> None:
         teams = snapshot.get("teams", [])
         if len(teams) < 2:
@@ -575,19 +640,40 @@ class MarbleRaceRenderer:
         score_a = int(team_a["score"])
         score_b = int(team_b["score"])
         progress = float(snapshot.get("final_result_progress", 1.0))
+        decided_by = str(snapshot.get("knockout_decided_by", "normal_time"))
+        regular_a = int(snapshot.get("regular_time_score_a", score_a))
+        regular_b = int(snapshot.get("regular_time_score_b", score_b))
+        extra_raw_a = snapshot.get("extra_time_score_a")
+        extra_raw_b = snapshot.get("extra_time_score_b")
+        extra_a = int(extra_raw_a) if extra_raw_a is not None else 0
+        extra_b = int(extra_raw_b) if extra_raw_b is not None else 0
+        pen_raw_a = snapshot.get("penalty_score_a")
+        pen_raw_b = snapshot.get("penalty_score_b")
+        pen_a = int(pen_raw_a) if pen_raw_a is not None else None
+        pen_b = int(pen_raw_b) if pen_raw_b is not None else None
 
         panel = pygame.Rect(120, 470, self.cfg.video.width - 240, 680)
         self._draw_glass_panel(surface, panel, (10, 16, 28, 220), (92, 114, 156, 235), 36)
 
-        final_label = "FINAL RESULT" if self._is_pop_mode(snapshot) else "FULL TIME"
+        if decided_by == "penalties":
+            final_label = "FULL TIME (PEN)"
+        elif decided_by == "extra_time":
+            final_label = "FULL TIME (AET)"
+        else:
+            final_label = "FINAL RESULT" if self._is_pop_mode(snapshot) else "FULL TIME"
         ft_text = self.overlay_font.render(final_label, True, (255, 228, 128))
         ft_rect = ft_text.get_rect(center=(self.cfg.video.width // 2, panel.y + 92))
         surface.blit(ft_text, ft_rect)
 
-        if score_a > score_b:
+        if decided_by == "penalties" and pen_a is not None and pen_b is not None:
+            winner_is_a = pen_a > pen_b
+        else:
+            winner_is_a = score_a > score_b
+
+        if winner_is_a:
             headline = f"{team_a['name']} WINS!"
             color = (220, 72, 72)
-        elif score_b > score_a:
+        elif (decided_by == "penalties" and pen_a is not None and pen_b is not None and pen_b > pen_a) or score_b > score_a:
             headline = f"{team_b['name']} WINS!"
             color = (79, 137, 255)
         else:
@@ -608,7 +694,16 @@ class MarbleRaceRenderer:
         surface.blit(team_a_text, team_a_text.get_rect(center=(panel.x + 190, panel.y + 495)))
         surface.blit(team_b_text, team_b_text.get_rect(center=(panel.right - 190, panel.y + 495)))
 
-        detail = self.result_font.render(f"{score_a} - {score_b}", True, (246, 246, 248))
+        if decided_by == "penalties" and pen_a is not None and pen_b is not None:
+            base_a = regular_a + extra_a
+            base_b = regular_b + extra_b
+            detail_text = f"{base_a} - {base_b}   PEN {pen_a}-{pen_b}"
+        elif decided_by == "extra_time":
+            detail_text = f"{regular_a + extra_a} - {regular_b + extra_b}   (AET)"
+        else:
+            detail_text = f"{score_a} - {score_b}"
+
+        detail = self._fit_text(self.result_font, detail_text, panel.width - 140, (246, 246, 248))
         detail_rect = detail.get_rect(center=(self.cfg.video.width // 2, panel.y + 372))
         surface.blit(detail, detail_rect)
 

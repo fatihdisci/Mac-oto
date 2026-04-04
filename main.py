@@ -7,6 +7,8 @@ import re
 import sys
 import json
 import argparse
+import time
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from tkinter import Tk, messagebox
@@ -15,6 +17,7 @@ import pygame
 
 from audio_mixer import mix_audio_into_video
 from config import build_default_config
+from knockout_rules import resolve_single_leg_knockout
 from models import MatchSelection
 from physics import MarbleRacePhysics
 from renderer import MarbleRaceRenderer
@@ -255,11 +258,72 @@ def _estimate_live_position_edge(
     return max(-1.0, min(1.0, edge))
 
 
+def _plan_extra_time_goal_triggers(
+    *,
+    match_id: str,
+    team_a_key: str,
+    team_b_key: str,
+    regular_score_a: int,
+    regular_score_b: int,
+    et_score_a: int,
+    et_score_b: int,
+    et_video_seconds: float,
+) -> list[tuple[float, str]]:
+    events: list[tuple[float, str]] = []
+    if et_video_seconds <= 0:
+        return events
+    seed = (
+        f"et_timeline:{match_id}:{team_a_key}:{team_b_key}:"
+        f"{regular_score_a}:{regular_score_b}:{et_score_a}:{et_score_b}"
+    )
+    rng = random.Random(seed)
+    pad = min(1.2, max(0.2, et_video_seconds * 0.12))
+    start = pad
+    end = max(start + 0.01, et_video_seconds - pad)
+    for _ in range(max(0, int(et_score_a))):
+        events.append((rng.uniform(start, end), team_a_key))
+    for _ in range(max(0, int(et_score_b))):
+        events.append((rng.uniform(start, end), team_b_key))
+    events.sort(key=lambda item: item[0])
+    return events
+
+
+def _compute_penalty_display(
+    kicks: list[dict],
+    shown_count: int,
+) -> tuple[int, int, list[str], list[str]]:
+    a_score = 0
+    b_score = 0
+    a_marks: list[str] = []
+    b_marks: list[str] = []
+    limit = max(0, min(int(shown_count), len(kicks)))
+    for kick in kicks[:limit]:
+        team = str(kick.get("team") or "")
+        scored = bool(kick.get("scored", False))
+        mark = "GOAL" if scored else "MISS"
+        if team == "A":
+            a_marks.append(mark)
+            if scored:
+                a_score += 1
+        elif team == "B":
+            b_marks.append(mark)
+            if scored:
+                b_score += 1
+    return a_score, b_score, a_marks, b_marks
+
+
 # ============================================================
 # ANA SÄ°MÃœLASYON
 # ============================================================
 
-def run_simulation() -> Path:
+def run_simulation(
+    *,
+    headless: bool = False,
+    fps_override: int | None = None,
+    progress_every: int = 0,
+    tournament_match_id: str = "",
+    tournament_progress: str = "",
+) -> Path:
     """
     AkÄ±ÅŸ:
     1) config yÃ¼klenir
@@ -268,6 +332,8 @@ def run_simulation() -> Path:
     4) sabit 60 saniyelik / 60 FPS export yapÄ±lÄ±r
     """
     cfg = build_default_config()
+    if fps_override is not None and int(fps_override) > 0:
+        cfg = replace(cfg, video=replace(cfg.video, fps=int(fps_override)))
     repository = TeamRepository(cfg.data_dir)
 
     match_selection = repository.load_selected_match()
@@ -284,14 +350,16 @@ def run_simulation() -> Path:
     video_output_path = output_dir / video_filename
 
     pygame.init()
-    preview_max_height = 780
-    preview_scale = min(1.0, preview_max_height / cfg.video.height)
-    preview_width = max(360, int(cfg.video.width * preview_scale))
-    preview_height = max(640, int(cfg.video.height * preview_scale))
-
-    pygame.display.set_caption("Marble Football Race Exporter Preview")
-
-    screen = pygame.display.set_mode((preview_width, preview_height))
+    screen = None
+    preview_width = 0
+    preview_height = 0
+    if not headless:
+        preview_max_height = 780
+        preview_scale = min(1.0, preview_max_height / cfg.video.height)
+        preview_width = max(360, int(cfg.video.width * preview_scale))
+        preview_height = max(640, int(cfg.video.height * preview_scale))
+        pygame.display.set_caption("Marble Football Race Exporter Preview")
+        screen = pygame.display.set_mode((preview_width, preview_height))
     render_surface = pygame.Surface((cfg.video.width, cfg.video.height))
     clock = pygame.time.Clock()
 
@@ -306,6 +374,8 @@ def run_simulation() -> Path:
     start_event_type = "pop_start" if is_pop_mode else "whistle_start"
     score_event_type = "pop_point" if is_pop_mode else "goal"
     end_event_type = "pop_end" if is_pop_mode else "whistle_end"
+    is_tournament_run = bool(str(tournament_match_id or "").strip())
+    knockout_mode_enabled = is_tournament_run and not is_pop_mode
 
     fixed_dt = 1.0 / cfg.video.fps
     base_video_seconds = cfg.video.total_duration_seconds
@@ -313,7 +383,22 @@ def run_simulation() -> Path:
     intro_seconds = 2.0
     outro_seconds = 2.0
     gameplay_seconds = max(1.0, base_video_seconds - intro_seconds - outro_seconds)
+    regular_video_seconds = gameplay_seconds
+    extra_time_video_seconds = 0.0
+    penalties_video_seconds = 0.0
+    configured_extra_time_video_seconds = 18.0
+    configured_penalties_video_seconds = 14.0
+    et_goal_triggers: list[tuple[float, str]] = []
+    et_goal_next_idx = 0
+    et_goal_offset = 0.0
+    penalty_kicks: list[dict] = []
+    penalty_kick_times: list[float] = []
+    penalty_revealed_count = 0
+    knockout_resolution: dict | None = None
+    knockout_final_resolution: dict | None = None
     frozen_snapshot: dict | None = None
+    extra_time_frozen_snapshot: dict | None = None
+    penalty_frozen_snapshot: dict | None = None
     var_rng = random.Random(cfg.gameplay.random_seed)
     var_check_probability = 0.20
     var_cancel_probability = 0.30
@@ -339,6 +424,14 @@ def run_simulation() -> Path:
     print(f"Toplam frame         : {total_frames}")
     print(f"Simule mac suresi    : {cfg.gameplay.simulated_match_minutes:.2f} dakika")
     print(f"Cikti                : {video_output_path}")
+    if headless:
+        print("Render mode          : HEADLESS")
+    if tournament_match_id:
+        print(f"Tournament match     : {tournament_match_id}")
+    if tournament_progress:
+        print(f"Tournament progress  : {tournament_progress}")
+    if knockout_mode_enabled:
+        print("Knockout rules       : 90 + ET(+15,+15) + PEN")
     print("=" * 60)
 
     running = True
@@ -357,20 +450,31 @@ def run_simulation() -> Path:
     final_score_b = 0
     final_team_a_key = match_selection.team_a.team_key
     final_team_b_key = match_selection.team_b.team_key
+    progress_every = max(0, int(progress_every))
+    render_start_ts = time.perf_counter()
 
     try:
         with Mp4VideoWriter(cfg, output_path=video_output_path) as writer:
             frame_index = 0
             while True:
-                total_video_seconds = base_video_seconds + var_extra_seconds + guided_extra_seconds
-                if guided_forced_total_seconds is not None:
-                    total_video_seconds = min(total_video_seconds, guided_forced_total_seconds)
+                regular_phase_seconds = regular_video_seconds + var_extra_seconds + guided_extra_seconds
+                if guided_forced_total_seconds is not None and not knockout_mode_enabled:
+                    regular_phase_seconds = min(
+                        regular_phase_seconds,
+                        max(1.0, guided_forced_total_seconds - intro_seconds - outro_seconds),
+                    )
+                gameplay_seconds = max(
+                    1.0,
+                    regular_phase_seconds + extra_time_video_seconds + penalties_video_seconds,
+                )
+                total_video_seconds = intro_seconds + gameplay_seconds + outro_seconds
                 total_frames = int(round(cfg.video.fps * total_video_seconds))
                 if frame_index >= total_frames:
                     break
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
+                if not headless:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
 
                 if not running:
                     break
@@ -378,8 +482,29 @@ def run_simulation() -> Path:
                 video_seconds_elapsed = (frame_index + 1) / cfg.video.fps
                 is_intro = video_seconds_elapsed < intro_seconds
                 is_outro = video_seconds_elapsed >= max(0.0, total_video_seconds - outro_seconds)
+                gameplay_elapsed = min(max(video_seconds_elapsed - intro_seconds, 0.0), gameplay_seconds)
 
-                if not is_intro and not is_outro:
+                regular_phase_end = regular_phase_seconds
+                extra_phase_end = regular_phase_end + extra_time_video_seconds
+                penalties_phase_end = extra_phase_end + penalties_video_seconds
+                if is_intro:
+                    match_phase = "intro"
+                elif gameplay_elapsed < regular_phase_end:
+                    match_phase = "regular_time"
+                elif extra_time_video_seconds > 0.0 and gameplay_elapsed < extra_phase_end:
+                    match_phase = "extra_time"
+                elif penalties_video_seconds > 0.0 and gameplay_elapsed < penalties_phase_end:
+                    match_phase = "penalties"
+                elif is_outro:
+                    match_phase = "outro"
+                elif penalties_video_seconds > 0.0:
+                    match_phase = "penalties"
+                elif extra_time_video_seconds > 0.0:
+                    match_phase = "extra_time"
+                else:
+                    match_phase = "regular_time"
+
+                if not is_intro and not is_outro and match_phase not in {"extra_time", "penalties"}:
                     if not (football_var_mode and active_var_review is not None):
                         physics.update(fixed_dt)
                         frozen_snapshot = None
@@ -392,13 +517,20 @@ def run_simulation() -> Path:
                         })
                         whistle_start_added = True
 
-
-                gameplay_seconds = max(1.0, total_video_seconds - intro_seconds - outro_seconds)
-                gameplay_elapsed = min(max(video_seconds_elapsed - intro_seconds, 0.0), gameplay_seconds)
                 raw_progress_ratio = gameplay_elapsed / gameplay_seconds
                 progress_ratio = max(max_progress_ratio, min(1.0, raw_progress_ratio))
                 max_progress_ratio = progress_ratio
-                current_match_seconds = cfg.simulated_match_total_seconds * progress_ratio
+                if regular_phase_seconds <= 1e-6:
+                    current_match_seconds = 0.0
+                elif gameplay_elapsed <= regular_phase_end:
+                    current_match_seconds = 90.0 * 60.0 * (gameplay_elapsed / max(1e-6, regular_phase_seconds))
+                elif extra_time_video_seconds > 0.0 and gameplay_elapsed <= extra_phase_end:
+                    et_elapsed = gameplay_elapsed - regular_phase_end
+                    current_match_seconds = 90.0 * 60.0 + 30.0 * 60.0 * (
+                        et_elapsed / max(1e-6, extra_time_video_seconds)
+                    )
+                else:
+                    current_match_seconds = 120.0 * 60.0
                 current_match_clock = format_match_clock(current_match_seconds)
 
                 if is_outro:
@@ -411,7 +543,19 @@ def run_simulation() -> Path:
                         })
                     snapshot = dict(frozen_snapshot)
                     active_balls = []
+                elif match_phase == "penalties":
+                    if penalty_frozen_snapshot is None:
+                        penalty_frozen_snapshot = physics.get_state_snapshot()
+                    snapshot = dict(penalty_frozen_snapshot)
+                    active_balls = []
+                elif match_phase == "extra_time" and knockout_mode_enabled and knockout_resolution is not None:
+                    if extra_time_frozen_snapshot is None:
+                        extra_time_frozen_snapshot = physics.get_state_snapshot()
+                    snapshot = dict(extra_time_frozen_snapshot)
+                    active_balls = []
                 else:
+                    penalty_frozen_snapshot = None
+                    extra_time_frozen_snapshot = None
                     snapshot = physics.get_state_snapshot()
                     active_balls = physics.get_active_ball_draw_data()
 
@@ -562,14 +706,161 @@ def run_simulation() -> Path:
                 team_b_key = str(team_b_meta.get("team_key", ""))
                 score_a = int(team_a_meta.get("score", 0))
                 score_b = int(team_b_meta.get("score", 0))
+
+                if (
+                    knockout_mode_enabled
+                    and knockout_resolution is None
+                    and gameplay_elapsed >= regular_phase_end
+                ):
+                    knockout_resolution = resolve_single_leg_knockout(
+                        match_id=str(tournament_match_id or ""),
+                        team_a_key=team_a_key,
+                        team_b_key=team_b_key,
+                        regular_score_a=score_a,
+                        regular_score_b=score_b,
+                    )
+                    knockout_final_resolution = dict(knockout_resolution)
+                    decided_by_now = str(knockout_resolution.get("decided_by") or "normal_time")
+                    if decided_by_now in {"extra_time", "penalties"}:
+                        extra_time_video_seconds = configured_extra_time_video_seconds
+                        et_goal_offset = regular_phase_end
+                        et_goal_next_idx = 0
+                        et_goal_triggers = _plan_extra_time_goal_triggers(
+                            match_id=str(tournament_match_id or ""),
+                            team_a_key=team_a_key,
+                            team_b_key=team_b_key,
+                            regular_score_a=score_a,
+                            regular_score_b=score_b,
+                            et_score_a=int(knockout_resolution.get("extra_time_score_a") or 0),
+                            et_score_b=int(knockout_resolution.get("extra_time_score_b") or 0),
+                            et_video_seconds=extra_time_video_seconds,
+                        )
+                    if decided_by_now == "penalties":
+                        penalties_video_seconds = configured_penalties_video_seconds
+                        penalty_kicks = list(knockout_resolution.get("penalty_kicks") or [])
+                        penalty_revealed_count = 0
+                        if penalty_kicks:
+                            step = penalties_video_seconds / max(1, len(penalty_kicks) + 1)
+                            penalty_kick_times = [step * (i + 1) for i in range(len(penalty_kicks))]
+                        else:
+                            penalty_kick_times = []
+                    print(
+                        "KNOCKOUT_DECISION:"
+                        f"FT {score_a}-{score_b} -> "
+                        f"{int(knockout_resolution.get('score_a', score_a))}"
+                        f"-{int(knockout_resolution.get('score_b', score_b))} "
+                        f"({decided_by_now})"
+                    )
+
+                if (
+                    knockout_mode_enabled
+                    and et_goal_triggers
+                    and match_phase == "extra_time"
+                    and not is_outro
+                ):
+                    et_elapsed = max(0.0, gameplay_elapsed - et_goal_offset)
+                    while et_goal_next_idx < len(et_goal_triggers):
+                        trigger_at, trigger_team_key = et_goal_triggers[et_goal_next_idx]
+                        if et_elapsed + 1e-6 < trigger_at:
+                            break
+                        physics.register_confirmed_goal(trigger_team_key)
+                        recent_scoring_events.append((video_seconds_elapsed, trigger_team_key))
+                        snapshot_needs_refresh = True
+                        et_goal_next_idx += 1
+
+                if snapshot_needs_refresh and not is_outro:
+                    snapshot = physics.get_state_snapshot()
+                    if match_phase == "extra_time":
+                        extra_time_frozen_snapshot = dict(snapshot)
+                        active_balls = []
+                    elif match_phase == "penalties":
+                        penalty_frozen_snapshot = dict(snapshot)
+                        active_balls = []
+                    else:
+                        active_balls = physics.get_active_ball_draw_data()
+                    teams_for_odds = snapshot.get("teams", [])
+                    team_a_meta = next(
+                        (team for team in teams_for_odds if team.get("role") == "A"),
+                        teams_for_odds[0] if teams_for_odds else {},
+                    )
+                    team_b_meta = next(
+                        (team for team in teams_for_odds if team.get("role") == "B"),
+                        teams_for_odds[1] if len(teams_for_odds) > 1 else {},
+                    )
+                    score_a = int(team_a_meta.get("score", 0))
+                    score_b = int(team_b_meta.get("score", 0))
+
+                penalty_display_a = 0
+                penalty_display_b = 0
+                penalty_marks_a: list[str] = []
+                penalty_marks_b: list[str] = []
+                penalty_phase_start = regular_phase_end + extra_time_video_seconds
+                if (
+                    knockout_mode_enabled
+                    and penalty_kicks
+                    and penalties_video_seconds > 0.0
+                    and match_phase == "penalties"
+                ):
+                    penalty_elapsed = max(0.0, gameplay_elapsed - penalty_phase_start)
+                    while (
+                        penalty_revealed_count < len(penalty_kicks)
+                        and penalty_revealed_count < len(penalty_kick_times)
+                        and penalty_elapsed + 1e-6 >= penalty_kick_times[penalty_revealed_count]
+                    ):
+                        kick = penalty_kicks[penalty_revealed_count]
+                        if bool(kick.get("scored", False)):
+                            audio_events.append(
+                                {
+                                    "type": score_event_type,
+                                    "time": round(video_seconds_elapsed, 2),
+                                }
+                            )
+                        penalty_revealed_count += 1
+
+                    (
+                        penalty_display_a,
+                        penalty_display_b,
+                        penalty_marks_a,
+                        penalty_marks_b,
+                    ) = _compute_penalty_display(penalty_kicks, penalty_revealed_count)
+
                 final_score_a = score_a
                 final_score_b = score_b
+                if knockout_final_resolution is not None:
+                    final_score_a = int(knockout_final_resolution.get("score_a", final_score_a))
+                    final_score_b = int(knockout_final_resolution.get("score_b", final_score_b))
                 if team_a_key:
                     final_team_a_key = team_a_key
                 if team_b_key:
                     final_team_b_key = team_b_key
+                should_log_progress = (
+                    progress_every > 0
+                    and (
+                        frame_index == 0
+                        or frame_index % progress_every == 0
+                        or (frame_index + 1) >= total_frames
+                    )
+                )
+                if should_log_progress:
+                    elapsed = max(1e-6, time.perf_counter() - render_start_ts)
+                    produced = frame_index + 1
+                    proc_fps = produced / elapsed
+                    remain_frames = max(0, total_frames - produced)
+                    eta_seconds = remain_frames / proc_fps if proc_fps > 1e-6 else 0.0
+                    pct = (produced / max(1, total_frames)) * 100.0
+                    match_tag = f"[{tournament_match_id}] " if tournament_match_id else ""
+                    tourn_tag = f"[{tournament_progress}] " if tournament_progress else ""
+                    score_part = f"{score_a}-{score_b}"
+                    if match_phase == "penalties":
+                        score_part += f" | pen {penalty_display_a}-{penalty_display_b}"
+                    print(
+                        f"PROGRESS {match_tag}{tourn_tag}"
+                        f"{produced}/{total_frames} ({pct:.1f}%) | "
+                        f"clock {current_match_clock} | phase {match_phase} | score {score_part} | "
+                        f"speed {proc_fps:.1f} fps | ETA {eta_seconds:.1f}s"
+                    )
 
-                if football_guided_mode and not is_intro:
+                if football_guided_mode and not is_intro and not knockout_mode_enabled:
                     target_a = guided_target_a
                     target_b = guided_target_b
                     if target_a is not None and target_b is not None:
@@ -608,8 +899,15 @@ def run_simulation() -> Path:
                     engine_mode=normalized_mode,
                     momentum=momentum,
                 )
+                if match_phase == "penalties":
+                    if penalty_display_a > penalty_display_b:
+                        target_probs = (0.84, 0.0, 0.16)
+                    elif penalty_display_b > penalty_display_a:
+                        target_probs = (0.16, 0.0, 0.84)
+                    else:
+                        target_probs = (0.50, 0.0, 0.50)
                 rail_position_edge = 0.0
-                if not is_intro and not is_outro:
+                if not is_intro and not is_outro and match_phase != "penalties":
                     rail_position_edge = _estimate_live_position_edge(
                         active_balls=active_balls,
                         team_a_key=team_a_key,
@@ -657,6 +955,7 @@ def run_simulation() -> Path:
 
                 snapshot["match_clock_text"] = current_match_clock
                 snapshot["match_progress_ratio"] = progress_ratio
+                snapshot["match_phase"] = match_phase
                 snapshot["video_frame_index"] = frame_index
                 snapshot["video_total_frames"] = total_frames
                 snapshot["video_seconds_elapsed"] = video_seconds_elapsed
@@ -673,6 +972,40 @@ def run_simulation() -> Path:
                 snapshot["intro_seconds"] = intro_seconds
                 snapshot["outro_seconds"] = outro_seconds
                 snapshot["gameplay_seconds"] = gameplay_seconds
+                snapshot["knockout_mode"] = knockout_mode_enabled
+                decided_by = "normal_time"
+                regular_time_score_a = score_a
+                regular_time_score_b = score_b
+                extra_time_score_a = None
+                extra_time_score_b = None
+                penalty_score_a = None
+                penalty_score_b = None
+                if knockout_final_resolution is not None:
+                    decided_by = str(knockout_final_resolution.get("decided_by") or "normal_time")
+                    regular_time_score_a = int(knockout_final_resolution.get("regular_time_score_a", score_a))
+                    regular_time_score_b = int(knockout_final_resolution.get("regular_time_score_b", score_b))
+                    extra_raw_a = knockout_final_resolution.get("extra_time_score_a")
+                    extra_raw_b = knockout_final_resolution.get("extra_time_score_b")
+                    pen_raw_a = knockout_final_resolution.get("penalty_score_a")
+                    pen_raw_b = knockout_final_resolution.get("penalty_score_b")
+                    extra_time_score_a = int(extra_raw_a) if extra_raw_a is not None else None
+                    extra_time_score_b = int(extra_raw_b) if extra_raw_b is not None else None
+                    penalty_score_a = int(pen_raw_a) if pen_raw_a is not None else None
+                    penalty_score_b = int(pen_raw_b) if pen_raw_b is not None else None
+                snapshot["knockout_decided_by"] = decided_by
+                snapshot["regular_time_score_a"] = regular_time_score_a
+                snapshot["regular_time_score_b"] = regular_time_score_b
+                snapshot["extra_time_score_a"] = extra_time_score_a
+                snapshot["extra_time_score_b"] = extra_time_score_b
+                snapshot["penalty_score_a"] = penalty_score_a
+                snapshot["penalty_score_b"] = penalty_score_b
+                snapshot["penalty_overlay_active"] = (match_phase == "penalties")
+                snapshot["penalty_display_score_a"] = penalty_display_a
+                snapshot["penalty_display_score_b"] = penalty_display_b
+                snapshot["penalty_marks_a"] = penalty_marks_a
+                snapshot["penalty_marks_b"] = penalty_marks_b
+                snapshot["penalty_total_kicks"] = len(penalty_kicks)
+                snapshot["penalty_shown_kicks"] = penalty_revealed_count
 
                 renderer.draw(
                     target_surface=render_surface,
@@ -680,14 +1013,16 @@ def run_simulation() -> Path:
                     active_ball_draw_data=active_balls,
                 )
 
-                preview_frame = pygame.transform.smoothscale(render_surface, (preview_width, preview_height))
-                screen.blit(preview_frame, (0, 0))
-                pygame.display.flip()
+                if not headless and screen is not None:
+                    preview_frame = pygame.transform.smoothscale(render_surface, (preview_width, preview_height))
+                    screen.blit(preview_frame, (0, 0))
+                    pygame.display.flip()
                 writer.write_surface(render_surface)
                 exported_frames += 1
                 frame_index += 1
 
-                clock.tick(240)
+                if not headless:
+                    clock.tick(240)
 
     finally:
         pygame.quit()
@@ -698,17 +1033,36 @@ def run_simulation() -> Path:
     print(f"Toplam frame         : {exported_frames}")
     print(f"Olusan video suresi  : {total_seconds:.2f} saniye")
     print(f"Sessiz dosya         : {video_output_path}")
+    result_payload: dict[str, object] = {
+        "team_a_key": final_team_a_key,
+        "team_b_key": final_team_b_key,
+        "score_a": int(final_score_a),
+        "score_b": int(final_score_b),
+        "decided_by": "normal_time",
+        "regular_time_score_a": int(final_score_a),
+        "regular_time_score_b": int(final_score_b),
+        "extra_time_score_a": None,
+        "extra_time_score_b": None,
+        "penalty_score_a": None,
+        "penalty_score_b": None,
+    }
+    if knockout_final_resolution is not None:
+        result_payload["score_a"] = int(knockout_final_resolution.get("score_a", final_score_a))
+        result_payload["score_b"] = int(knockout_final_resolution.get("score_b", final_score_b))
+        result_payload["decided_by"] = str(knockout_final_resolution.get("decided_by") or "normal_time")
+        result_payload["regular_time_score_a"] = int(
+            knockout_final_resolution.get("regular_time_score_a", final_score_a)
+        )
+        result_payload["regular_time_score_b"] = int(
+            knockout_final_resolution.get("regular_time_score_b", final_score_b)
+        )
+        result_payload["extra_time_score_a"] = knockout_final_resolution.get("extra_time_score_a")
+        result_payload["extra_time_score_b"] = knockout_final_resolution.get("extra_time_score_b")
+        result_payload["penalty_score_a"] = knockout_final_resolution.get("penalty_score_a")
+        result_payload["penalty_score_b"] = knockout_final_resolution.get("penalty_score_b")
     print(
         "TOURNAMENT_RESULT_JSON:"
-        + json.dumps(
-            {
-                "team_a_key": final_team_a_key,
-                "team_b_key": final_team_b_key,
-                "score_a": int(final_score_a),
-                "score_b": int(final_score_b),
-            },
-            ensure_ascii=False,
-        )
+        + json.dumps(result_payload, ensure_ascii=False)
     )
     print("=" * 60)
 
@@ -750,10 +1104,26 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="Do not show desktop message boxes on completion/failure.",
     )
+    parser.add_argument("--headless", action="store_true", help="Disable preview window.")
+    parser.add_argument("--fps-override", type=int, default=None, help="Override video FPS for this run.")
+    parser.add_argument(
+        "--progress-every",
+        type=int,
+        default=0,
+        help="Print progress log every N frames (0 disables periodic progress logs).",
+    )
+    parser.add_argument("--tournament-match-id", type=str, default="")
+    parser.add_argument("--tournament-progress", type=str, default="")
     args = parser.parse_args(argv)
 
     try:
-        output_path = run_simulation()
+        output_path = run_simulation(
+            headless=bool(args.headless),
+            fps_override=args.fps_override,
+            progress_every=max(0, int(args.progress_every)),
+            tournament_match_id=str(args.tournament_match_id or ""),
+            tournament_progress=str(args.tournament_progress or ""),
+        )
         if args.no_messagebox:
             print(f"VIDEO_OUTPUT_PATH:{output_path}")
         else:

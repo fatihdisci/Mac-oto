@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import json
 import math
-import random
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from knockout_rules import resolve_single_leg_knockout
 from models import MatchSelection
 from team_repository import TeamRepository
 
 
 class TournamentManager:
-    SUPPORTED_SIZES = {16, 32, 48}
+    SUPPORTED_SIZES = {4, 8, 16, 32, 48}
     SUPPORTED_MODES = {"elimination", "playoff"}
 
     def __init__(self, data_dir: Path, repository: TeamRepository) -> None:
@@ -31,7 +31,7 @@ class TournamentManager:
     ) -> dict[str, Any]:
         clean_name = (name or "").strip() or "Untitled Tournament"
         if format_size not in self.SUPPORTED_SIZES:
-            raise ValueError("Desteklenmeyen format. Sadece 16, 32 veya 48 secilebilir.")
+            raise ValueError("Desteklenmeyen format. Sadece 4, 8, 16, 32 veya 48 secilebilir.")
         if tournament_mode not in self.SUPPORTED_MODES:
             raise ValueError("Desteklenmeyen turnuva modu.")
 
@@ -49,7 +49,8 @@ class TournamentManager:
 
         now = datetime.now().replace(microsecond=0).isoformat()
         tid = f"t_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-        wins_needed = 1 if tournament_mode == "elimination" else 2
+        # Kullanici talebi: final/playoff fark etmeksizin her turnuva maci tek ayak.
+        wins_needed = 1
         matches = self._build_matches(
             format_size=format_size,
             ordered_team_keys=unique_team_keys,
@@ -86,6 +87,7 @@ class TournamentManager:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
         if not isinstance(payload, dict):
             return None
+        self._enforce_single_leg_mode(payload)
         return payload
 
     def load_latest_tournament(self) -> dict[str, Any] | None:
@@ -93,7 +95,10 @@ class TournamentManager:
         if not files:
             return None
         payload = json.loads(files[0].read_text(encoding="utf-8-sig"))
-        return payload if isinstance(payload, dict) else None
+        if not isinstance(payload, dict):
+            return None
+        self._enforce_single_leg_mode(payload)
+        return payload
 
     def list_tournaments(self) -> list[dict[str, Any]]:
         rows: list[dict[str, Any]] = []
@@ -102,6 +107,7 @@ class TournamentManager:
             try:
                 payload = json.loads(path.read_text(encoding="utf-8-sig"))
                 if isinstance(payload, dict):
+                    self._enforce_single_leg_mode(payload)
                     rows.append(payload)
             except Exception:
                 continue
@@ -165,11 +171,10 @@ class TournamentManager:
         match_id: str,
         score_a: int,
         score_b: int,
+        resolution_override: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         if score_a < 0 or score_b < 0:
             raise ValueError("Skorlar negatif olamaz.")
-        if score_a == score_b:
-            raise ValueError("Turnuva macinda beraberlik kaydi yapilamaz.")
 
         matches = state.get("matches", [])
         match_by_id: dict[str, dict[str, Any]] = {str(m.get("id")): m for m in matches}
@@ -181,6 +186,26 @@ class TournamentManager:
         if not match.get("team_a_key") or not match.get("team_b_key"):
             raise ValueError("Bu macin iki tarafi henuz belli degil.")
 
+        # Global kural: tum turnuva maclari tek ayak oynanir.
+        match["wins_needed"] = 1
+        if match.get("status") == "active_series" and not match.get("winner_team_key"):
+            match["status"] = "pending"
+
+        resolved = self._resolve_knockout_draw_if_needed(
+            match=match,
+            score_a=int(score_a),
+            score_b=int(score_b),
+        )
+        if isinstance(resolution_override, dict):
+            resolved = self._normalize_resolution_override(
+                fallback=resolved,
+                score_a=int(score_a),
+                score_b=int(score_b),
+                override=resolution_override,
+            )
+        score_a = int(resolved["score_a"])
+        score_b = int(resolved["score_b"])
+
         wins_needed = max(1, int(match.get("wins_needed", 1)))
         if wins_needed == 1:
             winner_key = str(match.get("team_a_key")) if score_a > score_b else str(match.get("team_b_key"))
@@ -188,6 +213,17 @@ class TournamentManager:
             match["score_b"] = int(score_b)
             match["winner_team_key"] = winner_key
             match["status"] = "completed"
+            match["regular_time_score_a"] = int(score_a) if resolved.get("decided_by") == "normal_time" else int(
+                resolved.get("regular_time_score_a", score_a)
+            )
+            match["regular_time_score_b"] = int(score_b) if resolved.get("decided_by") == "normal_time" else int(
+                resolved.get("regular_time_score_b", score_b)
+            )
+            match["decided_by"] = str(resolved.get("decided_by", "normal_time"))
+            match["extra_time_score_a"] = resolved.get("extra_time_score_a")
+            match["extra_time_score_b"] = resolved.get("extra_time_score_b")
+            match["penalty_score_a"] = resolved.get("penalty_score_a")
+            match["penalty_score_b"] = resolved.get("penalty_score_b")
         else:
             games = list(match.get("games", []))
             winner_key = str(match.get("team_a_key")) if score_a > score_b else str(match.get("team_b_key"))
@@ -196,6 +232,17 @@ class TournamentManager:
                     "score_a": int(score_a),
                     "score_b": int(score_b),
                     "winner_team_key": winner_key,
+                    "regular_time_score_a": int(score_a)
+                    if resolved.get("decided_by") == "normal_time"
+                    else int(resolved.get("regular_time_score_a", score_a)),
+                    "regular_time_score_b": int(score_b)
+                    if resolved.get("decided_by") == "normal_time"
+                    else int(resolved.get("regular_time_score_b", score_b)),
+                    "decided_by": str(resolved.get("decided_by", "normal_time")),
+                    "extra_time_score_a": resolved.get("extra_time_score_a"),
+                    "extra_time_score_b": resolved.get("extra_time_score_b"),
+                    "penalty_score_a": resolved.get("penalty_score_a"),
+                    "penalty_score_b": resolved.get("penalty_score_b"),
                 }
             )
             match["games"] = games
@@ -219,66 +266,33 @@ class TournamentManager:
         self.save_tournament(state)
         return state
 
+    def _enforce_single_leg_mode(self, state: dict[str, Any]) -> None:
+        matches = state.get("matches", [])
+        if not isinstance(matches, list):
+            return
+        for m in matches:
+            if not isinstance(m, dict):
+                continue
+            m["wins_needed"] = 1
+            if m.get("status") == "active_series" and not m.get("winner_team_key"):
+                m["status"] = "pending"
+
     def record_match_result_with_knockout_rules(
         self,
         state: dict[str, Any],
         match_id: str,
         score_a: int,
         score_b: int,
+        resolution_override: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        matches = state.get("matches", [])
-        match_by_id: dict[str, dict[str, Any]] = {str(m.get("id")): m for m in matches}
-        match = match_by_id.get(str(match_id))
-        if match is None:
-            raise ValueError("Mac bulunamadi.")
-
-        resolved = self._resolve_knockout_draw_if_needed(
-            match=match,
-            score_a=int(score_a),
-            score_b=int(score_b),
-        )
-        state = self.record_match_result(
+        # Geriye donuk uyumluluk: artik asıl kural seti record_match_result icinde.
+        return self.record_match_result(
             state=state,
             match_id=str(match_id),
-            score_a=int(resolved["score_a"]),
-            score_b=int(resolved["score_b"]),
+            score_a=int(score_a),
+            score_b=int(score_b),
+            resolution_override=resolution_override,
         )
-
-        matches_after = state.get("matches", [])
-        match_after = next((m for m in matches_after if str(m.get("id")) == str(match_id)), None)
-        if match_after is None:
-            return state
-
-        if int(match_after.get("wins_needed", 1)) == 1:
-            match_after["regular_time_score_a"] = int(score_a)
-            match_after["regular_time_score_b"] = int(score_b)
-            match_after["decided_by"] = str(resolved.get("decided_by", "normal_time"))
-            match_after["extra_time_score_a"] = resolved.get("extra_time_score_a")
-            match_after["extra_time_score_b"] = resolved.get("extra_time_score_b")
-            match_after["penalty_score_a"] = resolved.get("penalty_score_a")
-            match_after["penalty_score_b"] = resolved.get("penalty_score_b")
-            if resolved.get("decided_by") == "extra_time":
-                match_after["score_a"] = int(resolved["score_a"])
-                match_after["score_b"] = int(resolved["score_b"])
-        else:
-            games = list(match_after.get("games", []))
-            if games:
-                g = dict(games[-1])
-                g["regular_time_score_a"] = int(score_a)
-                g["regular_time_score_b"] = int(score_b)
-                g["decided_by"] = str(resolved.get("decided_by", "normal_time"))
-                g["extra_time_score_a"] = resolved.get("extra_time_score_a")
-                g["extra_time_score_b"] = resolved.get("extra_time_score_b")
-                g["penalty_score_a"] = resolved.get("penalty_score_a")
-                g["penalty_score_b"] = resolved.get("penalty_score_b")
-                if resolved.get("decided_by") == "extra_time":
-                    g["score_a"] = int(resolved["score_a"])
-                    g["score_b"] = int(resolved["score_b"])
-                games[-1] = g
-                match_after["games"] = games
-
-        self.save_tournament(state)
-        return state
 
     def _resolve_knockout_draw_if_needed(
         self,
@@ -286,88 +300,78 @@ class TournamentManager:
         score_a: int,
         score_b: int,
     ) -> dict[str, Any]:
-        if score_a < 0 or score_b < 0:
-            raise ValueError("Skorlar negatif olamaz.")
-        if score_a != score_b:
-            return {
-                "score_a": int(score_a),
-                "score_b": int(score_b),
-                "decided_by": "normal_time",
-                "extra_time_score_a": None,
-                "extra_time_score_b": None,
-                "penalty_score_a": None,
-                "penalty_score_b": None,
-            }
-
-        seed_key = (
-            f"{match.get('id','')}:"
-            f"{match.get('team_a_key','')}:"
-            f"{match.get('team_b_key','')}:"
-            f"{score_a}:{score_b}:"
-            f"{len(match.get('games', []))}"
+        return resolve_single_leg_knockout(
+            match_id=str(match.get("id") or ""),
+            team_a_key=str(match.get("team_a_key") or ""),
+            team_b_key=str(match.get("team_b_key") or ""),
+            regular_score_a=int(score_a),
+            regular_score_b=int(score_b),
+            game_index=len(match.get("games", [])),
         )
-        rng = random.Random(seed_key)
 
-        # Uzatma: +15 ve +15 dakikada ek gol
-        et_a = rng.choices([0, 1, 2], weights=[0.63, 0.30, 0.07], k=1)[0]
-        et_b = rng.choices([0, 1, 2], weights=[0.63, 0.30, 0.07], k=1)[0]
-        total_a = int(score_a) + int(et_a)
-        total_b = int(score_b) + int(et_b)
-        if total_a != total_b:
-            return {
-                "score_a": total_a,
-                "score_b": total_b,
-                "decided_by": "extra_time",
-                "extra_time_score_a": int(et_a),
-                "extra_time_score_b": int(et_b),
-                "penalty_score_a": None,
-                "penalty_score_b": None,
-            }
+    def _normalize_resolution_override(
+        self,
+        *,
+        fallback: dict[str, Any],
+        score_a: int,
+        score_b: int,
+        override: dict[str, Any],
+    ) -> dict[str, Any]:
+        try:
+            final_a = int(override.get("score_a", fallback.get("score_a", score_a)))
+            final_b = int(override.get("score_b", fallback.get("score_b", score_b)))
+            regular_a = int(override.get("regular_time_score_a", score_a))
+            regular_b = int(override.get("regular_time_score_b", score_b))
+        except Exception:
+            return fallback
 
-        # Penaltilar: 5 + sudden death
-        pen_a = 0
-        pen_b = 0
-        for i in range(5):
-            if rng.random() < 0.74:
-                pen_a += 1
-            if rng.random() < 0.74:
-                pen_b += 1
-            rem = 4 - i
-            if pen_a > pen_b + rem:
-                break
-            if pen_b > pen_a + rem:
-                break
+        if final_a == final_b:
+            return fallback
 
-        sudden_rounds = 0
-        while pen_a == pen_b and sudden_rounds < 12:
-            a_goal = rng.random() < 0.74
-            b_goal = rng.random() < 0.74
-            pen_a += int(a_goal)
-            pen_b += int(b_goal)
-            sudden_rounds += 1
+        decided_by = str(override.get("decided_by") or fallback.get("decided_by") or "normal_time")
+        if decided_by not in {"normal_time", "extra_time", "penalties"}:
+            decided_by = str(fallback.get("decided_by") or "normal_time")
 
-        if pen_a == pen_b:
-            if rng.random() < 0.5:
-                pen_a += 1
-            else:
-                pen_b += 1
+        extra_a = override.get("extra_time_score_a", fallback.get("extra_time_score_a"))
+        extra_b = override.get("extra_time_score_b", fallback.get("extra_time_score_b"))
+        pen_a = override.get("penalty_score_a", fallback.get("penalty_score_a"))
+        pen_b = override.get("penalty_score_b", fallback.get("penalty_score_b"))
+        extra_a = int(extra_a) if extra_a is not None else None
+        extra_b = int(extra_b) if extra_b is not None else None
+        pen_a = int(pen_a) if pen_a is not None else None
+        pen_b = int(pen_b) if pen_b is not None else None
 
-        # record_match_result beraberlik kabul etmedigi icin skorlar winner lehine ayarlanir
-        if pen_a > pen_b:
-            resolved_a = total_a + 1
-            resolved_b = total_b
-        else:
-            resolved_a = total_a
-            resolved_b = total_b + 1
+        if decided_by == "normal_time":
+            regular_a = final_a
+            regular_b = final_b
+            extra_a = None
+            extra_b = None
+            pen_a = None
+            pen_b = None
+        elif decided_by == "extra_time":
+            if extra_a is None or extra_b is None:
+                extra_a = max(0, final_a - regular_a)
+                extra_b = max(0, final_b - regular_b)
+            pen_a = None
+            pen_b = None
+        elif decided_by == "penalties":
+            if extra_a is None or extra_b is None:
+                base_total = min(final_a, final_b)
+                extra_a = max(0, base_total - regular_a)
+                extra_b = max(0, base_total - regular_b)
+            if pen_a is None or pen_b is None:
+                return fallback
 
         return {
-            "score_a": int(resolved_a),
-            "score_b": int(resolved_b),
-            "decided_by": "penalties",
-            "extra_time_score_a": int(et_a),
-            "extra_time_score_b": int(et_b),
-            "penalty_score_a": int(pen_a),
-            "penalty_score_b": int(pen_b),
+            "score_a": int(final_a),
+            "score_b": int(final_b),
+            "decided_by": decided_by,
+            "regular_time_score_a": int(regular_a),
+            "regular_time_score_b": int(regular_b),
+            "extra_time_score_a": extra_a,
+            "extra_time_score_b": extra_b,
+            "penalty_score_a": pen_a,
+            "penalty_score_b": pen_b,
         }
 
     def _propagate_winner(self, match_by_id: dict[str, dict[str, Any]], match: dict[str, Any], winner_team_key: str) -> None:
@@ -392,7 +396,7 @@ class TournamentManager:
             state["champion_team_key"] = finals[0].get("winner_team_key")
 
     def _build_matches(self, format_size: int, ordered_team_keys: list[str], wins_needed: int) -> list[dict[str, Any]]:
-        if format_size in {16, 32}:
+        if format_size in {4, 8, 16, 32}:
             return self._build_power_two_knockout(
                 ordered_team_keys=ordered_team_keys,
                 wins_needed=wins_needed,
