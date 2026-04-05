@@ -325,6 +325,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
             segmented_button_fg_color="#0D1320",
             segmented_button_selected_color="#2457F5",
             segmented_button_unselected_color="#1A2336",
+            command=self._on_tab_changed,
         )
         self.tabview.grid(row=1, column=0, sticky="nsew", padx=16, pady=(8, 16))
 
@@ -2096,6 +2097,13 @@ class MarbleRaceLauncherApp(ctk.CTk):
     # --------------------------------------------------------
     # NAVIGASYON
     # --------------------------------------------------------
+    def _on_tab_changed(self) -> None:
+        if self.tabview.get() == "Takim Secimi":
+            if REPOSITORY.exists():
+                REPOSITORY.load_teams(force_reload=False)
+                self.team_a_panel.reload_leagues()
+                self.team_b_panel.reload_leagues()
+
     def _go_to_team_tab(self) -> None:
         if not REPOSITORY.exists():
             messagebox.showerror(

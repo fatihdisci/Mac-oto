@@ -588,6 +588,115 @@ def _build_landscape_broadcast_video(
     return _concat_videos(segments, output_path)
 
 
+def _render_champion_clip(
+    *,
+    champion_name: str,
+    badge_file: str,
+    data_dir: Path,
+    output_path: Path,
+    fps: int = 30,
+    duration_s: int = 5,
+    width: int = 1080,
+    height: int = 1920,
+) -> Path:
+    """Render a static champion screen as a short video clip using PIL + ffmpeg."""
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+
+    # Gradient background
+    bg = Image.new("RGBA", (width, height))
+    bg_draw = ImageDraw.Draw(bg)
+    for y in range(height):
+        t = y / height
+        r = int(8 + t * 5)
+        g = int(12 + t * 7)
+        b = int(22 + t * 14)
+        bg_draw.line([(0, y), (width - 1, y)], fill=(r, g, b, 255))
+    img.alpha_composite(bg)
+
+    # Center glow
+    glow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow)
+    cx, cy = width // 2, height // 2
+    for radius, alpha in [(500, 20), (350, 25), (200, 18)]:
+        glow_draw.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], fill=(40, 90, 200, alpha))
+    img.alpha_composite(glow)
+
+    # Box dimensions
+    box_w, box_h = 940, 560
+    box_x = (width - box_w) // 2
+    box_y = cy - box_h // 2 - 60
+
+    # Gold glow behind box
+    outer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    outer_draw = ImageDraw.Draw(outer)
+    outer_draw.rounded_rectangle(
+        [box_x - 28, box_y - 28, box_x + box_w + 28, box_y + box_h + 28],
+        radius=46, fill=(255, 200, 80, 28),
+    )
+    img.alpha_composite(outer)
+
+    # Box fill + border
+    box_layer = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    box_draw = ImageDraw.Draw(box_layer)
+    box_draw.rounded_rectangle(
+        [box_x, box_y, box_x + box_w, box_y + box_h],
+        radius=32, fill=(15, 24, 40, 242),
+    )
+    box_draw.rounded_rectangle(
+        [box_x, box_y, box_x + box_w, box_y + box_h],
+        radius=32, outline=(255, 223, 149, 255), width=3,
+    )
+    img.alpha_composite(box_layer)
+
+    # Logo
+    logo_size = 170
+    logo_x = (width - logo_size) // 2
+    logo_y = box_y + 36
+    _paste_logo(img, data_dir, badge_file, logo_x, logo_y, logo_size)
+
+    # Text
+    title_font = _load_font(88, bold=True)
+    name_font = _load_font(54, bold=True)
+    draw = ImageDraw.Draw(img)
+
+    title_text = "CHAMPION"
+    bbox = draw.textbbox((0, 0), title_text, font=title_font)
+    tw = bbox[2] - bbox[0]
+    title_y = logo_y + logo_size + 28
+    draw.text(((width - tw) // 2, title_y), title_text, font=title_font, fill=(255, 244, 194, 255))
+
+    name_bbox = draw.textbbox((0, 0), champion_name, font=name_font)
+    nw = name_bbox[2] - name_bbox[0]
+    name_y = title_y + (bbox[3] - bbox[1]) + 20
+    draw.text(((width - nw) // 2, name_y), champion_name, font=name_font, fill=(248, 249, 252, 255))
+
+    # Save frame and encode with ffmpeg
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    frame_path = output_path.with_suffix(".tmp_frame.png")
+    img.convert("RGB").save(str(frame_path))
+
+    cmd = [
+        "ffmpeg", "-y",
+        "-loop", "1",
+        "-framerate", str(fps),
+        "-i", str(frame_path),
+        "-c:v", "libx264",
+        "-t", str(duration_s),
+        "-pix_fmt", "yuv420p",
+        "-preset", "medium",
+        "-crf", "18",
+        str(output_path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    try:
+        frame_path.unlink()
+    except Exception:
+        pass
+    if result.returncode != 0 or not output_path.exists():
+        raise RuntimeError(f"Champion clip render failed: {result.stderr[-500:]}")
+    return output_path
+
+
 def run_full_tournament(
     tournament_id: str | None,
     dry_run: bool = False,
@@ -790,7 +899,10 @@ def run_full_tournament(
             }
         )
 
-    champion = runner_tm.get_team_name(runner_tm.get_champion_key(state))
+    champion_key = runner_tm.get_champion_key(state)
+    champion = runner_tm.get_team_name(champion_key)
+    champion_record = repo.get_team_by_key(champion_key) if champion_key else None
+    champion_badge = str(champion_record.badge_file or "") if champion_record else ""
     print("=" * 64)
     print(f"FULL TOURNAMENT FINISHED: {state.get('id')} | Champion: {champion}")
     print("=" * 64)
@@ -804,6 +916,20 @@ def run_full_tournament(
     runs_dir = cfg.base_dir / "output" / "tournament_runs"
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     tid = state.get("id", "tournament")
+
+    champion_clip_path = runs_dir / f"_tmp_{tid}_{stamp}_champion.mp4"
+    try:
+        _render_champion_clip(
+            champion_name=champion or "Champion",
+            badge_file=champion_badge,
+            data_dir=cfg.data_dir,
+            output_path=champion_clip_path,
+        )
+        produced_videos.append(champion_clip_path)
+        print(f"Champion clip rendered: {champion_clip_path}")
+    except Exception as exc:
+        print(f"[WARNING] Champion clip render failed, skipping: {exc}")
+
     portrait_target = runs_dir / f"{tid}_{stamp}_full.mp4"
     portrait_final = _concat_videos(produced_videos, portrait_target)
     print(f"TOURNAMENT_FULL_OUTPUT:{portrait_final}")

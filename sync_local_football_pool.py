@@ -31,6 +31,7 @@ LOCAL_LEAGUES: list[LocalLeagueSpec] = [
     LocalLeagueSpec("dünya kupası", "National Teams", "national_teams", "International", "national_teams"),
     LocalLeagueSpec("şampiyonlar ligi", "UEFA Champions League", "champions_league", "Europe", None),
     LocalLeagueSpec("avrupa ligi", "UEFA Europa League", "europa_league", "Europe", None),
+    LocalLeagueSpec("konferans ligi", "UEFA Conference League", "conference_league", "Europe", None),
 ]
 
 
@@ -172,15 +173,22 @@ def main() -> None:
         by_league.setdefault(team.league_slug, []).append(team)
     candidate_index = _build_candidate_index(existing_teams)
 
+    # Hangi ligler işlenecek: sadece klasörü olanlar
+    specs_to_process = [s for s in LOCAL_LEAGUES if (local_logo_root / s.folder_name).exists()]
+    slugs_to_process = {s.league_slug for s in specs_to_process}
+
+    teams_dir.mkdir(parents=True, exist_ok=True)
+
+    # Sadece işlenecek liglerin eski JSON'larını temizle; diğerlerine dokunma
+    for spec in specs_to_process:
+        old_file = teams_dir / f"{spec.league_slug}.json"
+        if old_file.exists():
+            old_file.unlink()
+
     collected: list[TeamRecord] = []
     league_summaries: list[dict[str, object]] = []
 
-    # temiz lig jsonlari: sadece yeni ligler yazilacak
-    teams_dir.mkdir(parents=True, exist_ok=True)
-    for old_file in teams_dir.glob("*.json"):
-        old_file.unlink()
-
-    for spec in LOCAL_LEAGUES:
+    for spec in specs_to_process:
         folder = local_logo_root / spec.folder_name
         if not folder.exists():
             continue
@@ -268,23 +276,46 @@ def main() -> None:
             }
         )
 
-    # tum futbol takim havuzu (pop culture runtime'da ayri ekleniyor)
+    # Mevcut tum lig JSON'larini oku (islenmeyen ligler dahil) ve birleştir
+    all_teams_merged: list[TeamRecord] = []
+    seen_keys: set[str] = set()
+    # Önce işlenen ligler (yeni yazılanlar)
+    for team in collected:
+        if team.team_key not in seen_keys:
+            all_teams_merged.append(team)
+            seen_keys.add(team.team_key)
+    # Sonra diğer ligler (dokunulmayan JSON dosyaları)
+    for json_file in sorted(teams_dir.glob("*.json")):
+        slug = json_file.stem
+        if slug in slugs_to_process:
+            continue
+        try:
+            payload = json.loads(json_file.read_text(encoding="utf-8-sig"))
+            for item in payload.get("teams", []):
+                rec = TeamRecord.from_dict(item)
+                if rec.team_key not in seen_keys:
+                    all_teams_merged.append(rec)
+                    seen_keys.add(rec.team_key)
+        except Exception:
+            pass
+
     all_payload = {
-        "team_count": len(collected),
-        "teams": [asdict(team) for team in collected],
+        "team_count": len(all_teams_merged),
+        "teams": [asdict(team) for team in all_teams_merged],
     }
     all_teams_path.write_text(json.dumps(all_payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
     manifest_payload = {
-        "total_teams": len(collected),
+        "total_teams": len(all_teams_merged),
         "league_count": len(league_summaries),
         "leagues": league_summaries,
     }
     manifest_path.write_text(json.dumps(manifest_payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"Leagues written: {len(league_summaries)}")
-    print(f"Teams written  : {len(collected)}")
-    print(f"All teams path : {all_teams_path}")
+    print(f"Leagues written : {len(league_summaries)}")
+    print(f"Teams processed : {len(collected)}")
+    print(f"Total in pool   : {len(all_teams_merged)}")
+    print(f"All teams path  : {all_teams_path}")
 
 
 if __name__ == "__main__":

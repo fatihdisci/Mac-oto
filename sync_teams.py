@@ -146,6 +146,24 @@ LEAGUES: list[LeagueSpec] = [
         country="Mexico",
         aliases=("Liga MX",),
     ),
+    LeagueSpec(
+        api_name="UEFA Champions League",
+        slug="champions_league",
+        country="Europe",
+        aliases=("Champions League", "UCL"),
+    ),
+    LeagueSpec(
+        api_name="UEFA Europa League",
+        slug="europa_league",
+        country="Europe",
+        aliases=("Europa League", "UEL"),
+    ),
+    LeagueSpec(
+        api_name="UEFA Europa Conference League",
+        slug="conference_league",
+        country="Europe",
+        aliases=("Conference League", "UECL", "UEFA Conference League"),
+    ),
 ]
 
 NATIONAL_TEAMS_SPEC = LeagueSpec(
@@ -249,6 +267,9 @@ FOOTBALL_DATA_COMPETITION_CODES: dict[str, str] = {
     "eredivisie": "DED",
     "primeira_liga": "PPL",
     "brazilian_serie_a": "BSA",
+    "champions_league": "CL",
+    "europa_league": "EL",
+    "conference_league": "ECSL",
 }
 
 
@@ -281,6 +302,7 @@ class TeamSyncService:
         self,
         force_redownload_logos: bool = False,
         include_national_teams: bool = False,
+        skip_existing: bool = True,
     ) -> list[TeamRecord]:
         ensure_directories()
 
@@ -289,9 +311,18 @@ class TeamSyncService:
 
         print("=" * 72)
         print("TAKIM SENKRONIZASYONU BASLADI")
+        if skip_existing:
+            print("(Mevcut lig dosyalari atlanacak — skip_existing=True)")
         print("=" * 72)
 
         for league in LEAGUES:
+            league_file = TEAMS_DIR / f"{league.slug}.json"
+            if skip_existing and league_file.exists():
+                cached_teams = self.load_saved_league_teams(league.slug)
+                print(f"\n[=] Atlandi (mevcut): {league.api_name} ({len(cached_teams)} takim)")
+                all_teams.extend(cached_teams)
+                continue
+
             print(f"\n[+] Lig isleniyor: {league.api_name}")
             teams = self.fetch_league_teams(league)
             cached_teams = self.load_saved_league_teams(league.slug)
@@ -323,7 +354,12 @@ class TeamSyncService:
             all_teams.extend(teams)
 
         cached_national_teams = self.load_saved_league_teams(NATIONAL_TEAMS_SPEC.slug)
-        if include_national_teams:
+        national_teams_file = TEAMS_DIR / f"{NATIONAL_TEAMS_SPEC.slug}.json"
+        if include_national_teams and skip_existing and national_teams_file.exists():
+            print(f"\n[=] Atlandi (mevcut): {NATIONAL_TEAMS_SPEC.api_name} ({len(cached_national_teams)} takim)")
+            if cached_national_teams:
+                all_teams.extend(cached_national_teams)
+        elif include_national_teams:
             print(f"\n[+] Ozel havuz isleniyor: {NATIONAL_TEAMS_SPEC.api_name}")
             national_teams = self.fetch_national_teams()
             if national_teams and cached_national_teams:
@@ -759,11 +795,13 @@ class TeamSyncService:
 def main() -> None:
     force_redownload = "--force-logos" in sys.argv
     include_national_teams = "--include-national-teams" in sys.argv
+    skip_existing = "--force" not in sys.argv
     try:
         service = TeamSyncService()
         service.sync_all(
             force_redownload_logos=force_redownload,
             include_national_teams=include_national_teams,
+            skip_existing=skip_existing,
         )
     except requests.HTTPError as exc:
         print("\nHTTP HATASI OLUSTU")

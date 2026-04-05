@@ -165,10 +165,10 @@ class GrandPrixRenderer:
                     rank_s = pts_font.render(f"{int(row.get('rank', 1))}.", True, (255, 255, 255))
                     surface.blit(rank_s, (rr.x + 4, cy - rank_s.get_height() // 2))
                     logo = self._get_logo_surface(str(row.get("name", "")), str(row.get("badge_file", "")), logo_size)
-                    logo_cx = rr.x + 22 + logo_size // 2
+                    logo_cx = rr.x + 34 + logo_size // 2
                     surface.blit(logo, logo.get_rect(center=(logo_cx, cy)))
-                    name_surf = self._fit_text(name_font, self._display_name(row), col_w - logo_size - 46, (240, 244, 251))
-                    surface.blit(name_surf, (rr.x + 26 + logo_size, cy - name_surf.get_height() // 2))
+                    name_surf = self._fit_text(name_font, self._display_name(row), col_w - logo_size - 58, (240, 244, 251))
+                    surface.blit(name_surf, (rr.x + 38 + logo_size, cy - name_surf.get_height() // 2))
                     pts_s = pts_font.render(f"{int(row.get('points', 0))}p", True, (158, 232, 182))
                     surface.blit(pts_s, pts_s.get_rect(topright=(rr.right - 4, cy - pts_s.get_height() // 2)))
         else:
@@ -179,9 +179,9 @@ class GrandPrixRenderer:
                 rank_s = name_font.render(f"{int(row.get('rank', index + 1))}.", True, (255, 255, 255))
                 surface.blit(rank_s, (rr.x + 12, cy - rank_s.get_height() // 2))
                 logo = self._get_logo_surface(str(row.get("name", "")), str(row.get("badge_file", "")), logo_size)
-                surface.blit(logo, logo.get_rect(center=(rr.x + 20 + logo_size // 2, cy)))
-                name_surf = self._fit_text(name_font, self._display_name(row), panel_rect.width - 36 - logo_size - 100, (240, 244, 251))
-                surface.blit(name_surf, (rr.x + 26 + logo_size, cy - name_surf.get_height() // 2))
+                surface.blit(logo, logo.get_rect(center=(rr.x + 44 + logo_size // 2, cy)))
+                name_surf = self._fit_text(name_font, self._display_name(row), panel_rect.width - 36 - logo_size - 124, (240, 244, 251))
+                surface.blit(name_surf, (rr.x + 50 + logo_size, cy - name_surf.get_height() // 2))
                 pts_s = pts_font.render(f"{int(row.get('points', 0))}p", True, (158, 232, 182))
                 surface.blit(pts_s, pts_s.get_rect(topright=(rr.right - 14, cy - pts_s.get_height() // 2)))
 
