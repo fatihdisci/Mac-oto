@@ -131,23 +131,65 @@ class GrandPrixRenderer:
         surface.blit(standings_title, (panel_rect.x + 24, panel_rect.y + 22))
 
         standings = list(snapshot.get("standings", []))
+        team_count = len(standings)
         start_y = panel_rect.y + 72
-        row_h = 66 if len(standings) <= 4 else 58
-        for index, row in enumerate(standings):
-            row_rect = pygame.Rect(panel_rect.x + 18, start_y + index * row_h, panel_rect.width - 36, row_h - 8)
-            band_fill = (25, 33, 48, 210 if index % 2 == 0 else 170)
-            pygame.draw.rect(surface, band_fill, row_rect, border_radius=16)
-            rank = self.team_font.render(f"{int(row.get('rank', index + 1))}.", True, (255, 255, 255))
-            surface.blit(rank, (row_rect.x + 12, row_rect.y + 16))
-            logo = self._get_logo_surface(str(row.get("name", "")), str(row.get("badge_file", "")), 38)
-            surface.blit(logo, logo.get_rect(center=(row_rect.x + 62, row_rect.y + row_rect.height // 2)))
-            name = self._fit_text(self.team_font, self._display_name(row), 280, (240, 244, 251))
-            surface.blit(name, (row_rect.x + 90, row_rect.y + 15))
-            points = self.team_font.render(f"{int(row.get('points', 0))}p", True, (158, 232, 182))
-            surface.blit(points, points.get_rect(topright=(row_rect.right - 14, row_rect.y + 15)))
 
+        # Takım sayısına göre layout parametreleri
+        if team_count <= 4:
+            row_h, logo_size = 66, 38
+            name_font, pts_font = self.team_font, self.team_font
+            two_col, show_round_result = False, True
+        elif team_count <= 8:
+            row_h, logo_size = 54, 32
+            name_font, pts_font = self.team_font, self.team_font
+            two_col, show_round_result = False, True
+        elif team_count <= 16:
+            row_h, logo_size = 40, 26
+            name_font, pts_font = self.info_font, self.info_font
+            two_col, show_round_result = False, False
+        else:  # 32 takım: iki sütun
+            row_h, logo_size = 38, 22
+            name_font, pts_font = self.micro_font, self.micro_font
+            two_col, show_round_result = True, False
+
+        if two_col:
+            half = (team_count + 1) // 2
+            col_w = (panel_rect.width - 12) // 2
+            for col_idx in range(2):
+                col_x = panel_rect.x + col_idx * (col_w + 8) + 4
+                col_rows = standings[col_idx * half: (col_idx + 1) * half]
+                for row_idx, row in enumerate(col_rows):
+                    rr = pygame.Rect(col_x, start_y + row_idx * row_h, col_w, row_h - 3)
+                    pygame.draw.rect(surface, (25, 33, 48, 210 if row_idx % 2 == 0 else 170), rr, border_radius=10)
+                    cy = rr.y + rr.height // 2
+                    rank_s = pts_font.render(f"{int(row.get('rank', 1))}.", True, (255, 255, 255))
+                    surface.blit(rank_s, (rr.x + 4, cy - rank_s.get_height() // 2))
+                    logo = self._get_logo_surface(str(row.get("name", "")), str(row.get("badge_file", "")), logo_size)
+                    logo_cx = rr.x + 22 + logo_size // 2
+                    surface.blit(logo, logo.get_rect(center=(logo_cx, cy)))
+                    name_surf = self._fit_text(name_font, self._display_name(row), col_w - logo_size - 46, (240, 244, 251))
+                    surface.blit(name_surf, (rr.x + 26 + logo_size, cy - name_surf.get_height() // 2))
+                    pts_s = pts_font.render(f"{int(row.get('points', 0))}p", True, (158, 232, 182))
+                    surface.blit(pts_s, pts_s.get_rect(topright=(rr.right - 4, cy - pts_s.get_height() // 2)))
+        else:
+            for index, row in enumerate(standings):
+                rr = pygame.Rect(panel_rect.x + 18, start_y + index * row_h, panel_rect.width - 36, row_h - 4)
+                pygame.draw.rect(surface, (25, 33, 48, 210 if index % 2 == 0 else 170), rr, border_radius=16)
+                cy = rr.y + rr.height // 2
+                rank_s = name_font.render(f"{int(row.get('rank', index + 1))}.", True, (255, 255, 255))
+                surface.blit(rank_s, (rr.x + 12, cy - rank_s.get_height() // 2))
+                logo = self._get_logo_surface(str(row.get("name", "")), str(row.get("badge_file", "")), logo_size)
+                surface.blit(logo, logo.get_rect(center=(rr.x + 20 + logo_size // 2, cy)))
+                name_surf = self._fit_text(name_font, self._display_name(row), panel_rect.width - 36 - logo_size - 100, (240, 244, 251))
+                surface.blit(name_surf, (rr.x + 26 + logo_size, cy - name_surf.get_height() // 2))
+                pts_s = pts_font.render(f"{int(row.get('points', 0))}p", True, (158, 232, 182))
+                surface.blit(pts_s, pts_s.get_rect(topright=(rr.right - 14, cy - pts_s.get_height() // 2)))
+
+        if not show_round_result:
+            return
+
+        summary_y = start_y + team_count * row_h + 24
         summary_title = self.section_font.render("ROUND RESULT", True, (245, 247, 251))
-        summary_y = panel_rect.y + 420 if len(standings) <= 4 else panel_rect.y + 540
         surface.blit(summary_title, (panel_rect.x + 24, summary_y))
         latest_results = list(snapshot.get("latest_completed_round_results", []))
         if not latest_results:
@@ -159,8 +201,11 @@ class GrandPrixRenderer:
             latest_results,
             key=lambda row: (-int(row.get("points", 0)), -int(row.get("total_points", 0)), str(row.get("team_name", "")).lower()),
         )
+        result_row_h = 44 if team_count <= 4 else 36
         for index, row in enumerate(sorted_results):
-            line_y = summary_y + 48 + index * 44
+            line_y = summary_y + 48 + index * result_row_h
+            if line_y + result_row_h > panel_rect.bottom - 8:
+                break
             logo = self._get_logo_surface(str(row.get("team_name", "")), str(row.get("badge_file", "")), 28)
             surface.blit(logo, logo.get_rect(center=(panel_rect.x + 38, line_y + 10)))
             name = self._fit_text(self.info_font, str(row.get("short_name") or row.get("team_name") or ""), 180, (235, 239, 246))

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import subprocess
 import sys
 import threading
@@ -81,7 +82,7 @@ TOURNAMENT_MODE_LABEL_TO_VALUE = {
     "Eleme Usulu": "elimination",
     "Playoff (Tek Ayak + ET/PEN)": "playoff",
 }
-GRAND_PRIX_TEAM_COUNT_VALUES = ["4", "8"]
+GRAND_PRIX_TEAM_COUNT_VALUES = ["4", "8", "16", "32"]
 GRAND_PRIX_ROUND_COUNT_VALUES = ["5", "10", "15", "20", "25", "30"]
 
 
@@ -1802,6 +1803,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
         keys = [team.team_key for team in pool if team.team_key]
         if len(keys) < required:
             keys = [team.team_key for team in REPOSITORY.load_teams() if team.team_key]
+        random.shuffle(keys)
         self.grand_prix_selected_team_keys = keys[:required]
         self._refresh_grand_prix_selected_list()
 

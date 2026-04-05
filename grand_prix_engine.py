@@ -482,7 +482,7 @@ class GrandPrixEngine:
         board_left, board_right = self._horizontal_bounds()
         left = board_left + 64.0
         right = board_right - 64.0
-        lane_count = self.hole_count + 3
+        lane_count = max(self.hole_count + 3, team_count + 4)
         lane_gap = (right - left) / max(1, lane_count - 1)
         lane_xs = [left + lane_index * lane_gap for lane_index in range(lane_count)]
         selected_indices = self.rng.sample(range(lane_count), k=min(team_count, lane_count))

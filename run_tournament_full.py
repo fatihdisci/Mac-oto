@@ -437,8 +437,12 @@ def _build_top_bar_text(
     completed_matches: int,
     total_matches: int,
 ) -> str:
-    _ = left_record, right_record, completed_matches, total_matches
-    return _broadcast_safe_text(tournament_name or "Tournament")
+    name = _broadcast_safe_text(tournament_name or "Tournament")
+    raw_round = str(left_record.get("round_name") or "").strip()
+    round_label = _broadcast_safe_text(raw_round)
+    if round_label:
+        return f"{name}  |  {round_label}  ({completed_matches}/{total_matches})"
+    return f"{name}  ({completed_matches}/{total_matches})"
 
 
 def _ffmpeg_fontfile_param(bold: bool = True) -> str:
