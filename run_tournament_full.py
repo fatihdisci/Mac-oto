@@ -64,7 +64,6 @@ def _run_single_match(
         "-u",
         str(script_path),
         "--no-messagebox",
-        "--headless",
         "--fps-override",
         "30",
         "--progress-every",
@@ -224,17 +223,53 @@ def _format_match_text(rec: dict[str, Any] | None, *, reveal_score: bool) -> str
     return f"{team_a} {final_a}-{final_b} {team_b}"
 
 
-def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    candidates = (
-        ["C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/segoeuib.ttf"]
-        if bold
-        else ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/segoeui.ttf"]
-    )
+def _find_system_font(bold: bool = False) -> str | None:
+    """Return the first existing font file path for the current platform."""
+    if bold:
+        candidates = [
+            # Windows
+            "C:/Windows/Fonts/arialbd.ttf",
+            "C:/Windows/Fonts/segoeuib.ttf",
+            # Linux – Liberation (Arial metrik uyumlu)
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            "/usr/share/fonts/liberation/LiberationSans-Bold.ttf",
+            # Linux – DejaVu
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf",
+            # Linux – FreeSans
+            "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+            # Linux – MS core fonts (ttf-mscorefonts kuruluysa)
+            "/usr/share/fonts/truetype/msttcorefonts/arialbd.ttf",
+            # macOS
+            "/Library/Fonts/Arial Bold.ttf",
+            "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        ]
+    else:
+        candidates = [
+            "C:/Windows/Fonts/arial.ttf",
+            "C:/Windows/Fonts/segoeui.ttf",
+            "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/liberation/LiberationSans-Regular.ttf",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+            "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+            "/usr/share/fonts/truetype/msttcorefonts/arial.ttf",
+            "/Library/Fonts/Arial.ttf",
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+        ]
     for path in candidates:
+        if Path(path).exists():
+            return path
+    return None
+
+
+def _load_font(size: int, *, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    path = _find_system_font(bold=bold)
+    if path:
         try:
             return ImageFont.truetype(path, size=size)
         except Exception:
-            continue
+            pass
     return ImageFont.load_default()
 
 
@@ -402,8 +437,22 @@ def _build_top_bar_text(
     completed_matches: int,
     total_matches: int,
 ) -> str:
-    _ = left_record, right_record, completed_matches, total_matches
-    return _broadcast_safe_text(tournament_name or "Tournament")
+    name = _broadcast_safe_text(tournament_name or "Tournament")
+    raw_round = str(left_record.get("round_name") or "").strip()
+    round_label = _broadcast_safe_text(raw_round)
+    if round_label:
+        return f"{name}  |  {round_label}  ({completed_matches}/{total_matches})"
+    return f"{name}  ({completed_matches}/{total_matches})"
+
+
+def _ffmpeg_fontfile_param(bold: bool = True) -> str:
+    """Return a fontfile=... drawtext parameter for ffmpeg, or empty string if no font found."""
+    font_path = _find_system_font(bold=bold)
+    if not font_path:
+        return ""
+    # ffmpeg drawtext requires forward slashes and escaped colons on Windows.
+    escaped = font_path.replace("\\", "/").replace(":", "\\:")
+    return f"fontfile='{escaped}':"
 
 
 def _make_landscape_segment(
@@ -423,6 +472,7 @@ def _make_landscape_segment(
         right_has_audio = False
 
     bar_text = _ffmpeg_escape_text(top_bar_text)
+    ffmpeg_font = _ffmpeg_fontfile_param(bold=True)
     top_bar_h = 92
     top_bar_bottom_line = top_bar_h - 2
     content_top = top_bar_h + 12
@@ -451,7 +501,7 @@ def _make_landscape_segment(
             + f"drawbox=x={divider_x}:y={content_top - 2}:w={divider_w}:h={content_h + 4}:color=#e7f0ff@0.42:t=fill,"
             + f"drawbox=x=0:y=0:w=1920:h={top_bar_h}:color=#0c1f3f@0.88:t=fill,"
             + f"drawbox=x=0:y={top_bar_bottom_line}:w=1920:h=2:color=#6fa3ff@0.60:t=fill,"
-            + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
+            + f"drawtext={ffmpeg_font}fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
             + "[v]"
         )
     else:
@@ -465,7 +515,7 @@ def _make_landscape_segment(
             + "[tmp2]"
             + f"drawbox=x=0:y=0:w=1920:h={top_bar_h}:color=#0c1f3f@0.88:t=fill,"
             + f"drawbox=x=0:y={top_bar_bottom_line}:w=1920:h=2:color=#6fa3ff@0.60:t=fill,"
-            + f"drawtext=fontfile='C\\:/Windows/Fonts/arialbd.ttf':fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
+            + f"drawtext={ffmpeg_font}fontcolor=white:fontsize=32:x=(w-text_w)/2:y=24:text='{bar_text}'"
             + "[v]"
         )
 
