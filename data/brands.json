@@ -1,0 +1,242 @@
+[
+  {
+    "category": "car_brands",
+    "brand": "audi",
+    "full_name": "car_brands_audi",
+    "filename": "pop_culture__car_brands__audi.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "bmw",
+    "full_name": "car_brands_bmw",
+    "filename": "pop_culture__car_brands__bmw.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "ferrari",
+    "full_name": "car_brands_ferrari",
+    "filename": "pop_culture__car_brands__ferrari.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "lamborghini",
+    "full_name": "car_brands_lamborghini",
+    "filename": "pop_culture__car_brands__lamborghini.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "mercedes_benz",
+    "full_name": "car_brands_mercedes_benz",
+    "filename": "pop_culture__car_brands__mercedes_benz.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "porsche",
+    "full_name": "car_brands_porsche",
+    "filename": "pop_culture__car_brands__porsche.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "tesla",
+    "full_name": "car_brands_tesla",
+    "filename": "pop_culture__car_brands__tesla.png"
+  },
+  {
+    "category": "car_brands",
+    "brand": "toyota",
+    "full_name": "car_brands_toyota",
+    "filename": "pop_culture__car_brands__toyota.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "costa_coffee",
+    "full_name": "coffee_brands_costa_coffee",
+    "filename": "pop_culture__coffee_brands__costa_coffee.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "dunkin",
+    "full_name": "coffee_brands_dunkin",
+    "filename": "pop_culture__coffee_brands__dunkin.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "illy",
+    "full_name": "coffee_brands_illy",
+    "filename": "pop_culture__coffee_brands__illy.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "lavazza",
+    "full_name": "coffee_brands_lavazza",
+    "filename": "pop_culture__coffee_brands__lavazza.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "nespresso",
+    "full_name": "coffee_brands_nespresso",
+    "filename": "pop_culture__coffee_brands__nespresso.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "peets_coffee",
+    "full_name": "coffee_brands_peets_coffee",
+    "filename": "pop_culture__coffee_brands__peets_coffee.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "starbucks",
+    "full_name": "coffee_brands_starbucks",
+    "filename": "pop_culture__coffee_brands__starbucks.png"
+  },
+  {
+    "category": "coffee_brands",
+    "brand": "tim_hortons",
+    "full_name": "coffee_brands_tim_hortons",
+    "filename": "pop_culture__coffee_brands__tim_hortons.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "adidas",
+    "full_name": "fashion_brands_adidas",
+    "filename": "pop_culture__fashion_brands__adidas.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "gucci",
+    "full_name": "fashion_brands_gucci",
+    "filename": "pop_culture__fashion_brands__gucci.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "hm",
+    "full_name": "fashion_brands_hm",
+    "filename": "pop_culture__fashion_brands__hm.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "louis_vuitton",
+    "full_name": "fashion_brands_louis_vuitton",
+    "filename": "pop_culture__fashion_brands__louis_vuitton.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "nike",
+    "full_name": "fashion_brands_nike",
+    "filename": "pop_culture__fashion_brands__nike.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "prada",
+    "full_name": "fashion_brands_prada",
+    "filename": "pop_culture__fashion_brands__prada.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "puma",
+    "full_name": "fashion_brands_puma",
+    "filename": "pop_culture__fashion_brands__puma.png"
+  },
+  {
+    "category": "fashion_brands",
+    "brand": "zara",
+    "full_name": "fashion_brands_zara",
+    "filename": "pop_culture__fashion_brands__zara.png"
+  },
+  {
+    "category": "movies",
+    "brand": "avatar",
+    "full_name": "movies_avatar",
+    "filename": "pop_culture__movies__avatar.png"
+  },
+  {
+    "category": "movies",
+    "brand": "gladiator",
+    "full_name": "movies_gladiator",
+    "filename": "pop_culture__movies__gladiator.png"
+  },
+  {
+    "category": "movies",
+    "brand": "inception",
+    "full_name": "movies_inception",
+    "filename": "pop_culture__movies__inception.png"
+  },
+  {
+    "category": "movies",
+    "brand": "interstellar",
+    "full_name": "movies_interstellar",
+    "filename": "pop_culture__movies__interstellar.png"
+  },
+  {
+    "category": "movies",
+    "brand": "the_dark_knight",
+    "full_name": "movies_the_dark_knight",
+    "filename": "pop_culture__movies__the_dark_knight.png"
+  },
+  {
+    "category": "movies",
+    "brand": "the_godfather",
+    "full_name": "movies_the_godfather",
+    "filename": "pop_culture__movies__the_godfather.png"
+  },
+  {
+    "category": "movies",
+    "brand": "the_matrix",
+    "full_name": "movies_the_matrix",
+    "filename": "pop_culture__movies__the_matrix.png"
+  },
+  {
+    "category": "movies",
+    "brand": "titanic",
+    "full_name": "movies_titanic",
+    "filename": "pop_culture__movies__titanic.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "bts",
+    "full_name": "music_bands_bts",
+    "filename": "pop_culture__music_bands__bts.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "coldplay",
+    "full_name": "music_bands_coldplay",
+    "filename": "pop_culture__music_bands__coldplay.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "imagine_dragons",
+    "full_name": "music_bands_imagine_dragons",
+    "filename": "pop_culture__music_bands__imagine_dragons.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "linkin_park",
+    "full_name": "music_bands_linkin_park",
+    "filename": "pop_culture__music_bands__linkin_park.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "metallica",
+    "full_name": "music_bands_metallica",
+    "filename": "pop_culture__music_bands__metallica.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "nirvana",
+    "full_name": "music_bands_nirvana",
+    "filename": "pop_culture__music_bands__nirvana.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "pink_floyd",
+    "full_name": "music_bands_pink_floyd",
+    "filename": "pop_culture__music_bands__pink_floyd.png"
+  },
+  {
+    "category": "music_bands",
+    "brand": "queen",
+    "full_name": "music_bands_queen",
+    "filename": "pop_culture__music_bands__queen.png"
+  }
+]
