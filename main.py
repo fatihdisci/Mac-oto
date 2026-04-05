@@ -20,6 +20,7 @@ from config import build_default_config
 from knockout_rules import resolve_single_leg_knockout
 from models import MatchSelection
 from physics import MarbleRacePhysics
+from penalty_renderer import PenaltyRenderer
 from renderer import MarbleRaceRenderer
 from team_repository import TeamRepository
 from video_writer import Mp4VideoWriter
@@ -365,6 +366,7 @@ def run_simulation(
 
     physics = MarbleRacePhysics(cfg, match_selection)
     renderer = MarbleRaceRenderer(cfg)
+    penalty_renderer = PenaltyRenderer(cfg)
     normalized_mode = (match_selection.engine_mode or "").strip().lower()
     if normalized_mode == "football_rail_test":
         normalized_mode = "normal"
@@ -797,6 +799,8 @@ def run_simulation(
                 penalty_display_b = 0
                 penalty_marks_a: list[str] = []
                 penalty_marks_b: list[str] = []
+                penalty_kick_progress = 0.0
+                penalty_current_kick: dict | None = None
                 penalty_phase_start = regular_phase_end + extra_time_video_seconds
                 if (
                     knockout_mode_enabled
@@ -826,6 +830,18 @@ def run_simulation(
                         penalty_marks_a,
                         penalty_marks_b,
                     ) = _compute_penalty_display(penalty_kicks, penalty_revealed_count)
+
+                    # Mevcut atışın animasyon ilerlemesi (0-1)
+                    if penalty_revealed_count > 0 and penalty_kicks:
+                        kick_idx = penalty_revealed_count - 1
+                        penalty_current_kick = penalty_kicks[kick_idx]
+                        last_t = penalty_kick_times[kick_idx] if kick_idx < len(penalty_kick_times) else 0.0
+                        if penalty_revealed_count < len(penalty_kick_times):
+                            next_t = penalty_kick_times[penalty_revealed_count]
+                        else:
+                            next_t = penalties_video_seconds
+                        window = max(0.001, next_t - last_t)
+                        penalty_kick_progress = min(1.0, max(0.0, (penalty_elapsed - last_t) / window))
 
                 final_score_a = score_a
                 final_score_b = score_b
@@ -1009,12 +1025,17 @@ def run_simulation(
                 snapshot["penalty_marks_b"] = penalty_marks_b
                 snapshot["penalty_total_kicks"] = len(penalty_kicks)
                 snapshot["penalty_shown_kicks"] = penalty_revealed_count
+                snapshot["penalty_kick_progress"] = penalty_kick_progress
+                snapshot["penalty_current_kick"] = penalty_current_kick
+                snapshot["match_id"] = str(tournament_match_id or "")
 
                 renderer.draw(
                     target_surface=render_surface,
                     state_snapshot=snapshot,
                     active_ball_draw_data=active_balls,
                 )
+                if match_phase == "penalties":
+                    penalty_renderer.draw(render_surface, snapshot)
 
                 if not headless and screen is not None:
                     preview_frame = pygame.transform.smoothscale(render_surface, (preview_width, preview_height))
