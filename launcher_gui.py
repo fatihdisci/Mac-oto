@@ -1911,7 +1911,6 @@ class MarbleRaceLauncherApp(ctk.CTk):
             script_args=[
                 "--grand-prix-id",
                 grand_prix_id,
-                "--headless",
                 "--progress-every",
                 "300",
             ],

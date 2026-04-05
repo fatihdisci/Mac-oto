@@ -64,7 +64,6 @@ def _run_single_match(
         "-u",
         str(script_path),
         "--no-messagebox",
-        "--headless",
         "--fps-override",
         "30",
         "--progress-every",
