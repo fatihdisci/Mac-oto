@@ -54,7 +54,7 @@ VOLUME = {
     "pop_start": 0.78,
     "pop_point": 0.88,
     "pop_end": 0.82,
-    "background_music": 0.15,
+    "background_music": 0.35,
     "crowd_ambient": 0.40,
 }
 
