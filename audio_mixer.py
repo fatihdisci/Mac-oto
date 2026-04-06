@@ -51,10 +51,10 @@ VOLUME = {
     "whistle_start": 0.50,
     "whistle_end": 0.55,
     "goal": 0.60,
-    "pop_start": 0.55,
+    "pop_start": 0.30,
     "pop_point": 0.60,
     "pop_end": 0.55,
-    "background_music": 0.40,
+    "background_music": 0.50,
     "crowd_ambient": 0.15,
 }
 

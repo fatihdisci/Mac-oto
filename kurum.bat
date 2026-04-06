@@ -80,12 +80,14 @@ set "PY_BOOT_EXE="
 set "PY_BOOT_ARGS="
 
 for %%P in (
-  "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python314\python.exe"
-  "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python313\python.exe"
   "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python312\python.exe"
-  "C:\Python314\python.exe"
-  "C:\Python313\python.exe"
+  "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python310\python.exe"
+  "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python313\python.exe"
+  "C:\Users\%USERNAME%\AppData\Local\Programs\Python\Python314\python.exe"
   "C:\Python312\python.exe"
+  "C:\Python310\python.exe"
+  "C:\Python313\python.exe"
+  "C:\Python314\python.exe"
 ) do (
   if exist %%~P (
     set "PY_BOOT_EXE=%%~P"
