@@ -1,4 +1,4 @@
-﻿# main.py
+# main.py
 from __future__ import annotations
 
 import math
@@ -1105,6 +1105,7 @@ def run_simulation(
             video_path=video_output_path,
             event_timeline=audio_events,
             output_path=final_path,
+            background_music_path=Path(__file__).resolve().parent / "data" / "sounds" / "normalbg.mp3",
         )
         print("=" * 60)
         print("SES MIKSAJI TAMAMLANDI")
