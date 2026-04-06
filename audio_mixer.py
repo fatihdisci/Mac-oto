@@ -54,14 +54,14 @@ VOLUME = {
     "pop_start": 0.78,
     "pop_point": 0.88,
     "pop_end": 0.82,
-    "background_music": 0.50,
+    "background_music": 0.15,
     "crowd_ambient": 0.40,
 }
 
 # Fade ayarları (saniye)
 FADE = {
-    "bg_fade_in": 1.5,       # Müzik başlangıç fade-in
-    "bg_fade_out": 4.0,      # Müzik bitiş fade-out (tatlı kapanış)
+    "bg_fade_in": 3.0,       # Müzik başlangıç fade-in
+    "bg_fade_out": 3.0,      # Müzik bitiş fade-out (tatlı kapanış)
     "crowd_fade_in": 2.0,
     "crowd_fade_out": 3.0,
 }

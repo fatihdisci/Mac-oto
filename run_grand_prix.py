@@ -186,6 +186,7 @@ def run_grand_prix(
             video_path=output_path,
             event_timeline=audio_events,
             output_path=final_path,
+            background_music_path=cfg.data_dir / "sounds" / "grandprixbg.mp3",
         )
     except Exception as exc:
         _safe_print(f"GRAND_PRIX_AUDIO_WARN:{exc}")
