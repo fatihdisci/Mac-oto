@@ -1,93 +1,67 @@
-﻿# Mac-oto
+# Mac-oto: Marble Race & Pop Culture Battle Simulation
 
-Mac-oto, futbol marble race tabanli video uretimi icin masaustu aracidir.
+Bu proje, markaların, futbol takımlarının veya popüler kültür ikonlarının yarıştığı 2D fizik tabanlı bir misket yarışı simülatörüdür. TikTok, Reels ve Shorts gibi kısa formlu video platformları için yüksek kaliteli, dinamik ve heyecan verici içerikler üretmek üzere tasarlanmıştır.
 
-Projede 3 ana akis vardir:
-- Tek mac video uretimi
-- Turnuva (4/8/16/32/48 takim, tek ayak + ET/PEN)
-- Grand Prix modu (4/8 takim, 5-30 raunt)
+## 🚀 Temel Özellikler
 
-GUI uzerinden calisir ve ciktilari `output/` klasorune yazar.
+- **Çoklu Motor Modları:** 
+  - **Football Mode:** VAR incelemeleri, devre arası sistemleri ve klasik futbol atmosferi.
+  - **Pop Culture Mode:** Marka savaşları, "Glitch" efektleri ve modern görsel stil.
+  - **Dinamik Engeller:** Shifting (kayan) ve Blinking (yanıp sönen) çivilerle zamanlama odaklı yarışlar.
+- **🏆 Grand Prix Sistemi:** 
+  - Puan tabloları, eleme turları ve dinamik turnuva isimleri ile profesyonel bir şampiyona deneyimi.
+- **🎵 Gelişmiş Ses Miksajı:** 
+  - Arka plan müzikleri (`fade-in/out`), ıslık sesleri, gol efektleri ve glitch seslerinin otomatik olarak videoya gömülmesi.
+- **🎨 Görsel Kalite:** 
+  - 1080x1920 (Dikey) çözünürlük, 60 FPS akıcılık.
+  - Cam (Glassmorphism) arayüz panelleri ve dinamik ışıklandırma.
+- **⚙️ Fizik Motoru:** 
+  - `Pymunk` tabanlı gerçek zamanlı fizik simülasyonu. Topların sıkışmasını engelleyen optimize edilmiş sürtünme ve zıplama ayarları.
 
-## Gereksinimler
-- Windows 10/11
-- Python 3.12+ (resmi python.org kurulumu onerilir)
-- FFmpeg (ses miksaji icin)
+## 🛠️ Kurulum
 
-Not:
-- `tkinter` gerekli oldugu icin Windows Store Python yerine resmi Python kurulumu tavsiye edilir.
-- FFmpeg yoksa video yine uretilir ancak ses miksaji kisitlanabilir.
+Proje Windows ortamında kolayca kurulabilir:
 
-## Yeni PC Kurulumu (Onerilen)
-1. Repoyu cek:
-```powershell
-git clone https://github.com/fatihdisci/Mac-oto.git
-cd Mac-oto
-```
+1. **Python Kurulumu:** Bilgisayarınızda [Python 3.12+](https://www.python.org/downloads/) kurulu olduğundan emin olun.
+2. **Bağımlılıklar:** `kurum.bat` dosyasını çalıştırın. Bu script otomatik olarak bir sanal ortam oluşturacak ve gerekli tüm kütüphaneleri (`pygame`, `pymunk`, `customtkinter`, `moviepy` vb.) kuracaktır.
+3. **FFmpeg:** Ses miksajı için sisteminizde `ffmpeg` yüklü ve PATH'e ekli olmalıdır.
 
-2. Cift tikla:
-- `kurum.bat`  -> `.venv` olusturur ve `requirements.txt` kurar
+## 🎮 Kullanım
 
-3. Sonra cift tikla:
-- `00_Launcher.bat` -> GUI acilir
+1. `00_Launcher.bat` dosyasını çalıştırarak ana kontrol panelini açın.
+2. **Mod Seçimi:** Sol panelden "Normal Match" veya "Grand Prix" sekmelerinden birini seçin.
+3. **Ayarlar:** 
+   - Takımları seçin veya rastgele atayın.
+   - Motor tipini (Normal, VAR, Shifting vb.) belirleyin.
+   - Turnuva veya maç ismini girin.
+4. **Başlat:** "START" veya "RUN" butonuna tıklayarak simülasyonu ve video üretimini başlatın.
+5. **Sonuç:** İşlem bittiğinde `output_sim_final.mp4` dosyası proje ana dizininde hazır olacaktır.
 
-## Manual Kurulum
-```powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe launcher_gui.py
-```
+## 🏗️ Proje Mimarisi ve Ayarlar
 
-## Ana Komutlar
-- GUI:
-```powershell
-.\.venv\Scripts\python.exe launcher_gui.py
-```
+### 1. Fizik ve Görüntü (`config.py`)
+Tüm sistem ayarları bu dosyada merkezi olarak tutulur:
+- `gravity_y`: Yerçekimi gücü (Varsayılan: 1850.0).
+- `ball_friction`: Top sürtünmesi (Varsayılan: 0.95).
+- `total_duration_seconds`: Üretilecek videonun uzunluğu (Varsayılan: 55sn).
 
-- Tek mac render:
-```powershell
-.\.venv\Scripts\python.exe main.py --headless --no-messagebox
-```
+### 2. Ses Sistemi (`audio_mixer.py`)
+Ses seviyeleri (Volume) `VOLUME` sözlüğü üzerinden yönetilir:
+- `whistle_start`: 0.15 (Maç başlangıç ıslığı).
+- `bg_music`: 0.60 (Arka plan müziği).
+- `ambient`: 0.15 (Seyirci/Ortam sesi).
 
-- Full turnuva:
-```powershell
-.\.venv\Scripts\python.exe run_tournament_full.py --layout landscape_broadcast --replay-completed
-```
+### 3. Render Motorları
+- `renderer.py`: Standart maçların görselleştirilmesi.
+- `grand_prix_renderer.py`: Turnuva turlarının ve puan tablolarının görselleştirilmesi.
 
-- Grand Prix:
-```powershell
-.\.venv\Scripts\python.exe run_grand_prix.py --headless --progress-every 500
-```
+## 📁 Dosya Yapısı
+- `launcher_gui.py`: Ana GUI kontrolcü.
+- `main.py`: Tekil maç yönetim scripti.
+- `run_grand_prix.py`: Turnuva yönetim scripti.
+- `physics_engine.py`: Fizik dünyasının kurallarını tanımlar.
+- `audio_mixer.py`: Ses kanallarını birleştiren FFmpeg köprüsü.
+- `data/`: Takım bilgileri, logolar ve ses dosyalarının bulunduğu dizin.
 
-## Dosya Ozeti
-- `00_Launcher.bat`: Tek tikla calistirma (venv kontrol + GUI)
-- `kurum.bat`: Tek tikla kurulum (venv + paketler)
-- `launcher_gui.py`: Ana uygulama penceresi
-- `main.py`: Tek mac video akisi
-- `run_tournament_full.py`: Turnuva toplu render ve layout
-- `grand_prix_engine.py`: Grand Prix fizik/raunt motoru
-- `grand_prix_renderer.py`: Grand Prix yatay yayin renderi
-- `tournament_manager.py`: Turnuva bracket ve sonuc kaydi
-- `audio_mixer.py`: FFmpeg ile ses miksaji
-
-## Ciktilar
-- Tek mac: `output/*_final.mp4`
-- Turnuva: `output/tournament_runs/*.mp4`
-- Grand Prix: `output/grand_prix_runs/*.mp4`
-
-## Sorun Giderme
-- `ModuleNotFoundError: tkinter`:
-  - Resmi Python 3.12 kur ve tekrar `kurum.bat` calistir.
-
-- `did not find executable ... Python314`:
-  - Eski/bozuk `.venv` kalmis olabilir.
-  - `kurum.bat` veya `00_Launcher.bat` ile ortami yeniden kur.
-
-- Ses yok:
-  - `data/sounds/` altinda ses dosyalari oldugunu kontrol et.
-  - `ffmpeg -version` komutu calismali.
-
-- Logo yok:
-  - Takim havuzu/logolarin guncellenmesini GUI icinden tekrar calistir.
-
+---
+*Geliştirici Notu: Bu proje eğlence ve yüksek kaliteli sosyal medya içeriği üretimi için optimize edilmiştir.*
