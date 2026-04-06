@@ -55,7 +55,7 @@ VOLUME = {
     "pop_point": 0.88,
     "pop_end": 0.82,
     "background_music": 0.35,
-    "crowd_ambient": 0.40,
+    "crowd_ambient": 0.20,
 }
 
 # Fade ayarları (saniye)
