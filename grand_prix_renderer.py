@@ -208,8 +208,7 @@ class GrandPrixRenderer:
             surface.blit(logo, logo.get_rect(center=(panel_rect.x + 38, line_y + 10)))
             name = self._fit_text(self.info_font, str(row.get("short_name") or row.get("team_name") or ""), 180, (235, 239, 246))
             surface.blit(name, (panel_rect.x + 58, line_y))
-            slot = self.micro_font.render(f"H{int(row.get('slot_index', 0)) + 1}", True, (160, 192, 232))
-            surface.blit(slot, (panel_rect.x + 268, line_y + 5))
+            # Hx (slot index) metni kaldırıldı
             delta = self.info_font.render(f"{int(row.get('points', 0)):+d}", True, self._points_color(int(row.get("points", 0))))
             surface.blit(delta, delta.get_rect(topright=(panel_rect.x + 372, line_y)))
             total = self.info_font.render(f"{int(row.get('total_points', 0))}p", True, (240, 244, 251))
