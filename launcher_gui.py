@@ -1522,7 +1522,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
             text_color="#F1F4FA",
         ).grid(row=0, column=0, sticky="w", padx=12, pady=(12, 8))
 
-        self.grand_prix_name_var = StringVar(value="Yeni Grand Prix")
+        self.grand_prix_name_var = StringVar(value="")
         ctk.CTkEntry(
             left,
             textvariable=self.grand_prix_name_var,

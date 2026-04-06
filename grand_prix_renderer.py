@@ -51,11 +51,9 @@ class GrandPrixRenderer:
         )
         self._draw_glass_panel(surface, board_rect, (20, 26, 38, 215), (226, 233, 246, 210), 26)
 
-        title = self.title_font.render("GRAND PRIX ARENA", True, (241, 245, 251))
+        title_text = str(snapshot.get("title", "GRAND PRIX")).upper()
+        title = self.title_font.render(title_text, True, (241, 245, 251))
         surface.blit(title, (board_rect.x + 24, board_rect.y + 18))
-
-        subtitle = self.info_font.render(str(snapshot.get("title", "Grand Prix")), True, (167, 183, 212))
-        surface.blit(subtitle, (board_rect.x + 24, board_rect.y + 58))
 
         peg_layer = pygame.Surface((board_rect.width, board_rect.height), pygame.SRCALPHA)
         peg_radius = max(6, int(snapshot.get("peg_radius", 7)))
