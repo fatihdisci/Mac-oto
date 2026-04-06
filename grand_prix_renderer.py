@@ -258,7 +258,8 @@ class GrandPrixRenderer:
         panel.fill((6, 10, 20, 128))
         surface.blit(panel, (0, 0))
 
-        title = self.overlay_sub_font.render("GRAND PRIX START", True, (255, 244, 194))
+        intro_str = f"{snapshot.get('title', 'Grand Prix')} is starting"
+        title = self.overlay_sub_font.render(intro_str, True, (255, 244, 194))
         surface.blit(title, title.get_rect(center=(surface.get_width() // 2, 410)))
 
         countdown = int(snapshot.get("intro_countdown", 1))
