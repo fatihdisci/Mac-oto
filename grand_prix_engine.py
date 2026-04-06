@@ -70,11 +70,11 @@ class GrandPrixEngine:
             "height": 988,
         }
 
-        self.ball_radius = max(14, int(self.cfg.physics.ball_radius * 0.52))
+        self.ball_radius = max(13, int(self.cfg.physics.ball_radius * 0.48))
         self.ball_mass = max(0.7, float(self.cfg.physics.ball_mass))
-        self.ball_elasticity = 0.72
-        self.ball_friction = 0.84
-        self.peg_radius = max(8, int(self.cfg.physics.peg_radius * 0.72))
+        self.ball_elasticity = 0.75
+        self.ball_friction = 0.15  # Düşük sürtünme, topların üst üste binip sıkışmasını engeller
+        self.peg_radius = max(7, int(self.cfg.physics.peg_radius * 0.65))
 
         self.bottom_row_pegs: list[tuple[float, float]] = []
         self.peg_positions = self._build_peg_positions()
@@ -258,7 +258,7 @@ class GrandPrixEngine:
     def _spawn_ball(self, spawn_x: float, spawn_y: float) -> tuple[pymunk.Body, pymunk.Circle]:
         inertia = pymunk.moment_for_circle(self.ball_mass, 0.0, float(self.ball_radius))
         body = pymunk.Body(self.ball_mass, inertia)
-        body.position = (spawn_x, spawn_y + self.rng.uniform(-16.0, 10.0))
+        body.position = (spawn_x, spawn_y + self.rng.uniform(-300.0, 30.0))
         body.velocity = (self.rng.uniform(-110.0, 110.0), self.rng.uniform(10.0, 70.0))
         body.angular_velocity = self.rng.uniform(-7.0, 7.0)
 
@@ -341,18 +341,18 @@ class GrandPrixEngine:
             entry.last_x = x
             entry.last_y = y
 
-            if entry.stall_timer < 0.55 or entry.nudge_count >= 5:
+            if entry.stall_timer < 0.4 or entry.nudge_count >= 20:
                 continue
 
-            push_x = self.rng.uniform(-65.0, 65.0)
+            push_x = self.rng.uniform(-100.0, 100.0)
             if x < left_bound + 32.0:
-                push_x = abs(push_x) + 42.0
+                push_x = abs(push_x) + 60.0
             elif x > right_bound - 32.0:
-                push_x = -abs(push_x) - 42.0
-            push_y = self.rng.uniform(145.0, 225.0)
+                push_x = -abs(push_x) - 60.0
+            push_y = self.rng.uniform(200.0, 350.0)
             entry.body.apply_impulse_at_local_point((push_x * self.ball_mass, push_y * self.ball_mass))
             vx = float(entry.body.velocity.x)
-            vy = max(float(entry.body.velocity.y), 120.0)
+            vy = max(float(entry.body.velocity.y), 150.0)
             entry.body.velocity = (vx, vy)
             entry.stall_timer = 0.0
             entry.nudge_count += 1
