@@ -48,13 +48,13 @@ SOUND_FILES = {
 
 # Volume ayarları (0.0 - 1.0)
 VOLUME = {
-    "whistle_start": 0.50,
-    "whistle_end": 0.55,
-    "goal": 0.60,
-    "pop_start": 0.30,
-    "pop_point": 0.60,
-    "pop_end": 0.55,
-    "background_music": 0.50,
+    "whistle_start": 0.15,
+    "whistle_end": 0.18,
+    "goal": 0.55,
+    "pop_start": 0.22,
+    "pop_point": 0.55,
+    "pop_end": 0.50,
+    "background_music": 0.60,
     "crowd_ambient": 0.15,
 }
 

@@ -118,7 +118,13 @@ class MarbleRaceRenderer:
             26,
         )
 
-        title_text = "POP CULTURE RACE" if self._is_pop_mode(snapshot) else "FOOTBALL RACE"
+        # Dinamik başlık
+        raw_title = snapshot.get("title")
+        if not raw_title or str(raw_title).strip() == "":
+            title_text = "POP CULTURE RACE" if self._is_pop_mode(snapshot) else "FOOTBALL RACE"
+        else:
+            title_text = str(raw_title).upper()
+            
         title = self.title_font.render(title_text, True, (200, 208, 224))
         title_rect = title.get_rect(center=(cx, panel_y + panel_h // 2))
         surface.blit(title, title_rect)

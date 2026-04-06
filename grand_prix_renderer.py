@@ -51,7 +51,12 @@ class GrandPrixRenderer:
         )
         self._draw_glass_panel(surface, board_rect, (20, 26, 38, 215), (226, 233, 246, 210), 26)
 
-        title_text = str(snapshot.get("title", "GRAND PRIX")).upper()
+        # Sol üst dinamik turnuva ismi
+        raw_title = snapshot.get("title")
+        if not raw_title or str(raw_title).strip() == "":
+            raw_title = "GRAND PRIX"
+        
+        title_text = str(raw_title).upper()
         title = self.title_font.render(title_text, True, (241, 245, 251))
         surface.blit(title, (board_rect.x + 24, board_rect.y + 18))
 
@@ -258,7 +263,11 @@ class GrandPrixRenderer:
         panel.fill((6, 10, 20, 128))
         surface.blit(panel, (0, 0))
 
-        intro_str = f"{snapshot.get('title', 'Grand Prix')} is starting"
+        display_title = snapshot.get('title')
+        if not display_title or str(display_title).strip() == "":
+            display_title = "Grand Prix"
+            
+        intro_str = f"{display_title} is starting"
         title = self.overlay_sub_font.render(intro_str, True, (255, 244, 194))
         surface.blit(title, title.get_rect(center=(surface.get_width() // 2, 410)))
 
