@@ -73,7 +73,7 @@ class GrandPrixEngine:
         self.ball_radius = max(13, int(self.cfg.physics.ball_radius * 0.48))
         self.ball_mass = max(0.7, float(self.cfg.physics.ball_mass))
         self.ball_elasticity = 0.75
-        self.ball_friction = 0.15  # Düşük sürtünme, topların üst üste binip sıkışmasını engeller
+        self.ball_friction = 0.45  # Sürtünmeyi biraz artırdık (çok hızlı düşmemesi için)
         self.peg_radius = max(7, int(self.cfg.physics.peg_radius * 0.65))
 
         self.bottom_row_pegs: list[tuple[float, float]] = []
