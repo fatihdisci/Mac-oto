@@ -70,7 +70,7 @@ class GrandPrixEngine:
             "height": 988,
         }
 
-        self.ball_radius = max(13, int(self.cfg.physics.ball_radius * 0.48))
+        self.ball_radius = max(13, int(self.cfg.physics.ball_radius * 0.55))
         self.ball_mass = max(0.7, float(self.cfg.physics.ball_mass))
         self.ball_elasticity = 0.75
         self.ball_friction = 0.30  # Sürtünmeyi 0.30'a ayarladık (kullanıcı talebi)

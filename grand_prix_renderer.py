@@ -320,17 +320,17 @@ class GrandPrixRenderer:
         if not path.exists():
             raise FileNotFoundError(path)
         image = Image.open(path).convert("RGBA")
-        image.thumbnail((size - 2, size - 2), Image.Resampling.LANCZOS)
+        image.thumbnail((size, size), Image.Resampling.LANCZOS)
         image = image.filter(ImageFilter.UnsharpMask(radius=1.2, percent=160, threshold=2))
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         canvas.paste(image, ((size - image.width) // 2, (size - image.height) // 2), image)
         surface = pygame.image.fromstring(canvas.tobytes(), canvas.size, canvas.mode).convert_alpha()
         mask = pygame.Surface((size, size), pygame.SRCALPHA)
-        pygame.draw.circle(mask, (255, 255, 255, 255), (size // 2, size // 2), max(2, size // 2 - 2))
+        pygame.draw.circle(mask, (255, 255, 255, 255), (size // 2, size // 2), size // 2)
         cropped = pygame.Surface((size, size), pygame.SRCALPHA)
         cropped.blit(surface, (0, 0))
         cropped.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-        pygame.draw.circle(cropped, (247, 249, 252, 220), (size // 2, size // 2), max(2, size // 2 - 2), width=2)
+        pygame.draw.circle(cropped, (247, 249, 252, 220), (size // 2, size // 2), size // 2, width=2)
         return cropped
 
     def _build_placeholder_logo(self, team_name: str, size: int) -> pygame.Surface:
