@@ -26,7 +26,7 @@ def build_grand_prix_config():
             cfg.video,
             width=1920,
             height=1080,
-            fps=30,
+            fps=60,
             output_filename="grand_prix_output.mp4",
             background_color=(13, 18, 29),
         ),

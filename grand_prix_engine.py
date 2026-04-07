@@ -86,7 +86,7 @@ class GrandPrixEngine:
             self.exit_capture_y = board_bottom + 22.0
 
         self.space = pymunk.Space()
-        self.space.gravity = (0.0, float(self.cfg.physics.gravity_y) * 0.98)
+        self.space.gravity = (0.0, float(self.cfg.physics.gravity_y) * 0.72)
         self.space.iterations = max(24, int(self.cfg.physics.space_iterations))
         self.space.damping = 0.9985
         self._build_static_world()

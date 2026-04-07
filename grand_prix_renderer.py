@@ -230,7 +230,7 @@ class GrandPrixRenderer:
             surface.blit(shadow, shadow.get_rect(center=(x + 4, y + 6)))
             pygame.draw.circle(surface, color, (x, y), radius)
             pygame.draw.circle(surface, (244, 247, 252), (x, y), radius, width=2)
-            logo = self._get_logo_surface(str(ball.get("team_name", "")), str(ball.get("badge_file", "")), radius * 2 - 4)
+            logo = self._get_logo_surface(str(ball.get("team_name", "")), str(ball.get("badge_file", "")), radius * 2)
             surface.blit(logo, logo.get_rect(center=(x, y)))
 
     def _draw_final_overlay(self, surface: pygame.Surface, snapshot: dict[str, Any]) -> None:
@@ -320,7 +320,7 @@ class GrandPrixRenderer:
         if not path.exists():
             raise FileNotFoundError(path)
         image = Image.open(path).convert("RGBA")
-        image.thumbnail((size - 8, size - 8), Image.Resampling.LANCZOS)
+        image.thumbnail((size - 2, size - 2), Image.Resampling.LANCZOS)
         image = image.filter(ImageFilter.UnsharpMask(radius=1.2, percent=160, threshold=2))
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         canvas.paste(image, ((size - image.width) // 2, (size - image.height) // 2), image)
