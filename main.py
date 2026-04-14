@@ -16,7 +16,7 @@ from tkinter import Tk, messagebox
 import pygame
 
 from audio_mixer import mix_audio_into_video
-from config import build_default_config
+from config import build_default_config, get_video_preset
 from knockout_rules import resolve_single_leg_knockout
 from models import MatchSelection
 from physics import MarbleRacePhysics
@@ -344,6 +344,9 @@ def run_simulation(
             "Ã–nce match_selector.py Ã¼zerinden iki takÄ±m seÃ§ip kaydetmelisin."
         )
 
+    video_preset = get_video_preset(getattr(match_selection, "video_preset", None))
+    cfg = replace(cfg, video=replace(cfg.video, total_duration_seconds=video_preset.total_duration_seconds))
+
     # Benzersiz dosya adÄ± Ã¼ret
     output_dir = cfg.base_dir / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -382,8 +385,8 @@ def run_simulation(
     fixed_dt = 1.0 / cfg.video.fps
     base_video_seconds = cfg.video.total_duration_seconds
     total_frames = cfg.total_video_frames
-    intro_seconds = 2.0
-    outro_seconds = 2.0
+    intro_seconds = video_preset.intro_seconds
+    outro_seconds = video_preset.outro_seconds
     gameplay_seconds = max(1.0, base_video_seconds - intro_seconds - outro_seconds)
     regular_video_seconds = gameplay_seconds
     extra_time_video_seconds = 0.0

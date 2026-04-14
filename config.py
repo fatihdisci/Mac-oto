@@ -25,6 +25,34 @@ class VideoConfig:
 
 
 # ============================================================
+# VİDEO PRESET (Shorts sure varyasyonları)
+# ============================================================
+
+@dataclass(frozen=True)
+class VideoPreset:
+    key: str
+    label: str
+    total_duration_seconds: float
+    intro_seconds: float
+    outro_seconds: float
+
+
+VIDEO_PRESETS: dict[str, VideoPreset] = {
+    "shorts_30": VideoPreset("shorts_30", "Shorts 30s", 30.0, 2.5, 2.5),
+    "shorts_45": VideoPreset("shorts_45", "Shorts 45s", 45.0, 3.0, 3.0),
+    "shorts_55": VideoPreset("shorts_55", "Shorts 55s (Varsayilan)", 55.0, 3.0, 2.0),
+}
+
+DEFAULT_VIDEO_PRESET_KEY = "shorts_55"
+
+
+def get_video_preset(key: str | None) -> VideoPreset:
+    if not key:
+        return VIDEO_PRESETS[DEFAULT_VIDEO_PRESET_KEY]
+    return VIDEO_PRESETS.get(key.strip(), VIDEO_PRESETS[DEFAULT_VIDEO_PRESET_KEY])
+
+
+# ============================================================
 # FİZİK AYARLARI
 # ============================================================
 

@@ -797,14 +797,28 @@ class MarbleRaceRenderer:
         surface.blit(name_a, name_a.get_rect(center=na_pos))
         surface.blit(name_b, name_b.get_rect(center=nb_pos))
 
-        # 6) WHO WINS + VS badge
+        # 6) Dynamic title (custom match title or WHO WINS fallback) + VS badge
+        raw_title = str(snapshot.get("match_title", "")).strip()
+        default_auto_title = f"{team_a.get('name', '')} vs {team_b.get('name', '')}".strip()
+        if not raw_title or raw_title.lower() == default_auto_title.lower():
+            hook_text = "WHO WINS?"
+        else:
+            hook_text = raw_title.upper()
+
+        max_text_width = w - 160
+        hook_font = self.hook_mega_font
+        rendered_width = hook_font.size(hook_text)[0]
+        text_scale = 1.0
+        if rendered_width > max_text_width and rendered_width > 0:
+            text_scale = max_text_width / rendered_width
+
         who_y = 252
-        shadow = self.hook_mega_font.render("WHO WINS?", True, (0, 0, 0))
+        shadow = hook_font.render(hook_text, True, (0, 0, 0))
         shadow.set_alpha(int(185 * content_alpha))
-        who = self.hook_mega_font.render("WHO WINS?", True, (255, 255, 255))
+        who = hook_font.render(hook_text, True, (255, 255, 255))
         who.set_alpha(int(255 * content_alpha))
-        if abs(scale - 1.0) > 0.01:
-            s = max(0.3, scale)
+        s = max(0.3, scale * text_scale)
+        if abs(s - 1.0) > 0.01:
             shadow = pygame.transform.smoothscale(shadow, (max(1, int(shadow.get_width() * s)), max(1, int(shadow.get_height() * s))))
             who = pygame.transform.smoothscale(who, (max(1, int(who.get_width() * s)), max(1, int(who.get_height() * s))))
         surface.blit(shadow, shadow.get_rect(center=(cx + 5, who_y + 6)))
@@ -822,11 +836,23 @@ class MarbleRaceRenderer:
         vs_t.set_alpha(int(255 * content_alpha))
         surface.blit(vs_t, vs_t.get_rect(center=(cx, vs_y)))
 
-        # 7) Bottom waiting text
-        dots = "." * (1 + int(progress * 3) % 4)
-        starting = self.info_font.render(f"Match is starting{dots}", True, (150, 164, 196))
-        starting.set_alpha(int(255 * content_alpha))
-        surface.blit(starting, starting.get_rect(center=(cx, h - 84)))
+        # 7) Bottom context text (league / tournament context if available)
+        league_a = str(team_a.get("league_name", "")).strip()
+        league_b = str(team_b.get("league_name", "")).strip()
+        if league_a and league_a == league_b:
+            context_text = league_a.upper()
+        elif league_a and league_b:
+            context_text = f"{league_a.upper()} vs {league_b.upper()}"
+        elif league_a:
+            context_text = league_a.upper()
+        elif league_b:
+            context_text = league_b.upper()
+        else:
+            context_text = ""
+        if context_text:
+            ctx = self.info_font.render(context_text, True, (180, 196, 220))
+            ctx.set_alpha(int(200 * content_alpha))
+            surface.blit(ctx, ctx.get_rect(center=(cx, h - 84)))
 
     def _hook_anim_values(self, progress: float) -> dict:
         """Timeline: 0.0-0.3 entry, 0.3-0.8 peak pulse, 0.8-1.0 full fade-out."""

@@ -15,7 +15,7 @@ import requests
 
 import customtkinter as ctk
 
-from config import build_default_config
+from config import build_default_config, VIDEO_PRESETS, DEFAULT_VIDEO_PRESET_KEY
 from grand_prix_manager import GrandPrixManager
 from models import MatchSelection, TeamRecord
 from team_repository import TeamRepository
@@ -661,8 +661,56 @@ class MarbleRaceLauncherApp(ctk.CTk):
         )
         self.guided_score_b_entry.grid(row=0, column=3, sticky="w")
 
+        title_row = ctk.CTkFrame(footer, fg_color="transparent")
+        title_row.grid(row=5, column=0, sticky="ew", padx=16, pady=(0, 8))
+        title_row.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            title_row,
+            text="Mac Basligi:",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#D9E2F2",
+        ).grid(row=0, column=0, sticky="w", padx=(0, 8))
+
+        self.match_title_var = StringVar(value="")
+        self.match_title_entry = ctk.CTkEntry(
+            title_row,
+            height=30,
+            textvariable=self.match_title_var,
+            placeholder_text="Ornek: UCL QUARTER FINAL, DEV DERBI, EL CLASICO... (bos birakirsan otomatik)",
+            fg_color="#0A111D",
+            border_color="#243047",
+        )
+        self.match_title_entry.grid(row=0, column=1, sticky="ew")
+
+        preset_row = ctk.CTkFrame(footer, fg_color="transparent")
+        preset_row.grid(row=6, column=0, sticky="ew", padx=16, pady=(0, 8))
+        preset_row.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            preset_row,
+            text="Video Suresi:",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#D9E2F2",
+        ).grid(row=0, column=0, sticky="w", padx=(0, 8))
+
+        self._preset_label_to_key = {p.label: p.key for p in VIDEO_PRESETS.values()}
+        self._preset_key_to_label = {p.key: p.label for p in VIDEO_PRESETS.values()}
+        default_preset_label = self._preset_key_to_label[DEFAULT_VIDEO_PRESET_KEY]
+        self.video_preset_var = StringVar(value=default_preset_label)
+        self.video_preset_menu = ctk.CTkOptionMenu(
+            preset_row,
+            values=list(self._preset_label_to_key.keys()),
+            variable=self.video_preset_var,
+            height=32,
+            fg_color="#1A2336",
+            button_color="#2457F5",
+            button_hover_color="#1E46C8",
+        )
+        self.video_preset_menu.grid(row=0, column=1, sticky="w")
+
         btn_row = ctk.CTkFrame(footer, fg_color="transparent")
-        btn_row.grid(row=5, column=0, sticky="ew", padx=16, pady=(0, 12))
+        btn_row.grid(row=7, column=0, sticky="ew", padx=16, pady=(0, 12))
         btn_row.grid_columnconfigure((0, 1, 2), weight=1)
 
         ctk.CTkButton(
@@ -716,7 +764,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
             )
             return
 
-        title = f"{team_a.name} vs {team_b.name}"
+        custom_title = ""
+        if hasattr(self, "match_title_var"):
+            custom_title = self.match_title_var.get().strip()
+        title = custom_title or f"{team_a.name} vs {team_b.name}"
         mode_label = ENGINE_MODE_VALUE_TO_LABEL.get(
             self.selected_engine_mode_value,
             self.selected_engine_mode_value,
@@ -741,7 +792,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
             messagebox.showerror("Gecersiz Eslesme", "Ayni takim iki tarafa birden secilemez.")
             return False
 
-        title = f"{team_a.name} vs {team_b.name}"
+        custom_title = ""
+        if hasattr(self, "match_title_var"):
+            custom_title = self.match_title_var.get().strip()
+        title = custom_title or f"{team_a.name} vs {team_b.name}"
         engine_mode = self.selected_engine_mode_value
         guided_target_score_a: int | None = None
         guided_target_score_b: int | None = None
@@ -759,6 +813,11 @@ class MarbleRaceLauncherApp(ctk.CTk):
                 messagebox.showerror("Gecersiz Guided Sonuc", "Guided skorlar 0-20 araliginda olmali.")
                 return False
 
+        video_preset_key = DEFAULT_VIDEO_PRESET_KEY
+        if hasattr(self, "video_preset_var"):
+            selected_label = self.video_preset_var.get()
+            video_preset_key = self._preset_label_to_key.get(selected_label, DEFAULT_VIDEO_PRESET_KEY)
+
         selection = MatchSelection(
             team_a=team_a,
             team_b=team_b,
@@ -767,6 +826,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
             guided_target_score_a=guided_target_score_a,
             guided_target_score_b=guided_target_score_b,
             is_real_fixture_reference=self.real_fixture_var.get(),
+            video_preset=video_preset_key,
         )
 
         output_path = REPOSITORY.save_selected_match(selection)
@@ -1353,6 +1413,18 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self._set_engine_mode_selection(selection.engine_mode)
         self.team_a_panel._sync_selection_ui()
         self.team_b_panel._sync_selection_ui()
+        if hasattr(self, "match_title_var"):
+            default_title = f"{selection.team_a.name} vs {selection.team_b.name}"
+            if selection.title and selection.title != default_title:
+                self.match_title_var.set(selection.title)
+            else:
+                self.match_title_var.set("")
+        if hasattr(self, "video_preset_var"):
+            preset_label = self._preset_key_to_label.get(
+                selection.video_preset or DEFAULT_VIDEO_PRESET_KEY,
+                self._preset_key_to_label[DEFAULT_VIDEO_PRESET_KEY],
+            )
+            self.video_preset_var.set(preset_label)
         self._refresh_match_summary()
         self.tabview.set("Takim Secimi")
         self.log(f"Turnuva maci secime aktarildi: {selection.title}")

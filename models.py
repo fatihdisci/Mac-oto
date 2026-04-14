@@ -106,6 +106,7 @@ class MatchSelection:
     guided_target_score_a: int | None = None
     guided_target_score_b: int | None = None
     is_real_fixture_reference: bool = False
+    video_preset: str = "shorts_55"
     created_at_utc: str = field(
         default_factory=lambda: datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     )
@@ -119,6 +120,7 @@ class MatchSelection:
             "guided_target_score_a": self.guided_target_score_a,
             "guided_target_score_b": self.guided_target_score_b,
             "is_real_fixture_reference": self.is_real_fixture_reference,
+            "video_preset": self.video_preset,
             "created_at_utc": self.created_at_utc,
         }
 
@@ -151,6 +153,7 @@ class MatchSelection:
                 else None
             ),
             is_real_fixture_reference=bool(payload.get("is_real_fixture_reference", False)),
+            video_preset=str(payload.get("video_preset") or "shorts_55").strip() or "shorts_55",
             created_at_utc=str(payload.get("created_at_utc") or "").strip()
             or datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
         )
