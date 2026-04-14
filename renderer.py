@@ -801,15 +801,18 @@ class MarbleRaceRenderer:
         surface.blit(overlay, (0, 0))
 
         # 2) Background color glow based on team colors
-        # Left side Team A dominant color, right side Team B dominant color
+        # Align glow centers with logo centers for perfect symmetry
+        logo_dist = 170
+        logo_a_x = cx - logo_dist
+        logo_b_x = cx + logo_dist
+        logo_y = h // 2 + 50
+
         glow_strength = glow_intensity * content_alpha
         glow_surface = pygame.Surface((w, h), pygame.SRCALPHA)
         
-        # Create gradient glow
-        # Left glow
-        pygame.draw.circle(glow_surface, (*color_a[:3], int(60 * glow_strength)), (cx - 250, h // 2), 400)
-        # Right glow
-        pygame.draw.circle(glow_surface, (*color_b[:3], int(60 * glow_strength)), (cx + 250, h // 2), 400)
+        # Create gradient glow - Centered on logos
+        pygame.draw.circle(glow_surface, (*color_a[:3], int(70 * glow_strength)), (logo_a_x, logo_y), 450)
+        pygame.draw.circle(glow_surface, (*color_b[:3], int(70 * glow_strength)), (logo_b_x, logo_y), 450)
         
         surface.blit(glow_surface, (0, 0))
 
@@ -845,7 +848,7 @@ class MarbleRaceRenderer:
         surface.blit(who, who.get_rect(center=(cx, who_y)))
 
         # 5) Logos (Much bigger, closer to center)
-        base_logo = 290
+        base_logo = 340
         logo_a = self._get_logo_surface(team_a["name"], team_a.get("badge_file", ""), base_logo)
         logo_b = self._get_logo_surface(team_b["name"], team_b.get("badge_file", ""), base_logo)
         scaled_size = max(48, int(base_logo * scale))
@@ -857,10 +860,6 @@ class MarbleRaceRenderer:
 
         logo_a.set_alpha(int(255 * content_alpha))
         logo_b.set_alpha(int(255 * content_alpha))
-        
-        logo_a_x = cx - 180
-        logo_b_x = cx + 180
-        logo_y = h // 2 + 50
         
         surface.blit(logo_a, logo_a.get_rect(center=(logo_a_x - toss_x, logo_y + toss_y)))
         surface.blit(logo_b, logo_b.get_rect(center=(logo_b_x + toss_x, logo_y + toss_y)))
