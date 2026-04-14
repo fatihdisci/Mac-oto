@@ -143,7 +143,7 @@ class MarbleRaceRenderer:
         height = self.cfg.video.height
 
         background = pygame.Surface((width, height))
-        background.fill(theme["bg_color"])
+        background.fill(theme["bg"])
 
         self._draw_field_panel(background, theme)
         self._draw_side_walls(background, theme)
@@ -158,8 +158,8 @@ class MarbleRaceRenderer:
             self.cfg.playfield_width + 36,
             self.cfg.video.height - 192,
         )
-        pygame.draw.rect(surface, theme["panel_bg"], field_rect, border_radius=28)
-        pygame.draw.rect(surface, theme["panel_border"], field_rect, width=2, border_radius=28)
+        pygame.draw.rect(surface, theme["field"], field_rect, border_radius=28)
+        pygame.draw.rect(surface, theme["border"], field_rect, width=2, border_radius=28)
 
     def _draw_side_walls(self, surface: pygame.Surface, theme: dict) -> None:
         left_x = self.cfg.playfield_left
@@ -167,8 +167,8 @@ class MarbleRaceRenderer:
         wall_top = 120
         ramp_top_y = self.cfg.layout.floor_y - 180
 
-        pygame.draw.line(surface, theme["accent"], (left_x, wall_top), (left_x, ramp_top_y), 6)
-        pygame.draw.line(surface, theme["accent"], (right_x, wall_top), (right_x, ramp_top_y), 6)
+        pygame.draw.line(surface, theme["wall"], (left_x, wall_top), (left_x, ramp_top_y), 6)
+        pygame.draw.line(surface, theme["wall"], (right_x, wall_top), (right_x, ramp_top_y), 6)
 
     def _draw_pegs(self, surface: pygame.Surface, snapshot: Optional[dict] = None) -> None:
         left = self.cfg.playfield_left
@@ -203,8 +203,8 @@ class MarbleRaceRenderer:
                 dx, dy = int(x + vib_x), int(y + vib_y)
             else:
                 dx, dy = int(x), int(y)
-            pygame.draw.circle(surface, theme["peg_shadow"], (dx + 3, dy + 4), self.cfg.physics.peg_radius)
-            pygame.draw.circle(surface, theme["peg_color"], (dx, dy), self.cfg.physics.peg_radius)
+            pygame.draw.circle(surface, theme["peg_sh"], (dx + 3, dy + 4), self.cfg.physics.peg_radius)
+            pygame.draw.circle(surface, theme["peg"], (dx, dy), self.cfg.physics.peg_radius)
             pygame.draw.circle(
                 surface,
                 (228, 232, 240),
