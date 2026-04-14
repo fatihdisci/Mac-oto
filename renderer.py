@@ -1220,27 +1220,27 @@ class MarbleRaceRenderer:
             image = image.crop(bbox)
             
         # 2) Calculate smart scale
-        # We want to fit the logo inside a circle of radius R = size/2 - 3
-        # Standard thumbnail preserves aspect ratio.
-        # For non-square logos (like crests), thumbnail makes them look small.
         orig_w, orig_h = image.size
         aspect = orig_w / orig_h
         
-        target_inner = size - 6 # Leave a tiny bit of breath
+        # We want to fill the circle as much as possible. 
+        # Radius is size//2 - 3, so diameter is size - 6.
+        target_inner = size - 4 
         
         if 0.85 <= aspect <= 1.15:
-            # Nearly square: standard fit
+            # Nearly square/round: Fill both
             draw_w, draw_h = target_inner, target_inner
         elif aspect < 0.85:
-            # Narrow/Tall (Liverpool etc.): Fit to height, but allow slight width expansion
+            # Tall (Crest): Fix height, calculate width
             draw_h = target_inner
             draw_w = int(draw_h * aspect)
         else:
-            # Wide: Fit to width
+            # Wide: Fix width, calculate height
             draw_w = target_inner
             draw_h = int(draw_w / aspect)
             
-        image.thumbnail((draw_w, draw_h), Image.Resampling.LANCZOS)
+        # Use resize instead of thumbnail to force upscaling if source is small
+        image = image.resize((draw_w, draw_h), Image.Resampling.LANCZOS)
         image = image.filter(ImageFilter.UnsharpMask(radius=1.6, percent=165, threshold=2))
 
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
