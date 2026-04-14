@@ -455,9 +455,6 @@ class MarbleRacePhysics:
             (cA_l, y3, rA, 6, -2.0),
             (cA_c, y3, rA, 6,  1.7),
             (cA_r, y3, rA, 6, -1.9),
-            # Satır 4 — B (2 orta): zıt satır 2'ye
-            (cB_l, y4, rB, 6,  2.1),
-            (cB_r, y4, rB, 6, -1.8),
         ]
 
         for i, (x, y, radius, spokes, rate) in enumerate(layout):
@@ -501,25 +498,27 @@ class MarbleRacePhysics:
         self._gear_deflectors = []
 
         # Bumper çivileri — sadece kritik boşluklara, az sayıda
-        # A-B aralarına birer tane, soldaki ve sağdaki boşluğa
-        br = 20   # bumper yarıçapı
+        br = 20   # normal bumper yarıçapı
         bumper_positions = [
             # Satır 1 (A) ve 2 (B) arası -> A'nın boşluk hizası (çarklar topu ezmesin diye y aşağı kaydırıldı)
-            (cA_l, 770),
-            (cA_c, 770),
-            (cA_r, 770),
+            (cA_l, 770, br, 1.1),
+            (cA_c, 770, br, 1.1),
+            (cA_r, 770, br, 1.1),
             # Satır 2 (B) ve 3 (A) arası -> B'nin boşluk hizası
-            (cB_l, 1070),
-            (cB_r, 1070),
+            (cB_l, 1070, br, 1.1),
+            (cB_r, 1070, br, 1.1),
             # Satır 3 (A) ve 4 (B) arası -> A'nın boşluk hizası
-            (cA_l, 1388),
-            (cA_c, 1388),
-            (cA_r, 1388),
+            (cA_l, 1388, br, 1.1),
+            (cA_c, 1388, br, 1.1),
+            (cA_r, 1388, br, 1.1),
+            # Alt satırdaki iptal edilen 2 çarkın yerine büyük ve yüksek sekme sağlayan çiviler
+            (cB_l, y4, 32, 1.55),
+            (cB_r, y4, 32, 1.55),
         ]
-        self._gear_bumpers = [{"x": x, "y": y, "r": br} for x, y in bumper_positions]
-        for bx, by in bumper_positions:
-            shape = pymunk.Circle(static_body, br, offset=(bx, by))
-            shape.elasticity = 1.1   # sert sekme
+        self._gear_bumpers = [{"x": x, "y": y, "r": r} for x, y, r, e in bumper_positions]
+        for bx, by, r, e in bumper_positions:
+            shape = pymunk.Circle(static_body, r, offset=(bx, by))
+            shape.elasticity = e   # yüksek sekme
             shape.friction = 0.1
             shape.collision_type = self.COLLISION_TYPE_BUMPER
             self.space.add(shape)
