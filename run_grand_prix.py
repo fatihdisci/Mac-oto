@@ -76,8 +76,19 @@ def run_grand_prix(
     pygame.init()
     screen = None
     if not headless:
-        preview_width = 1280
-        preview_height = int(preview_width * cfg.video.height / cfg.video.width)
+        # Önizleme boyutunu ekrana sığacak şekilde hesapla
+        display_info = pygame.display.Info()
+        max_preview_w = min(1280, display_info.current_w - 80)
+        max_preview_h = int(display_info.current_h * 0.85)
+
+        # Oranı koru, hem genişlik hem yükseklik sınırını aşma
+        aspect = cfg.video.width / cfg.video.height
+        preview_width = max_preview_w
+        preview_height = int(preview_width / aspect)
+        if preview_height > max_preview_h:
+            preview_height = max_preview_h
+            preview_width = int(preview_height * aspect)
+
         pygame.display.set_caption("Grand Prix Preview")
         screen = pygame.display.set_mode((preview_width, preview_height))
     else:
@@ -100,6 +111,7 @@ def run_grand_prix(
     progress_every = max(0, int(progress_every))
     frame_index = 0
     audio_events: list[dict[str, float | str]] = []
+    last_hit_sound_time: float = -1.0
     render_start = time.perf_counter()
 
     _safe_print("=" * 60)
@@ -136,6 +148,22 @@ def run_grand_prix(
                     )
 
                 snapshot = engine.get_snapshot()
+                
+                # Collision sparks and hit sounds
+                spark_window = 2.0 / cfg.video.fps
+                frame_sparks = engine.get_collision_sparks(since=engine.phase_elapsed - spark_window)
+                snapshot["collision_sparks"] = frame_sparks
+                
+                if frame_sparks:
+                    strongest = max((float(s.get("impulse", 0.0)) for s in frame_sparks), default=0.0)
+                    if strongest >= 0.42 and (current_video_time - last_hit_sound_time) >= 0.17:
+                        audio_events.append({
+                            "type": "ball_hit_peg",
+                            "time": round(current_video_time, 2),
+                            "impulse": round(strongest, 2)
+                        })
+                        last_hit_sound_time = current_video_time
+
                 renderer.draw(render_surface, snapshot)
                 writer.write_surface(render_surface)
 

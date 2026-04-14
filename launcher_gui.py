@@ -40,20 +40,14 @@ ENGINE_MODE_LABEL_TO_VALUE: dict[str, str] = {
     "2) Football Normal (1st/2nd Half HUD, Civisiz)": "normal",
     "3) Football VAR (Normal Pegs + VAR Review)": "football_var",
     "4) Football Result Guided Test (Normal Pegs, VAR Yok)": "football_result_guided_test",
-    "5) Pop SlowFast (Progress Bar, Kirmizi-Yesil Civili)": "pop_power_pegs",
-    "6) Pop Normal (Progress Bar, Civisiz)": "pop_normal",
-    "7) Football Shifting (1st/2nd Half HUD, SlowFast Yok)": "football_shift",
-    "8) Pop Shifting (Progress Bar, SlowFast Yok)": "pop_shift",
-    "9) Football Blinking (Sadece Blinking Pegs)": "football_blink",
-    "10) Pop Blinking (Sadece Blinking Pegs)": "pop_blink",
+    "5) Football Shifting (1st/2nd Half HUD, SlowFast Yok)": "football_shift",
+    "6) Football Blinking (Sadece Blinking Pegs)": "football_blink",
 }
 ENGINE_MODE_VALUE_TO_LABEL: dict[str, str] = {value: label for label, value in ENGINE_MODE_LABEL_TO_VALUE.items()}
 ENGINE_MODE_VALUE_TO_LABEL.update(
     {
         "normal_shift": ENGINE_MODE_VALUE_TO_LABEL.get("football_shift", "Football Shifting"),
         "power_pegs_shift": ENGINE_MODE_VALUE_TO_LABEL.get("football_shift", "Football Shifting"),
-        "pop_normal_shift": ENGINE_MODE_VALUE_TO_LABEL.get("pop_shift", "Pop Shifting"),
-        "pop_power_pegs_shift": ENGINE_MODE_VALUE_TO_LABEL.get("pop_shift", "Pop Shifting"),
     }
 )
 DEFAULT_ENGINE_MODE_LABEL = next(iter(ENGINE_MODE_LABEL_TO_VALUE.keys()))
@@ -546,10 +540,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
 
         mode_row = ctk.CTkFrame(footer, fg_color="transparent")
         mode_row.grid(row=2, column=0, sticky="ew", padx=16, pady=(0, 8))
-        mode_row.grid_columnconfigure((0, 1), weight=1)
+        mode_row.grid_columnconfigure(0, weight=1)
 
         football_box = ctk.CTkFrame(mode_row, corner_radius=10, fg_color="#0A111D")
-        football_box.grid(row=0, column=0, sticky="nsew", padx=(0, 6))
+        football_box.grid(row=0, column=0, sticky="nsew")
         football_box.grid_columnconfigure(0, weight=1)
 
         ctk.CTkLabel(
@@ -578,37 +572,6 @@ class MarbleRaceLauncherApp(ctk.CTk):
             self.football_mode_listbox.insert("end", label)
             self.football_mode_values.append(value)
         self.football_mode_listbox.bind("<<ListboxSelect>>", self._handle_football_mode_select)
-
-        pop_box = ctk.CTkFrame(mode_row, corner_radius=10, fg_color="#0A111D")
-        pop_box.grid(row=0, column=1, sticky="nsew", padx=(6, 0))
-        pop_box.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(
-            pop_box,
-            text="Pop Culture Modlari",
-            font=ctk.CTkFont(size=12, weight="bold"),
-            text_color="#D9E2F2",
-        ).grid(row=0, column=0, sticky="w", padx=10, pady=(8, 4))
-
-        self.pop_mode_listbox = Listbox(
-            pop_box,
-            height=6,
-            bg="#0A111D",
-            fg="#F1F4FA",
-            selectbackground="#2457F5",
-            selectforeground="#FFFFFF",
-            exportselection=False,
-            activestyle="none",
-            relief="flat",
-            highlightthickness=0,
-            font=("Segoe UI", 10),
-        )
-        self.pop_mode_listbox.grid(row=1, column=0, sticky="nsew", padx=10, pady=(0, 10))
-        self.pop_mode_values: list[str] = []
-        for label, value in POP_ENGINE_MODE_ITEMS:
-            self.pop_mode_listbox.insert("end", label)
-            self.pop_mode_values.append(value)
-        self.pop_mode_listbox.bind("<<ListboxSelect>>", self._handle_pop_mode_select)
 
         self.engine_mode_status_label = ctk.CTkLabel(
             footer,
@@ -710,7 +673,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self.video_preset_menu.grid(row=0, column=1, sticky="w")
 
         theme_row = ctk.CTkFrame(footer, fg_color="transparent")
-        theme_row.grid(row=6, column=0, sticky="ew", padx=16, pady=(0, 8))
+        theme_row.grid(row=7, column=0, sticky="ew", padx=16, pady=(0, 8))
         theme_row.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(
@@ -733,7 +696,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self.arena_theme_menu.grid(row=0, column=1, sticky="w")
 
         btn_row = ctk.CTkFrame(footer, fg_color="transparent")
-        btn_row.grid(row=7, column=0, sticky="ew", padx=16, pady=(0, 12))
+        btn_row.grid(row=8, column=0, sticky="ew", padx=16, pady=(0, 12))
         btn_row.grid_columnconfigure((0, 1, 2), weight=1)
 
         ctk.CTkButton(
@@ -1762,10 +1725,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
             text_color="#AFC1E8",
             font=ctk.CTkFont(size=12, weight="bold"),
         )
-        self.grand_prix_selected_count_label.grid(row=6, column=0, sticky="w", padx=12, pady=(0, 8))
+        self.grand_prix_selected_count_label.grid(row=7, column=0, sticky="w", padx=12, pady=(0, 8))
 
         setup_btn_row = ctk.CTkFrame(left, fg_color="transparent")
-        setup_btn_row.grid(row=7, column=0, sticky="ew", padx=12, pady=(0, 10))
+        setup_btn_row.grid(row=8, column=0, sticky="ew", padx=12, pady=(0, 10))
         setup_btn_row.grid_columnconfigure((0, 1), weight=1)
         ctk.CTkButton(
             setup_btn_row,
@@ -1790,10 +1753,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
             fg_color="#2457F5",
             hover_color="#1B46C7",
             command=self._create_grand_prix_from_ui,
-        ).grid(row=8, column=0, sticky="ew", padx=12, pady=(0, 8))
+        ).grid(row=9, column=0, sticky="ew", padx=12, pady=(0, 8))
 
         action_row = ctk.CTkFrame(left, fg_color="transparent")
-        action_row.grid(row=9, column=0, sticky="ew", padx=12, pady=(0, 12))
+        action_row.grid(row=10, column=0, sticky="ew", padx=12, pady=(0, 12))
         action_row.grid_columnconfigure((0, 1), weight=1)
         ctk.CTkButton(
             action_row,
@@ -2269,9 +2232,6 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self.ai_text_button.configure(state=state)
         self.refresh_button.configure(state=state)
 
-    @staticmethod
-    def _is_pop_engine_mode(engine_mode: str) -> bool:
-        return engine_mode.startswith("pop_") or engine_mode == "pop_shift"
 
     def _canonical_engine_mode(self, engine_mode: str) -> str:
         canonical = ENGINE_MODE_ALIASES_TO_CANONICAL.get(engine_mode, engine_mode)
@@ -2285,18 +2245,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
         self._engine_mode_syncing = True
         try:
             self.football_mode_listbox.selection_clear(0, "end")
-            self.pop_mode_listbox.selection_clear(0, "end")
-
-            if self._is_pop_engine_mode(canonical):
-                if canonical in self.pop_mode_values:
-                    idx = self.pop_mode_values.index(canonical)
-                    self.pop_mode_listbox.selection_set(idx)
-                    self.pop_mode_listbox.see(idx)
-            else:
-                if canonical in self.football_mode_values:
-                    idx = self.football_mode_values.index(canonical)
-                    self.football_mode_listbox.selection_set(idx)
-                    self.football_mode_listbox.see(idx)
+            if canonical in self.football_mode_values:
+                idx = self.football_mode_values.index(canonical)
+                self.football_mode_listbox.selection_set(idx)
+                self.football_mode_listbox.see(idx)
         finally:
             self._engine_mode_syncing = False
 
@@ -2326,16 +2278,6 @@ class MarbleRaceLauncherApp(ctk.CTk):
             self._set_engine_mode_selection(self.football_mode_values[idx])
             self._refresh_match_summary()
 
-    def _handle_pop_mode_select(self, _event=None) -> None:
-        if self._engine_mode_syncing:
-            return
-        selection = self.pop_mode_listbox.curselection()
-        if not selection:
-            return
-        idx = int(selection[0])
-        if 0 <= idx < len(self.pop_mode_values):
-            self._set_engine_mode_selection(self.pop_mode_values[idx])
-            self._refresh_match_summary()
 
     def _run_python_script_async(
         self,

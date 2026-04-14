@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Iterable
 
 from models import MatchSelection, TeamRecord
-from pop_culture_catalog import build_pop_culture_teams
-
 
 class TeamRepository:
     def __init__(self, data_dir: Path) -> None:
@@ -42,7 +40,6 @@ class TeamRepository:
                 raise ValueError("all_teams.json beklenen formatta degil.")
             teams.extend(TeamRecord.from_dict(item) for item in raw_teams if isinstance(item, dict))
 
-        teams.extend(build_pop_culture_teams(self.data_dir))
         teams = self._deduplicate_by_key(teams)
         teams.sort(key=lambda team: (team.league_name.lower(), team.name.lower()))
         self._teams_cache = teams

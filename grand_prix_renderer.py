@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import colorsys
+import math
+import random
 from pathlib import Path
 from typing import Any
 
@@ -22,17 +24,82 @@ class GrandPrixRenderer:
         self.overlay_font = pygame.font.SysFont("arial", 72, bold=True)
         self.overlay_sub_font = pygame.font.SysFont("arial", 34, bold=True)
         self.logo_cache: dict[str, pygame.Surface] = {}
+        
+        self._spawned_spark_keys: set[tuple] = set()
+        self._impact_particles: list[dict] = []
 
     def draw(self, surface: pygame.Surface, snapshot: dict[str, Any]) -> None:
+        dt = 1.0 / self.cfg.video.fps
+        self._update_impact_particles(snapshot, dt)
+        
         surface.fill((13, 18, 29))
         self._draw_background_accents(surface)
         self._draw_board(surface, snapshot)
         self._draw_side_panel(surface, snapshot)
         self._draw_active_balls(surface, snapshot)
+        self._draw_impact_particles(surface)
+        
         if bool(snapshot.get("show_intro_overlay", False)):
             self._draw_intro_overlay(surface, snapshot)
         if bool(snapshot.get("show_final_overlay", False)):
             self._draw_final_overlay(surface, snapshot)
+
+    def _update_impact_particles(self, snapshot: dict, dt: float) -> None:
+        sparks = snapshot.get("collision_sparks", []) or []
+        for spark in sparks:
+            key = (round(float(spark.get("time", 0.0)), 4), round(float(spark.get("x", 0.0)), 1), round(float(spark.get("y", 0.0)), 1))
+            if key in self._spawned_spark_keys:
+                continue
+            self._spawned_spark_keys.add(key)
+            impulse = max(0.0, min(1.0, float(spark.get("impulse", 0.5))))
+            count = max(2, int(3 + 4 * impulse))
+            base_x = float(spark.get("x", 0.0))
+            base_y = float(spark.get("y", 0.0))
+            for _ in range(count):
+                angle = random.uniform(0.0, 2.0 * math.pi)
+                speed = random.uniform(70.0, 220.0) * (0.5 + impulse)
+                self._impact_particles.append({
+                    "x": base_x,
+                    "y": base_y,
+                    "vx": math.cos(angle) * speed,
+                    "vy": math.sin(angle) * speed - 60.0,
+                    "life": random.uniform(0.18, 0.42),
+                    "age": 0.0,
+                    "size": random.uniform(1.8, 4.2),
+                    "color": random.choice([
+                        (255, 220, 120),
+                        (255, 185, 82),
+                        (255, 248, 210),
+                        (255, 160, 70),
+                    ]),
+                })
+        if len(self._spawned_spark_keys) > 256:
+            self._spawned_spark_keys = set(list(self._spawned_spark_keys)[-128:])
+        alive: list[dict] = []
+        for p in self._impact_particles:
+            p["age"] += dt
+            if p["age"] >= p["life"]:
+                continue
+            p["x"] += p["vx"] * dt
+            p["y"] += p["vy"] * dt
+            p["vy"] += 420.0 * dt
+            alive.append(p)
+        if len(alive) > 140:
+            alive = alive[-110:]
+        self._impact_particles = alive
+
+    def _draw_impact_particles(self, surface: pygame.Surface) -> None:
+        if not self._impact_particles:
+            return
+        for p in self._impact_particles:
+            life = max(1e-6, float(p.get("life", 0.3)))
+            age = float(p.get("age", 0.0))
+            ratio = 1.0 - (age / life)
+            if ratio <= 0.05:
+                continue
+            sz = max(1, int(float(p.get("size", 2.5)) * ratio))
+            color = p.get("color", (255, 220, 120))
+            pygame.draw.circle(surface, color, (int(p["x"]), int(p["y"])), sz)
 
     def _draw_background_accents(self, surface: pygame.Surface) -> None:
         glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)

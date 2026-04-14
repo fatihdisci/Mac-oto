@@ -85,12 +85,8 @@ def _mode_scoring_intensity(engine_mode: str) -> float:
         "normal": 5.8,
         "football_var": 5.2,
         "football_result_guided_test": 5.8,
-        "pop_power_pegs": 8.0,
-        "pop_normal": 5.4,
         "football_shift": 6.9,
-        "pop_shift": 6.5,
         "football_blink": 6.2,
-        "pop_blink": 5.9,
     }
     if mode in explicit:
         return explicit[mode]
@@ -100,8 +96,6 @@ def _mode_scoring_intensity(engine_mode: str) -> float:
         base += 2.0
     if "shift" in mode:
         base += 1.0
-    if mode.startswith("pop_") or mode == "pop_shift":
-        base -= 0.3
     return max(2.8, base)
 
 
@@ -373,14 +367,13 @@ def run_simulation(
     normalized_mode = (match_selection.engine_mode or "").strip().lower()
     if normalized_mode == "football_rail_test":
         normalized_mode = "normal"
-    is_pop_mode = normalized_mode.startswith("pop_") or normalized_mode == "pop_shift"
     football_var_mode = normalized_mode == "football_var"
     football_guided_mode = normalized_mode == "football_result_guided_test"
-    start_event_type = "pop_start" if is_pop_mode else "whistle_start"
-    score_event_type = "pop_point" if is_pop_mode else "goal"
-    end_event_type = "pop_end" if is_pop_mode else "whistle_end"
+    start_event_type = "whistle_start"
+    score_event_type = "goal"
+    end_event_type = "whistle_end"
     is_tournament_run = bool(str(tournament_match_id or "").strip())
-    knockout_mode_enabled = is_tournament_run and not is_pop_mode
+    knockout_mode_enabled = is_tournament_run
 
     fixed_dt = 1.0 / cfg.video.fps
     base_video_seconds = cfg.video.total_duration_seconds
@@ -585,7 +578,7 @@ def run_simulation(
 
                 snapshot_needs_refresh = False
                 teams_for_odds = snapshot.get("teams", [])
-                scoring_gap_label = str(snapshot.get("scoring_gap_label", "POINT" if is_pop_mode else "GOAL"))
+                scoring_gap_label = str(snapshot.get("scoring_gap_label", "GOAL"))
                 confirmed_scoring_events: list[dict] = []
 
                 for evt in snapshot.get("latest_round_events", []):

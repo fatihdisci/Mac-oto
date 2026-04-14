@@ -101,15 +101,13 @@ class MarbleRaceRenderer:
             self._draw_finish_overlay(target_surface, state_snapshot)
 
     def _ensure_static_background(self, snapshot: dict) -> None:
-        base_mode = "pop" if self._is_pop_mode(snapshot) else "football"
         theme_key = str(snapshot.get("arena_theme", "default")).strip() or "default"
-        mode_key = f"{base_mode}_{theme_key}"
         
-        if self.static_background is not None and getattr(self, "_background_mode_key", None) == mode_key:
+        if self.static_background is not None and getattr(self, "_background_mode_key", None) == theme_key:
             return
 
-        self.static_background = self._build_static_background(pop_mode=(base_mode == "pop"), theme_key=theme_key)
-        self._background_mode_key = mode_key
+        self.static_background = self._build_static_background(theme_key=theme_key)
+        self._background_mode_key = theme_key
 
     def _draw_header(self, surface: pygame.Surface, snapshot: dict) -> None:
         cx = self.cfg.video.width // 2
@@ -129,7 +127,7 @@ class MarbleRaceRenderer:
         # Dinamik başlık
         raw_title = snapshot.get("title")
         if not raw_title or str(raw_title).strip() == "":
-            title_text = "POP CULTURE RACE" if self._is_pop_mode(snapshot) else "FOOTBALL RACE"
+            title_text = "FOOTBALL RACE"
         else:
             title_text = str(raw_title).upper()
             
@@ -137,7 +135,7 @@ class MarbleRaceRenderer:
         title_rect = title.get_rect(center=(cx, panel_y + panel_h // 2))
         surface.blit(title, title_rect)
 
-    def _build_static_background(self, pop_mode: bool = False, theme_key: str = "default") -> pygame.Surface:
+    def _build_static_background(self, theme_key: str = "default") -> pygame.Surface:
         theme = get_arena_theme(theme_key)
         width = self.cfg.video.width
         height = self.cfg.video.height
@@ -147,7 +145,7 @@ class MarbleRaceRenderer:
 
         self._draw_field_panel(background, theme)
         self._draw_side_walls(background, theme)
-        self._draw_bottom_layout(background, pop_mode=pop_mode)
+        self._draw_bottom_layout(background)
 
         return background
 
@@ -255,13 +253,13 @@ class MarbleRaceRenderer:
         }
         return palettes.get(zone_type, palettes["speed_boost"])
 
-    def _draw_bottom_layout(self, surface: pygame.Surface, pop_mode: bool = False) -> None:
+    def _draw_bottom_layout(self, surface: pygame.Surface) -> None:
         floor_y = self.cfg.layout.floor_y
         post_h = self.cfg.layout.gap_post_height
         ramp_rise = 180
         divider_peak_rise = max(20, int(self.cfg.physics.ball_radius * 0.8))
 
-        gaps = self._build_gap_draw_data_from_cfg(pop_mode=pop_mode)
+        gaps = self._build_gap_draw_data_from_cfg()
         left_gap, center_gap, right_gap = gaps
 
         left_divider_peak_x = (left_gap["end_x"] + center_gap["start_x"]) / 2.0
@@ -295,25 +293,6 @@ class MarbleRaceRenderer:
         for x in post_x_positions:
             pygame.draw.line(surface, post_color, (x, floor_y), (x, floor_y + post_h), 8)
 
-        if pop_mode:
-            for gap in gaps:
-                label = str(gap.get("label", ""))
-                if label == "POINT":
-                    zone_rgba = (84, 198, 136, 62)
-                    label_color = (164, 245, 202)
-                elif label == "GLITCH":
-                    zone_rgba = (186, 140, 232, 52)
-                    label_color = (216, 182, 252)
-                else:
-                    zone_rgba = (196, 96, 124, 54)
-                    label_color = (242, 162, 178)
-
-                self._draw_gap_zone(surface, gap, zone_rgba)
-                text = self.bottom_font.render(label, True, label_color)
-                text_rect = text.get_rect(center=(gap["center_x"], floor_y + 46))
-                surface.blit(text, text_rect)
-            return
-
         self._draw_gap_zone(surface, left_gap, (235, 181, 77, 38))
         self._draw_gap_zone(surface, center_gap, (73, 201, 126, 58))
         self._draw_gap_zone(surface, right_gap, (214, 90, 90, 42))
@@ -335,10 +314,6 @@ class MarbleRaceRenderer:
         surface.blit(zone, (int(gap["start_x"]), self.cfg.layout.floor_y))
 
     def _draw_scoreboard(self, surface: pygame.Surface, snapshot: dict) -> None:
-        if self._is_pop_mode(snapshot):
-            self._draw_pop_scoreboard(surface, snapshot)
-            return
-
         self._draw_football_scoreboard(surface, snapshot)
 
     def _draw_football_scoreboard(self, surface: pygame.Surface, snapshot: dict) -> None:
@@ -442,70 +417,7 @@ class MarbleRaceRenderer:
             width=panel_w - 48,
         )
 
-    def _draw_pop_scoreboard(self, surface: pygame.Surface, snapshot: dict) -> None:
-        teams = snapshot.get("teams", [])
-        if len(teams) < 2:
-            return
 
-        team_a = next((team for team in teams if team.get("role") == "A"), teams[0])
-        team_b = next((team for team in teams if team.get("role") == "B"), teams[1])
-
-        cx = self.cfg.video.width // 2
-        progress_ratio = max(0.0, min(1.0, float(snapshot.get("match_progress_ratio", 0.0))))
-
-        panel_w = 940
-        panel_h = 210
-        panel_x = cx - panel_w // 2
-        panel_y = 94
-
-        self._draw_glass_panel(
-            surface,
-            pygame.Rect(panel_x, panel_y, panel_w, panel_h),
-            (10, 16, 26, 195),
-            (60, 82, 122, 210),
-            30,
-        )
-
-        logo_size = 88
-        logo_a = self._get_logo_surface(team_a["name"], team_a.get("badge_file", ""), logo_size)
-        logo_b = self._get_logo_surface(team_b["name"], team_b.get("badge_file", ""), logo_size)
-        logo_a_cx = cx - 210
-        logo_b_cx = cx + 210
-        logo_cy = panel_y + 58
-        surface.blit(logo_a, logo_a.get_rect(center=(logo_a_cx, logo_cy)))
-        surface.blit(logo_b, logo_b.get_rect(center=(logo_b_cx, logo_cy)))
-
-        name_a = self._display_score_team_name(team_a)
-        name_b = self._display_score_team_name(team_b)
-        name_a_surf = self._fit_text(self.match_font, name_a, 250, (235, 240, 250))
-        name_b_surf = self._fit_text(self.match_font, name_b, 250, (235, 240, 250))
-        surface.blit(name_a_surf, name_a_surf.get_rect(center=(logo_a_cx, logo_cy + 70)))
-        surface.blit(name_b_surf, name_b_surf.get_rect(center=(logo_b_cx, logo_cy + 70)))
-
-        score_str = f"{team_a['score']}  -  {team_b['score']}"
-        score_surf = self.score_font.render(score_str, True, (248, 248, 252))
-        score_rect = score_surf.get_rect(center=(cx, panel_y + 58))
-        surface.blit(score_surf, score_rect)
-
-        bar_w = 500
-        bar_h = 18
-        bar_x = cx - bar_w // 2
-        bar_y = panel_y + 156
-        bar_bg = pygame.Rect(bar_x, bar_y, bar_w, bar_h)
-        fill_w = max(2, int(bar_w * progress_ratio))
-        bar_fill = pygame.Rect(bar_x, bar_y, fill_w, bar_h)
-        pygame.draw.rect(surface, (46, 56, 78), bar_bg, border_radius=9)
-        pygame.draw.rect(surface, (102, 196, 255), bar_fill, border_radius=9)
-
-        progress_text = self.team_font.render(f"RACE PROGRESS  {int(progress_ratio * 100)}%", True, (195, 208, 232))
-        surface.blit(progress_text, progress_text.get_rect(center=(cx, bar_y + 34)))
-        self._draw_win_rate_rail(
-            surface=surface,
-            snapshot=snapshot,
-            x=panel_x + 24,
-            y=panel_y + panel_h + 8,
-            width=panel_w - 48,
-        )
 
     def _draw_win_odds_strip(
         self,
@@ -1311,10 +1223,10 @@ class MarbleRaceRenderer:
                     x = left_edge + spacing_x / 2 + col * spacing_x
                     yield x, y
 
-    def _build_gap_draw_data_from_cfg(self, pop_mode: bool = False) -> List[dict]:
-        left_label = "GLITCH" if pop_mode else self.cfg.gameplay.left_gap_label
-        center_label = "POINT" if pop_mode else self.cfg.gameplay.center_gap_label
-        right_label = "VOID" if pop_mode else self.cfg.gameplay.right_gap_label
+    def _build_gap_draw_data_from_cfg(self) -> List[dict]:
+        left_label = self.cfg.gameplay.left_gap_label
+        center_label = self.cfg.gameplay.center_gap_label
+        right_label = self.cfg.gameplay.right_gap_label
 
         cx = self.cfg.playfield_center_x
         side_gap_w = self.cfg.layout.side_gap_width

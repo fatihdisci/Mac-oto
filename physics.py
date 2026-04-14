@@ -100,39 +100,26 @@ class MarbleRacePhysics:
         self.cfg = cfg
         self.match_selection = match_selection
         self.engine_mode = (match_selection.engine_mode or "power_pegs").strip().lower()
-        self.is_pop_mode = self.engine_mode.startswith("pop_") or self.engine_mode == "pop_shift"
         self.var_mode_enabled = self.engine_mode == "football_var"
         self.guided_mode_enabled = self.engine_mode == "football_result_guided_test"
         self.shifting_rows_enabled = self.engine_mode in {
             "football_shift",
-            "pop_shift",
             "power_pegs_shift",
             "normal_shift",
-            "pop_power_pegs_shift",
-            "pop_normal_shift",
         }
         self.blinking_pegs_enabled = self.engine_mode in {
             "football_blink",
-            "pop_blink",
         }
         self.power_zones_enabled = self.engine_mode in {
             "power_pegs",
             "power_pegs_shift",
             "slowfast",
             "classic",
-            "pop_power_pegs",
-            "pop_power_pegs_shift",
-            "pop_slowfast",
         }
 
-        if self.is_pop_mode:
-            self.left_gap_label = "GLITCH"
-            self.center_gap_label = "POINT"
-            self.right_gap_label = "VOID"
-        else:
-            self.left_gap_label = self.cfg.gameplay.left_gap_label
-            self.center_gap_label = self.cfg.gameplay.center_gap_label
-            self.right_gap_label = self.cfg.gameplay.right_gap_label
+        self.left_gap_label = self.cfg.gameplay.left_gap_label
+        self.center_gap_label = self.cfg.gameplay.center_gap_label
+        self.right_gap_label = self.cfg.gameplay.right_gap_label
 
         self.rng = random.Random(cfg.gameplay.random_seed)
 
@@ -148,7 +135,7 @@ class MarbleRacePhysics:
 
         self.team_a_key = self._team_key(self.team_a)
         self.team_b_key = self._team_key(self.team_b)
-        if self.guided_mode_enabled and not self.is_pop_mode:
+        if self.guided_mode_enabled:
             raw_target_a = match_selection.guided_target_score_a
             raw_target_b = match_selection.guided_target_score_b
             self.guided_target_score_a: int | None = max(0, int(raw_target_a if raw_target_a is not None else 2))
@@ -351,7 +338,6 @@ class MarbleRacePhysics:
             ],
             "match_title": self.match_selection.title,
             "engine_mode": self.engine_mode,
-            "is_pop_mode": self.is_pop_mode,
             "var_mode_enabled": self.var_mode_enabled,
             "guided_mode_enabled": self.guided_mode_enabled,
             "guided_target_score_a": self.guided_target_score_a,
@@ -374,6 +360,7 @@ class MarbleRacePhysics:
                 "right": self.right_gap_label,
             },
             "scoring_gap_label": self.center_gap_label,
+            "arena_theme": self.match_selection.arena_theme,
             "shifting_rows_enabled": self.shifting_rows_enabled,
             "blinking_pegs_enabled": self.blinking_pegs_enabled,
             "peg_draw_data": self._build_peg_draw_data(),

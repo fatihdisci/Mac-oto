@@ -40,6 +40,7 @@ class GrandPrixEngine:
         round_count: int,
         role: str = "grand_prix",
         round_duration_seconds: float = 22.0,
+        random_seed: int = 0,
         vertical: bool = False,
     ) -> None:
         self.cfg = cfg
@@ -122,6 +123,7 @@ class GrandPrixEngine:
         self._pending_round_payloads: list[dict[str, Any]] = []
         self._pending_audio_cues: list[str] = []
         self._final_audio_sent = False
+        self._collision_sparks: list[dict[str, Any]] = []
 
     def update(self, dt: float) -> None:
         if self.phase == "finished":
@@ -145,7 +147,7 @@ class GrandPrixEngine:
                     self.phase = "final"
                     self.final_elapsed = 0.0
                     if not self._final_audio_sent:
-                        self._pending_audio_cues.append("pop_end")
+                        self._pending_audio_cues.append("whistle_end")
                         self._final_audio_sent = True
                 else:
                     self._start_next_round()
@@ -166,6 +168,9 @@ class GrandPrixEngine:
         payloads = list(self._pending_round_payloads)
         self._pending_round_payloads = []
         return payloads
+
+    def get_collision_sparks(self, since: float) -> list[dict[str, Any]]:
+        return [dict(s) for s in self._collision_sparks if float(s.get("time", 0.0)) >= since]
 
     def get_snapshot(self) -> dict[str, Any]:
         active_balls = []
@@ -250,10 +255,11 @@ class GrandPrixEngine:
         self.current_round += 1
         self.phase = "action"
         self.phase_elapsed = 0.0
+        self._collision_sparks = []  # Yeni raund baslarken eski çarpışma verilerini temizle
         self._round_awarded = False
         self.current_round_results = []
         self.current_entries = self._build_round_entries()
-        self._pending_audio_cues.append("pop_start")
+        self._pending_audio_cues.append("whistle_start")
 
     def _build_round_entries(self) -> list[RoundEntry]:
         entries: list[RoundEntry] = []
@@ -293,8 +299,36 @@ class GrandPrixEngine:
             self._capture_exits()
             self._resolve_stuck_entries(step_dt)
 
+        # Spark temizliği
+        if len(self._collision_sparks) > 64:
+            self._collision_sparks = self._collision_sparks[-48:]
+
         if self.phase_elapsed >= self.action_timeout_seconds and not self._all_entries_exited():
             self._force_exit_remaining()
+
+    def _handle_spark_collision(self, arbiter: pymunk.Arbiter, _space=None, _data=None) -> None:
+        """Herhangi iki cisim arasındaki çarpışmalarda spark verisi toplar."""
+        if not arbiter:
+            return
+
+        # Sadece bu frame'deki impulse'u kontrol et
+        impulse = float(arbiter.total_impulse.length)
+        if impulse < 45.0:  # Çok düşük impulseları yoksay
+            return
+
+        # Temas noktası yoksa hayalet çarpışmadır
+        contact_set = arbiter.contact_point_set
+        if not contact_set.points:
+            return
+
+        # İlk temas noktasını al
+        contact = contact_set.points[0]
+        self._collision_sparks.append({
+            "time": float(self.phase_elapsed),
+            "x": float(contact.point_a.x),
+            "y": float(contact.point_a.y),
+            "impulse": min(1.0, impulse / 900.0),
+        })
 
     def _capture_exits(self) -> None:
         for entry in self.current_entries:
@@ -402,9 +436,10 @@ class GrandPrixEngine:
         self.current_round_results = placements
         self.latest_completed_round_results = placements
         self._pending_round_payloads.append(payload)
-        self._pending_audio_cues.append("pop_point")
+        self._pending_audio_cues.append("goal")
         self.phase = "summary"
         self.phase_elapsed = 0.0
+        self._collision_sparks = []  # Aksiyon biterken de listeyi temizle
         self._round_awarded = True
 
     def _build_static_world(self) -> None:
@@ -428,6 +463,16 @@ class GrandPrixEngine:
             peg_shapes.append(peg)
 
         self.space.add(left_wall, right_wall, *peg_shapes)
+        
+        # Collision handler for sparks (with fallback for different pymunk versions)
+        try:
+            if hasattr(self.space, "on_collision"):
+                self.space.on_collision(post_solve=self._handle_spark_collision)
+            else:
+                handler = self.space.add_default_collision_handler()
+                handler.post_solve = self._handle_spark_collision
+        except Exception:
+            pass
 
     def _build_peg_positions(self) -> list[tuple[float, float]]:
         positions: list[tuple[float, float]] = []

@@ -35,16 +35,13 @@ import cv2
 
 SOUNDS_DIR = Path(__file__).resolve().parent / "data" / "sounds"
 
-# Ses dosyası eşlemesi — yoksa atlanır
 SOUND_FILES = {
     "whistle_start": "whistle.mp3",
     "whistle_end": "whistle.mp3",
     "goal": "goal_crowd.mp3",
-    "pop_start": "pop_start_glitch.wav",
-    "pop_point": "pop_point_chime.wav",
-    "pop_end": "pop_end_void.wav",
     "crowd_ambient": "crowd_ambient.mp3",
     "ball_hit_peg": "ball_hit.mp3",
+    "hit": "ball_hit.mp3",  # Grand Prix alias
 }
 
 # Volume ayarları (0.0 - 1.0)
@@ -52,12 +49,10 @@ VOLUME = {
     "whistle_start": 0.15,
     "whistle_end": 0.18,
     "goal": 0.55,
-    "pop_start": 0.22,
-    "pop_point": 0.55,
-    "pop_end": 0.50,
     "background_music": 0.60,
     "crowd_ambient": 0.15,
-    "ball_hit_peg": 0.45,
+    "ball_hit_peg": 0.55,  # 0.45'ten 0.55'e yükseltildi
+    "hit": 0.55,           # Grand Prix için aynı seviye
 }
 
 # Fade ayarları (saniye)
@@ -189,11 +184,21 @@ def mix_audio_into_video(
         evt_time = float(evt.get("time", 0))
         sound_path = _get_sound_path(evt_type)
         if sound_path:
+            base_vol = VOLUME.get(evt_type, 0.5)
+            
+            # Dinamik volume: impulse parametresi varsa base_vol ile çarp.
+            # Normalde impulse 0.5 - 1.0 arası gelir.
+            final_vol = base_vol
+            if "impulse" in evt and evt_type in {"ball_hit_peg", "hit"}:
+                impulse = float(evt["impulse"])
+                # impulse 0.0-1.0 aralığında, sesi çok kısmamak için alt limit koyalım
+                final_vol = base_vol * max(0.4, impulse)
+
             audio_events.append({
                 "type": evt_type,
                 "time": evt_time,
                 "path": str(sound_path),
-                "volume": VOLUME.get(evt_type, 0.5),
+                "volume": final_vol,
             })
 
     if not audio_events and not background_music_path and not crowd_path:
@@ -201,34 +206,60 @@ def mix_audio_into_video(
         shutil.copy2(video_path, output_path)
         return output_path
 
-    # FFmpeg complex filter oluştur
+    # --- INPUTLARI HAZIRLA (Deduplication) ---
     inputs = ["-i", str(video_path)]
-    input_idx = 1  # 0 = video
+    input_idx = 1 # 0 = video
 
+    # Background music
+    bg_idx = None
+    if background_music_path and background_music_path.exists():
+        inputs.extend(["-stream_loop", "-1", "-i", str(background_music_path)])
+        bg_idx = input_idx
+        input_idx += 1
+
+    # Crowd ambient
+    crowd_idx = None
+    if crowd_path:
+        inputs.extend(["-stream_loop", "-1", "-i", str(crowd_path)])
+        crowd_idx = input_idx
+        input_idx += 1
+
+    # Unique SFX paths
+    unique_sfx_paths = []
+    path_to_input_idx = {}
+    sfx_usage: dict[str, list[dict[str, Any]]] = {}
+
+    for evt in audio_events:
+        p = evt["path"]
+        if p not in path_to_input_idx:
+            path_to_input_idx[p] = input_idx
+            unique_sfx_paths.append(p)
+            inputs.extend(["-i", p])
+            input_idx += 1
+            sfx_usage[p] = []
+        sfx_usage[p].append(evt)
+
+    # --- FILTER COMPLEX OLUSTUR ---
     filter_parts: list[str] = []
     overlay_labels: list[str] = []
 
-    # Arka plan müziği (loop + trim to video length + smooth fade in/out)
-    if background_music_path and background_music_path.exists():
-        # Muzik dosyasi kisa olsa bile videonun sonuna kadar devam etsin.
-        inputs.extend(["-stream_loop", "-1", "-i", str(background_music_path)])
+    # Arka plan müziği
+    if bg_idx is not None:
         vol = VOLUME["background_music"]
         fade_in = FADE["bg_fade_in"]
         fade_out = FADE["bg_fade_out"]
         fade_out_start = max(0, video_duration - fade_out)
         label = "bg"
         filter_parts.append(
-            f"[{input_idx}]atrim=0:{video_duration},asetpts=PTS-STARTPTS,"
+            f"[{bg_idx}:a]atrim=0:{video_duration},asetpts=PTS-STARTPTS,"
             f"volume={vol},"
             f"afade=t=in:st=0:d={fade_in},"
             f"afade=t=out:st={fade_out_start}:d={fade_out}[{label}]"
         )
         overlay_labels.append(f"[{label}]")
-        input_idx += 1
 
-    # Crowd ambient (loop + fade + tension ramp)
-    if crowd_path:
-        inputs.extend(["-stream_loop", "-1", "-i", str(crowd_path)])
+    # Crowd ambient
+    if crowd_idx is not None:
         vol = VOLUME["crowd_ambient"]
         peak_vol = min(1.0, vol * 3.5)
         ramp_start = max(0, video_duration - 10.0)
@@ -239,33 +270,56 @@ def mix_audio_into_video(
         fade_out_start = max(0, video_duration - fade_out)
         label = "crowd"
         filter_parts.append(
-            f"[{input_idx}]atrim=0:{video_duration},asetpts=PTS-STARTPTS,"
+            f"[{crowd_idx}:a]atrim=0:{video_duration},asetpts=PTS-STARTPTS,"
             f"volume={vol_expr},"
             f"afade=t=in:st=0:d={fade_in},"
             f"afade=t=out:st={fade_out_start}:d={fade_out}[{label}]"
         )
         overlay_labels.append(f"[{label}]")
-        input_idx += 1
 
-    # Event ses efektleri
-    for i, evt in enumerate(audio_events):
-        inputs.extend(["-i", evt["path"]])
-        label = f"sfx{i}"
-        delay_ms = int(evt["time"] * 1000)
-        vol = evt["volume"]
-        # Gol efektine fade-out ekle, düdükler kısa zaten
-        if evt["type"] in {"goal", "pop_point", "pop_end"}:
-            filter_parts.append(
-                f"[{input_idx}]volume={vol},afade=t=out:st=2.0:d=1.2,"
-                f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{label}]"
-            )
+    # Event ses efektleri (her unique inputu ihtiyac kadar split et)
+    sfx_total_count = 0
+    for p in unique_sfx_paths:
+        idx = path_to_input_idx[p]
+        events = sfx_usage[p]
+        n = len(events)
+        
+        if n > 1:
+            split_labels = "".join(f"[u{idx}e{j}]" for j in range(n))
+            filter_parts.append(f"[{idx}:a]asplit={n}{split_labels}")
+            for j, evt in enumerate(events):
+                in_label = f"u{idx}e{j}"
+                out_label = f"sfx{sfx_total_count}"
+                sfx_total_count += 1
+                
+                delay_ms = int(evt["time"] * 1000)
+                vol = evt["volume"]
+                
+                if evt["type"] in {"goal", "pop_point", "pop_end"}:
+                    filter_parts.append(
+                        f"[{in_label}]volume={vol},afade=t=out:st=2.0:d=1.2,"
+                        f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{out_label}]"
+                    )
+                else:
+                    filter_parts.append(
+                        f"[{in_label}]volume={vol},"
+                        f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{out_label}]"
+                    )
+                overlay_labels.append(f"[{out_label}]")
         else:
+            # Tek bir kullanim varsa split'e gerek yok
+            evt = events[0]
+            out_label = f"sfx{sfx_total_count}"
+            sfx_total_count += 1
+            
+            delay_ms = int(evt["time"] * 1000)
+            vol = evt["volume"]
+            
             filter_parts.append(
-                f"[{input_idx}]volume={vol},"
-                f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{label}]"
+                f"[{idx}:a]volume={vol},"
+                f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{out_label}]"
             )
-        overlay_labels.append(f"[{label}]")
-        input_idx += 1
+            overlay_labels.append(f"[{out_label}]")
 
     if not overlay_labels:
         shutil.copy2(video_path, output_path)
@@ -274,54 +328,58 @@ def mix_audio_into_video(
     # Tüm ses katmanlarını birleştir
     mix_input = "".join(overlay_labels)
     n_streams = len(overlay_labels)
-    # duration=longest: herhangi bir kisa stream tum mix'i erken bitirmesin.
     filter_parts.append(
         f"{mix_input}amix=inputs={n_streams}:duration=longest:dropout_transition=2:normalize=0[aout]"
     )
 
-    filter_complex = ";".join(filter_parts)
+    filter_complex_str = ";\n".join(filter_parts)
 
-    # Temp file kullan (aynı dosyaya yazma sorunu)
-    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False, dir=str(video_path.parent)) as tmp:
-        tmp_path = tmp.name
-
-    cmd = [
-        ffmpeg,
-        *inputs,
-        "-filter_complex", filter_complex,
-        "-map", "0:v",
-        "-map", "[aout]",
-        "-c:v", "copy",
-        "-c:a", "aac",
-        "-b:a", "256k",
-        "-t", f"{video_duration:.3f}",
-        "-y",
-        tmp_path,
-    ]
-
-    print(f"[AudioMixer] {len(audio_events)} ses efekti + "
-          f"{'muzik' if background_music_path else 'muzik yok'} + "
-          f"{'ambient' if crowd_path else 'ambient yok'}")
-    print(f"[AudioMixer] FFmpeg calistiriliyor...")
-
+    # Filter script ve cikti icin temp dosyalar
+    fscript_path = None
+    tmp_path = None
     try:
+        # Filter script dosyasi
+        with tempfile.NamedTemporaryFile(suffix=".txt", delete=False, mode="w", encoding="utf-8", dir=str(video_path.parent)) as fs:
+            fs.write(filter_complex_str)
+            fscript_path = fs.name
+
+        # Temp video dosyasi
+        with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False, dir=str(video_path.parent)) as tmp:
+            tmp_path = tmp.name
+
+        cmd = [
+            ffmpeg,
+            *inputs,
+            "-filter_complex_script", fscript_path,
+            "-map", "0:v",
+            "-map", "[aout]",
+            "-c:v", "copy",
+            "-c:a", "aac",
+            "-b:a", "256k",
+            "-t", f"{video_duration:.3f}",
+            "-y",
+            tmp_path,
+        ]
+
+        print(f"[AudioMixer] {len(audio_events)} ses efekti ({len(unique_sfx_paths)} benzersiz dosya) + "
+              f"{'muzik' if background_music_path else 'muzik yok'} + "
+              f"{'ambient' if crowd_path else 'ambient yok'}")
+        print(f"[AudioMixer] FFmpeg calistiriliyor...")
+
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=180,
             encoding="utf-8",
             errors="replace",
         )
 
         if result.returncode != 0:
             print(f"[AudioMixer] FFmpeg HATA (kod {result.returncode}):")
-            # Son 10 satır stderr
             stderr_lines = result.stderr.strip().split("\n")
             for line in stderr_lines[-10:]:
                 print(f"  {line}")
-            # Hatada orijinal dosyayı kopyala
-            Path(tmp_path).unlink(missing_ok=True)
             shutil.copy2(video_path, output_path)
             return output_path
 
@@ -331,15 +389,19 @@ def mix_audio_into_video(
         return output_path
 
     except subprocess.TimeoutExpired:
-        print("[AudioMixer] FFmpeg zaman asimi (120s). Sessiz video korunuyor.")
-        Path(tmp_path).unlink(missing_ok=True)
+        print("[AudioMixer] FFmpeg zaman asimi (180s). Sessiz video korunuyor.")
         shutil.copy2(video_path, output_path)
         return output_path
     except Exception as exc:
         print(f"[AudioMixer] Beklenmeyen hata: {exc}")
-        Path(tmp_path).unlink(missing_ok=True)
         shutil.copy2(video_path, output_path)
         return output_path
+    finally:
+        if fscript_path and Path(fscript_path).exists():
+            Path(fscript_path).unlink(missing_ok=True)
+        if tmp_path and Path(tmp_path).exists():
+            Path(tmp_path).unlink(missing_ok=True)
+
 
 
 def save_event_timeline(events: list[dict[str, Any]], path: str | Path) -> None:
