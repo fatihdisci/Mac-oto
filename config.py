@@ -133,6 +133,26 @@ class GameplayConfig:
 
 
 # ============================================================
+# TENSION (GERİLİM) AYARLARI
+# ============================================================
+# Son %X'te skor farkı ≤ max_score_diff ise gerilim modu aktif olur.
+# - Yerçekimi yavaşlar (dramatik slow-motion hissi)
+# - Ekrana kırmızı tint binmeye başlar
+# - Peg'ler hafifçe titrer
+# ============================================================
+
+@dataclass(frozen=True)
+class TensionConfig:
+    threshold_progress: float = 0.85
+    max_score_diff: int = 1
+    gravity_multiplier: float = 0.55
+    bg_tint_color: Tuple[int, int, int] = (180, 30, 30)
+    bg_tint_alpha_max: int = 45
+    peg_vibrate_amplitude: float = 2.5
+    peg_vibrate_speed: float = 18.0
+
+
+# ============================================================
 # HUD AYARLARI
 # ============================================================
 
@@ -162,6 +182,7 @@ class SimulationConfig:
     layout: LayoutConfig = field(default_factory=LayoutConfig)
     gameplay: GameplayConfig = field(default_factory=GameplayConfig)
     hud: HudConfig = field(default_factory=HudConfig)
+    tension: TensionConfig = field(default_factory=TensionConfig)
 
     base_dir: Path = field(default_factory=lambda: Path(__file__).resolve().parent)
     assets_dir: Path = field(default_factory=lambda: Path(__file__).resolve().parent / "assets")

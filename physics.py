@@ -206,6 +206,10 @@ class MarbleRacePhysics:
         if self.power_zones_enabled:
             self._register_power_collision_callbacks()
 
+        # Çarpışma spark verileri (partikül sistemi için)
+        self._collision_sparks: List[dict] = []
+        self._register_spark_collision_callback()
+
         # Dünya kur
         self._build_world()
 
@@ -215,12 +219,19 @@ class MarbleRacePhysics:
     # --------------------------------------------------------
     # ANA UPDATE
     # --------------------------------------------------------
-    def update(self, dt: float) -> None:
+    def update(self, dt: float, gravity_override: float | None = None) -> None:
         """
         Her frame fizik akışını yürütür.
+        gravity_override: None ise config gravity'si kullanılır; değer verilirse
+        o frame için y-gravity'si override edilir (Tension mode).
         """
         if self.simulation_finished:
             return
+
+        default_gravity = float(self.cfg.physics.gravity_y)
+        target_gravity = default_gravity if gravity_override is None else float(gravity_override)
+        if abs(self.space.gravity[1] - target_gravity) > 0.5:
+            self.space.gravity = (0.0, target_gravity)
 
         self._sim_time += dt
         self._advance_blinking_pegs()
@@ -682,6 +693,49 @@ class MarbleRacePhysics:
             self.COLLISION_TYPE_POWER_ZONE,
         )
         handler.begin = self._handle_power_zone_collision
+
+    def _register_spark_collision_callback(self) -> None:
+        """Herhangi iki cisim arasındaki çarpışmalarda spark verisi toplar."""
+        try:
+            if hasattr(self.space, "on_collision"):
+                self.space.on_collision(post_solve=self._handle_spark_collision)
+                return
+            handler = self.space.add_default_collision_handler()
+            handler.post_solve = self._handle_spark_collision
+        except Exception:
+            pass
+
+    def _handle_spark_collision(self, arbiter, _space=None, _data=None) -> None:
+        try:
+            shapes = arbiter.shapes
+            for shape in shapes:
+                if getattr(shape, "collision_type", 0) == self.COLLISION_TYPE_POWER_ZONE:
+                    return
+            impulse_vec = arbiter.total_impulse
+            impulse_mag = float((impulse_vec.x ** 2 + impulse_vec.y ** 2) ** 0.5)
+            if impulse_mag < 120.0:
+                return
+            contact_set = arbiter.contact_point_set
+            points = getattr(contact_set, "points", None)
+            if not points:
+                return
+            contact = points[0]
+            cx = float(getattr(contact.point_a, "x", 0.0))
+            cy = float(getattr(contact.point_a, "y", 0.0))
+            normalized = min(1.0, impulse_mag / 900.0)
+            self._collision_sparks.append({
+                "x": cx,
+                "y": cy,
+                "impulse": normalized,
+                "time": float(self._sim_time),
+            })
+            if len(self._collision_sparks) > 64:
+                self._collision_sparks = self._collision_sparks[-48:]
+        except Exception:
+            pass
+
+    def get_collision_sparks(self, since: float) -> list[dict]:
+        return [dict(s) for s in self._collision_sparks if s.get("time", 0.0) >= since]
 
     def _build_power_zones(self) -> None:
         if not self.power_zones_enabled:

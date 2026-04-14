@@ -61,6 +61,8 @@ class MarbleRaceRenderer:
         self._hook_sparks: List[dict] = []
         self._hook_sparks_ready = False
         self._win_rate_rail_probs: Tuple[float, float, float] = (0.34, 0.32, 0.34)
+        self._impact_particles: List[dict] = []
+        self._spawned_spark_keys: set[tuple] = set()
 
         self.static_background: pygame.Surface | None = None
         self._background_mode_key: str = ""
@@ -85,7 +87,10 @@ class MarbleRaceRenderer:
             self._draw_ball(target_surface, ball)
 
         self._draw_confetti(target_surface, 1.0 / self.cfg.video.fps)
+        self._update_impact_particles(state_snapshot, 1.0 / self.cfg.video.fps)
+        self._draw_impact_particles(target_surface)
         self._draw_goal_flash(target_surface)
+        self._draw_tension_overlay(target_surface, state_snapshot)
         self._draw_var_review_overlay(target_surface, state_snapshot)
         self._draw_penalty_overlay(target_surface, state_snapshot)
 
@@ -176,15 +181,27 @@ class MarbleRaceRenderer:
         else:
             peg_centers = list(self._iter_peg_centers())
 
+        tension_active = bool(snapshot.get("tension_active", False)) if snapshot else False
+        tension_progress = float(snapshot.get("tension_progress", 0.0)) if snapshot else 0.0
+        sim_time = float(snapshot.get("physics_sim_time", 0.0)) if snapshot else 0.0
+        vib_amp = self.cfg.tension.peg_vibrate_amplitude * max(0.0, min(1.0, tension_progress))
+        vib_speed = self.cfg.tension.peg_vibrate_speed
+
         for x, y in peg_centers:
             if not (left <= x <= right):
                 continue
-            pygame.draw.circle(surface, (10, 14, 22), (int(x + 3), int(y + 4)), self.cfg.physics.peg_radius)
-            pygame.draw.circle(surface, (194, 200, 214), (int(x), int(y)), self.cfg.physics.peg_radius)
+            if tension_active and vib_amp > 0.05:
+                vib_x = math.sin(sim_time * vib_speed + x * 0.1) * vib_amp
+                vib_y = math.cos(sim_time * (vib_speed + 4.0) + y * 0.1) * vib_amp * 0.6
+                dx, dy = int(x + vib_x), int(y + vib_y)
+            else:
+                dx, dy = int(x), int(y)
+            pygame.draw.circle(surface, (10, 14, 22), (dx + 3, dy + 4), self.cfg.physics.peg_radius)
+            pygame.draw.circle(surface, (194, 200, 214), (dx, dy), self.cfg.physics.peg_radius)
             pygame.draw.circle(
                 surface,
                 (228, 232, 240),
-                (int(x - 2), int(y - 2)),
+                (dx - 2, dy - 2),
                 max(2, self.cfg.physics.peg_radius // 3),
             )
 
@@ -978,6 +995,77 @@ class MarbleRaceRenderer:
         burst.blit(sub_text, sub_rect)
 
         surface.blit(burst, (0, 370))
+
+    def _update_impact_particles(self, snapshot: dict, dt: float) -> None:
+        sparks = snapshot.get("collision_sparks", []) or []
+        for spark in sparks:
+            key = (round(float(spark.get("time", 0.0)), 4), round(float(spark.get("x", 0.0)), 1), round(float(spark.get("y", 0.0)), 1))
+            if key in self._spawned_spark_keys:
+                continue
+            self._spawned_spark_keys.add(key)
+            impulse = max(0.0, min(1.0, float(spark.get("impulse", 0.5))))
+            count = max(2, int(3 + 4 * impulse))
+            base_x = float(spark.get("x", 0.0))
+            base_y = float(spark.get("y", 0.0))
+            for _ in range(count):
+                angle = random.uniform(0.0, 2.0 * math.pi)
+                speed = random.uniform(70.0, 220.0) * (0.5 + impulse)
+                self._impact_particles.append({
+                    "x": base_x,
+                    "y": base_y,
+                    "vx": math.cos(angle) * speed,
+                    "vy": math.sin(angle) * speed - 60.0,
+                    "life": random.uniform(0.18, 0.42),
+                    "age": 0.0,
+                    "size": random.uniform(1.8, 4.2),
+                    "color": random.choice([
+                        (255, 220, 120),
+                        (255, 185, 82),
+                        (255, 248, 210),
+                        (255, 160, 70),
+                    ]),
+                })
+        if len(self._spawned_spark_keys) > 256:
+            self._spawned_spark_keys = set(list(self._spawned_spark_keys)[-128:])
+        alive: List[dict] = []
+        for p in self._impact_particles:
+            p["age"] += dt
+            if p["age"] >= p["life"]:
+                continue
+            p["x"] += p["vx"] * dt
+            p["y"] += p["vy"] * dt
+            p["vy"] += 420.0 * dt
+            alive.append(p)
+        if len(alive) > 140:
+            alive = alive[-110:]
+        self._impact_particles = alive
+
+    def _draw_impact_particles(self, surface: pygame.Surface) -> None:
+        if not self._impact_particles:
+            return
+        for p in self._impact_particles:
+            life = max(1e-6, float(p.get("life", 0.3)))
+            age = float(p.get("age", 0.0))
+            ratio = 1.0 - (age / life)
+            if ratio <= 0.05:
+                continue
+            sz = max(1, int(float(p.get("size", 2.5)) * ratio))
+            color = p.get("color", (255, 220, 120))
+            pygame.draw.circle(surface, color, (int(p["x"]), int(p["y"])), sz)
+
+    def _draw_tension_overlay(self, surface: pygame.Surface, snapshot: dict) -> None:
+        if not bool(snapshot.get("tension_active", False)):
+            return
+        tp = max(0.0, min(1.0, float(snapshot.get("tension_progress", 0.0))))
+        if tp <= 0.02:
+            return
+        tint = self.cfg.tension.bg_tint_color
+        max_alpha = int(self.cfg.tension.bg_tint_alpha_max)
+        pulse = 0.75 + 0.25 * math.sin(float(snapshot.get("physics_sim_time", 0.0)) * 4.5)
+        alpha = int(max_alpha * tp * pulse)
+        overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        overlay.fill((tint[0], tint[1], tint[2], alpha))
+        surface.blit(overlay, (0, 0))
 
     def _draw_var_review_overlay(self, surface: pygame.Surface, snapshot: dict) -> None:
         payload = snapshot.get("var_review")

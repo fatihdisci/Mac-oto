@@ -446,6 +446,7 @@ def run_simulation(
     audio_events: list[dict] = []
     seen_goal_count = 0
     whistle_start_added = False
+    last_hit_sound_time: float = -1.0
     live_probs: tuple[float, float, float] | None = None
     last_score_tuple: tuple[int, int] | None = None
     seen_round_event_keys: set[tuple[int, str, str, float]] = set()
@@ -509,9 +510,27 @@ def run_simulation(
                 else:
                     match_phase = "regular_time"
 
+                tension_active = False
+                tension_progress = 0.0
+                tension_cfg = cfg.tension
+                gravity_override: float | None = None
+                if not is_intro and not is_outro and match_phase == "regular_time":
+                    live_score_a = int(physics.scores.get(physics.team_a_key, 0))
+                    live_score_b = int(physics.scores.get(physics.team_b_key, 0))
+                    score_diff = abs(live_score_a - live_score_b)
+                    live_progress = min(1.0, max(0.0, max_progress_ratio))
+                    if (
+                        live_progress >= tension_cfg.threshold_progress
+                        and score_diff <= tension_cfg.max_score_diff
+                    ):
+                        tension_active = True
+                        span = max(1e-6, 1.0 - tension_cfg.threshold_progress)
+                        tension_progress = min(1.0, (live_progress - tension_cfg.threshold_progress) / span)
+                        gravity_override = float(cfg.physics.gravity_y) * tension_cfg.gravity_multiplier
+
                 if not is_intro and not is_outro and match_phase not in {"extra_time", "penalties"}:
                     if not (football_var_mode and active_var_review is not None):
-                        physics.update(fixed_dt)
+                        physics.update(fixed_dt, gravity_override=gravity_override)
                         frozen_snapshot = None
 
                     # BaÅŸlangÄ±Ã§ dÃ¼dÃ¼ÄŸÃ¼ â€” gameplay baÅŸladÄ±ÄŸÄ±nda
@@ -995,6 +1014,34 @@ def run_simulation(
                 snapshot["outro_seconds"] = outro_seconds
                 snapshot["gameplay_seconds"] = gameplay_seconds
                 snapshot["knockout_mode"] = knockout_mode_enabled
+                snapshot["tension_active"] = tension_active
+                snapshot["tension_progress"] = tension_progress
+                snapshot["physics_sim_time"] = getattr(physics, "_sim_time", 0.0)
+                spark_window = 3.0 / cfg.video.fps
+                current_sim_time = getattr(physics, "_sim_time", 0.0)
+                if hasattr(physics, "get_collision_sparks"):
+                    frame_sparks = physics.get_collision_sparks(
+                        since=current_sim_time - spark_window
+                    )
+                else:
+                    frame_sparks = []
+                snapshot["collision_sparks"] = frame_sparks
+
+                if (
+                    frame_sparks
+                    and not is_intro
+                    and not is_outro
+                    and match_phase in {"regular_time", "extra_time"}
+                ):
+                    strongest = max(
+                        (float(s.get("impulse", 0.0)) for s in frame_sparks), default=0.0
+                    )
+                    if strongest >= 0.55 and (video_seconds_elapsed - last_hit_sound_time) >= 0.28:
+                        audio_events.append({
+                            "type": "ball_hit_peg",
+                            "time": round(video_seconds_elapsed, 2),
+                        })
+                        last_hit_sound_time = video_seconds_elapsed
                 decided_by = "normal_time"
                 regular_time_score_a = score_a
                 regular_time_score_b = score_b

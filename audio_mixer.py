@@ -44,6 +44,7 @@ SOUND_FILES = {
     "pop_point": "pop_point_chime.wav",
     "pop_end": "pop_end_void.wav",
     "crowd_ambient": "crowd_ambient.mp3",
+    "ball_hit_peg": "ball_hit.mp3",
 }
 
 # Volume ayarları (0.0 - 1.0)
@@ -56,6 +57,7 @@ VOLUME = {
     "pop_end": 0.50,
     "background_music": 0.60,
     "crowd_ambient": 0.15,
+    "ball_hit_peg": 0.08,
 }
 
 # Fade ayarları (saniye)
