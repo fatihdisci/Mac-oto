@@ -75,7 +75,7 @@ TOURNAMENT_MODE_LABEL_TO_VALUE = {
     "Eleme Usulu": "elimination",
     "Playoff (Tek Ayak + ET/PEN)": "playoff",
 }
-GRAND_PRIX_TEAM_COUNT_VALUES = ["4", "8", "16", "32"]
+GRAND_PRIX_TEAM_COUNT_VALUES = ["4", "8", "16", "18", "20", "24", "32"]
 GRAND_PRIX_ROUND_COUNT_VALUES = ["5", "10", "15", "20", "25", "30"]
 
 

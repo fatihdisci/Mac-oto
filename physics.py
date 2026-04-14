@@ -511,9 +511,9 @@ class MarbleRacePhysics:
             (cA_l, 1388, br, 1.1),
             (cA_c, 1388, br, 1.1),
             (cA_r, 1388, br, 1.1),
-            # Alt satırdaki iptal edilen 2 çarkın yerine büyük ve yüksek sekme sağlayan çiviler
-            (cB_l, y4, 32, 1.55),
-            (cB_r, y4, 32, 1.55),
+            # Alt satırdaki iptal edilen 2 çarkın yerine normal boyutta, biraz daha aşağıda sekme sağlayan çiviler
+            (cB_l, y4 + 35, br, 1.55),
+            (cB_r, y4 + 35, br, 1.55),
         ]
         self._gear_bumpers = [{"x": x, "y": y, "r": r} for x, y, r, e in bumper_positions]
         for bx, by, r, e in bumper_positions:
