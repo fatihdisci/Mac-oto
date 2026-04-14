@@ -504,14 +504,17 @@ class MarbleRacePhysics:
         # A-B aralarına birer tane, soldaki ve sağdaki boşluğa
         br = 20   # bumper yarıçapı
         bumper_positions = [
-            # Satır 1-2 arası boşluklar (B'nin yokluğu)
-            (cA_l,                (y1 + y2) // 2),   # sol sütun ortası
-            (cA_r,                (y1 + y2) // 2),   # sağ sütun ortası
-            # Satır 2-3 arası boşluklar (A'nın olmadığı B sütunları arası)
-            (cA_c,                (y2 + y3) // 2),   # tam orta
-            # Satır 3-4 arası
-            (cA_l,                (y3 + y4) // 2),
-            (cA_r,                (y3 + y4) // 2),
+            # Satır 1 (A) ve 2 (B) arası -> A'nın boşluk hizası (çarklar topu ezmesin diye y aşağı kaydırıldı)
+            (cA_l, 770),
+            (cA_c, 770),
+            (cA_r, 770),
+            # Satır 2 (B) ve 3 (A) arası -> B'nin boşluk hizası
+            (cB_l, 1070),
+            (cB_r, 1070),
+            # Satır 3 (A) ve 4 (B) arası -> A'nın boşluk hizası
+            (cA_l, 1388),
+            (cA_c, 1388),
+            (cA_r, 1388),
         ]
         self._gear_bumpers = [{"x": x, "y": y, "r": br} for x, y in bumper_positions]
         for bx, by in bumper_positions:
