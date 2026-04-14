@@ -53,6 +53,86 @@ def get_video_preset(key: str | None) -> VideoPreset:
 
 
 # ============================================================
+# ARENA TEMALARI (Renk paletleri)
+# ============================================================
+# Arena theme mevcut engine davranışına dokunmaz; sadece saha ve peg
+# renklerini değiştirir. Renderer temadan okuyup default değerlerin
+# yerine bu paleti kullanır.
+# ============================================================
+
+ARENA_THEMES: dict[str, dict] = {
+    "default": {
+        "name": "Classic Dark",
+        "bg": (16, 22, 34),
+        "field": (22, 30, 44),
+        "border": (46, 58, 82),
+        "wall": (105, 118, 145),
+        "peg": (194, 200, 214),
+        "peg_hi": (228, 232, 240),
+        "peg_sh": (10, 14, 22),
+    },
+    "ucl_night": {
+        "name": "UCL Night",
+        "bg": (8, 12, 32),
+        "field": (14, 20, 52),
+        "border": (30, 50, 120),
+        "wall": (60, 80, 160),
+        "peg": (140, 160, 220),
+        "peg_hi": (180, 200, 255),
+        "peg_sh": (6, 8, 24),
+    },
+    "derby_fire": {
+        "name": "Derby Fire",
+        "bg": (34, 12, 8),
+        "field": (44, 18, 14),
+        "border": (120, 40, 20),
+        "wall": (180, 70, 40),
+        "peg": (220, 160, 120),
+        "peg_hi": (255, 200, 150),
+        "peg_sh": (24, 8, 4),
+    },
+    "green_pitch": {
+        "name": "Green Pitch",
+        "bg": (8, 28, 16),
+        "field": (14, 38, 22),
+        "border": (30, 82, 46),
+        "wall": (60, 130, 80),
+        "peg": (160, 210, 170),
+        "peg_hi": (200, 240, 210),
+        "peg_sh": (4, 18, 8),
+    },
+    "midnight_gold": {
+        "name": "Midnight Gold",
+        "bg": (10, 10, 18),
+        "field": (16, 16, 28),
+        "border": (80, 70, 30),
+        "wall": (160, 140, 50),
+        "peg": (200, 180, 100),
+        "peg_hi": (240, 220, 140),
+        "peg_sh": (8, 8, 12),
+    },
+    "ice_arena": {
+        "name": "Ice Arena",
+        "bg": (18, 28, 38),
+        "field": (24, 38, 52),
+        "border": (60, 100, 140),
+        "wall": (100, 160, 200),
+        "peg": (180, 210, 230),
+        "peg_hi": (220, 240, 255),
+        "peg_sh": (12, 18, 26),
+    },
+}
+
+DEFAULT_ARENA_THEME_KEY = "default"
+
+
+def get_arena_theme(key: str | None) -> dict:
+    if not key:
+        return ARENA_THEMES[DEFAULT_ARENA_THEME_KEY]
+    return ARENA_THEMES.get(str(key).strip(), ARENA_THEMES[DEFAULT_ARENA_THEME_KEY])
+
+
+# ============================================================
 # FİZİK AYARLARI
 # ============================================================
 

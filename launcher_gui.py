@@ -15,7 +15,7 @@ import requests
 
 import customtkinter as ctk
 
-from config import build_default_config, VIDEO_PRESETS, DEFAULT_VIDEO_PRESET_KEY
+from config import build_default_config, VIDEO_PRESETS, DEFAULT_VIDEO_PRESET_KEY, ARENA_THEMES, DEFAULT_ARENA_THEME_KEY
 from grand_prix_manager import GrandPrixManager
 from models import MatchSelection, TeamRecord
 from team_repository import TeamRepository
@@ -709,6 +709,29 @@ class MarbleRaceLauncherApp(ctk.CTk):
         )
         self.video_preset_menu.grid(row=0, column=1, sticky="w")
 
+        theme_row = ctk.CTkFrame(footer, fg_color="transparent")
+        theme_row.grid(row=6, column=0, sticky="ew", padx=16, pady=(0, 8))
+        theme_row.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            theme_row,
+            text="Arena Temasi:",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="#D9E2F2",
+        ).grid(row=0, column=0, sticky="w", padx=(0, 8))
+
+        self.arena_theme_var = StringVar(value=DEFAULT_ARENA_THEME_KEY)
+        self.arena_theme_menu = ctk.CTkOptionMenu(
+            theme_row,
+            values=list(ARENA_THEMES.keys()),
+            variable=self.arena_theme_var,
+            height=32,
+            fg_color="#1A2336",
+            button_color="#2457F5",
+            button_hover_color="#1E46C8",
+        )
+        self.arena_theme_menu.grid(row=0, column=1, sticky="w")
+
         btn_row = ctk.CTkFrame(footer, fg_color="transparent")
         btn_row.grid(row=7, column=0, sticky="ew", padx=16, pady=(0, 12))
         btn_row.grid_columnconfigure((0, 1, 2), weight=1)
@@ -818,6 +841,10 @@ class MarbleRaceLauncherApp(ctk.CTk):
             selected_label = self.video_preset_var.get()
             video_preset_key = self._preset_label_to_key.get(selected_label, DEFAULT_VIDEO_PRESET_KEY)
 
+        arena_theme_key = DEFAULT_ARENA_THEME_KEY
+        if hasattr(self, "arena_theme_var"):
+            arena_theme_key = self.arena_theme_var.get()
+
         selection = MatchSelection(
             team_a=team_a,
             team_b=team_b,
@@ -827,6 +854,7 @@ class MarbleRaceLauncherApp(ctk.CTk):
             guided_target_score_b=guided_target_score_b,
             is_real_fixture_reference=self.real_fixture_var.get(),
             video_preset=video_preset_key,
+            arena_theme=arena_theme_key,
         )
 
         output_path = REPOSITORY.save_selected_match(selection)
@@ -1631,8 +1659,23 @@ class MarbleRaceLauncherApp(ctk.CTk):
             button_color="#2457F5",
         ).grid(row=0, column=3, sticky="ew", padx=(8, 0))
 
+        orientation_row = ctk.CTkFrame(left, fg_color="transparent")
+        orientation_row.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 6))
+        orientation_row.grid_columnconfigure((1, 3), weight=1)
+
+        ctk.CTkLabel(orientation_row, text="Yonelim:", text_color="#D9E2F2").grid(row=0, column=0, sticky="w")
+        self.grand_prix_orientation_var = StringVar(value="Yatay")
+        ctk.CTkOptionMenu(
+            orientation_row,
+            values=["Yatay", "Dikey"],
+            variable=self.grand_prix_orientation_var,
+            height=30,
+            fg_color="#1A2336",
+            button_color="#2457F5",
+        ).grid(row=0, column=1, sticky="w", padx=(8, 10))
+
         filter_row = ctk.CTkFrame(left, fg_color="transparent")
-        filter_row.grid(row=3, column=0, sticky="ew", padx=12, pady=(0, 6))
+        filter_row.grid(row=4, column=0, sticky="ew", padx=12, pady=(0, 6))
         filter_row.grid_columnconfigure(1, weight=1)
         ctk.CTkLabel(filter_row, text="Lig:", text_color="#D9E2F2").grid(row=0, column=0, sticky="w")
         self.grand_prix_league_var = StringVar(value="All Leagues")
@@ -1654,11 +1697,11 @@ class MarbleRaceLauncherApp(ctk.CTk):
             fg_color="#0A111D",
             border_color="#243047",
         )
-        self.grand_prix_search_entry.grid(row=4, column=0, sticky="ew", padx=12, pady=(0, 8))
+        self.grand_prix_search_entry.grid(row=5, column=0, sticky="ew", padx=12, pady=(0, 8))
         self.grand_prix_search_entry.bind("<KeyRelease>", lambda _e: self._refresh_grand_prix_available_list())
 
         list_row = ctk.CTkFrame(left, fg_color="transparent")
-        list_row.grid(row=5, column=0, sticky="nsew", padx=12, pady=(0, 8))
+        list_row.grid(row=6, column=0, sticky="nsew", padx=12, pady=(0, 8))
         list_row.grid_columnconfigure((0, 2), weight=1)
         list_row.grid_rowconfigure(0, weight=1)
 
@@ -1979,16 +2022,24 @@ class MarbleRaceLauncherApp(ctk.CTk):
                 self.current_grand_prix_state = updated
                 self._update_grand_prix_status_box()
 
+        script_args = [
+            "--grand-prix-id",
+            grand_prix_id,
+            "--progress-every",
+            "300",
+        ]
+        
+        orientation = "Yatay"
+        if hasattr(self, "grand_prix_orientation_var"):
+            orientation = self.grand_prix_orientation_var.get()
+        if orientation == "Dikey":
+            script_args.append("--vertical")
+
         self._run_python_script_async(
             script_name="run_grand_prix.py",
             success_message="Grand Prix run tamamlandi.",
             refresh_after=True,
-            script_args=[
-                "--grand-prix-id",
-                grand_prix_id,
-                "--progress-every",
-                "300",
-            ],
+            script_args=script_args,
             on_success=_on_success,
         )
 

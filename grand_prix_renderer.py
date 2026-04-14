@@ -137,30 +137,43 @@ class GrandPrixRenderer:
         team_count = len(standings)
         start_y = panel_rect.y + 72
 
-        # Takım sayısına göre layout parametreleri
-        if team_count <= 4:
-            row_h, logo_size = 66, 38
-            name_font, pts_font = self.team_font, self.team_font
-            two_col, show_round_result = False, True
-        elif team_count <= 8:
-            row_h, logo_size = 54, 32
-            name_font, pts_font = self.team_font, self.team_font
-            two_col, show_round_result = False, True
-        elif team_count <= 16:
-            row_h, logo_size = 40, 26
-            name_font, pts_font = self.info_font, self.info_font
-            two_col, show_round_result = False, False
-        else:  # 32 takım: iki sütun
-            row_h, logo_size = 38, 22
-            name_font, pts_font = self.micro_font, self.micro_font
-            two_col, show_round_result = True, False
+        is_vertical = bool(snapshot.get("is_vertical", False))
 
-        if two_col:
-            half = (team_count + 1) // 2
-            col_w = (panel_rect.width - 12) // 2
-            for col_idx in range(2):
-                col_x = panel_rect.x + col_idx * (col_w + 8) + 4
-                col_rows = standings[col_idx * half: (col_idx + 1) * half]
+        # Takım sayısına göre layout parametreleri
+        if is_vertical:
+            if team_count <= 8:
+                row_h, logo_size = 42, 28
+                name_font, pts_font = self.info_font, self.info_font
+                columns, show_round_result = 2, False
+            else: # 16 or 32 takim
+                row_h, logo_size = 34, 22
+                name_font, pts_font = self.micro_font, self.micro_font
+                columns, show_round_result = 4, False
+        else:
+            if team_count <= 4:
+                row_h, logo_size = 66, 38
+                name_font, pts_font = self.team_font, self.team_font
+                columns, show_round_result = 1, True
+            elif team_count <= 8:
+                row_h, logo_size = 54, 32
+                name_font, pts_font = self.team_font, self.team_font
+                columns, show_round_result = 1, True
+            elif team_count <= 16:
+                row_h, logo_size = 40, 26
+                name_font, pts_font = self.info_font, self.info_font
+                columns, show_round_result = 1, False
+            else:  # 32 takım: iki sütun
+                row_h, logo_size = 38, 22
+                name_font, pts_font = self.micro_font, self.micro_font
+                columns, show_round_result = 2, False
+
+        import math
+        if columns > 1:
+            per_col = math.ceil(team_count / columns)
+            col_w = (panel_rect.width - 24) // columns
+            for col_idx in range(columns):
+                col_x = panel_rect.x + col_idx * (col_w + 8) + 8
+                col_rows = standings[col_idx * per_col: (col_idx + 1) * per_col]
                 for row_idx, row in enumerate(col_rows):
                     rr = pygame.Rect(col_x, start_y + row_idx * row_h, col_w, row_h - 3)
                     pygame.draw.rect(surface, (25, 33, 48, 210 if row_idx % 2 == 0 else 170), rr, border_radius=10)

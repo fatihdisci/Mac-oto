@@ -226,17 +226,21 @@ def mix_audio_into_video(
         overlay_labels.append(f"[{label}]")
         input_idx += 1
 
-    # Crowd ambient (loop + fade)
+    # Crowd ambient (loop + fade + tension ramp)
     if crowd_path:
         inputs.extend(["-stream_loop", "-1", "-i", str(crowd_path)])
         vol = VOLUME["crowd_ambient"]
+        peak_vol = min(1.0, vol * 3.5)
+        ramp_start = max(0, video_duration - 10.0)
+        vol_expr = f"'{vol} + ({peak_vol} - {vol}) * min(1, max(0, t - {ramp_start}) / 10)':eval=frame"
+        
         fade_in = FADE["crowd_fade_in"]
         fade_out = FADE["crowd_fade_out"]
         fade_out_start = max(0, video_duration - fade_out)
         label = "crowd"
         filter_parts.append(
             f"[{input_idx}]atrim=0:{video_duration},asetpts=PTS-STARTPTS,"
-            f"volume={vol},"
+            f"volume={vol_expr},"
             f"afade=t=in:st=0:d={fade_in},"
             f"afade=t=out:st={fade_out_start}:d={fade_out}[{label}]"
         )

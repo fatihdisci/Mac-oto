@@ -9,7 +9,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import pygame
 from PIL import Image, ImageFilter
 
-from config import SimulationConfig
+from config import SimulationConfig, get_arena_theme
 
 
 @dataclass
@@ -101,11 +101,14 @@ class MarbleRaceRenderer:
             self._draw_finish_overlay(target_surface, state_snapshot)
 
     def _ensure_static_background(self, snapshot: dict) -> None:
-        mode_key = "pop" if self._is_pop_mode(snapshot) else "football"
-        if self.static_background is not None and self._background_mode_key == mode_key:
+        base_mode = "pop" if self._is_pop_mode(snapshot) else "football"
+        theme_key = str(snapshot.get("arena_theme", "default")).strip() or "default"
+        mode_key = f"{base_mode}_{theme_key}"
+        
+        if self.static_background is not None and getattr(self, "_background_mode_key", None) == mode_key:
             return
 
-        self.static_background = self._build_static_background(pop_mode=(mode_key == "pop"))
+        self.static_background = self._build_static_background(pop_mode=(base_mode == "pop"), theme_key=theme_key)
         self._background_mode_key = mode_key
 
     def _draw_header(self, surface: pygame.Surface, snapshot: dict) -> None:
@@ -134,43 +137,47 @@ class MarbleRaceRenderer:
         title_rect = title.get_rect(center=(cx, panel_y + panel_h // 2))
         surface.blit(title, title_rect)
 
-    def _build_static_background(self, pop_mode: bool = False) -> pygame.Surface:
+    def _build_static_background(self, pop_mode: bool = False, theme_key: str = "default") -> pygame.Surface:
+        theme = get_arena_theme(theme_key)
         width = self.cfg.video.width
         height = self.cfg.video.height
 
         background = pygame.Surface((width, height))
-        background.fill(self.cfg.video.background_color)
+        background.fill(theme["bg_color"])
 
-        self._draw_field_panel(background)
-        self._draw_side_walls(background)
+        self._draw_field_panel(background, theme)
+        self._draw_side_walls(background, theme)
         self._draw_bottom_layout(background, pop_mode=pop_mode)
 
         return background
 
-    def _draw_field_panel(self, surface: pygame.Surface) -> None:
+    def _draw_field_panel(self, surface: pygame.Surface, theme: dict) -> None:
         field_rect = pygame.Rect(
             self.cfg.playfield_left - 18,
             108,
             self.cfg.playfield_width + 36,
             self.cfg.video.height - 192,
         )
-        pygame.draw.rect(surface, (22, 30, 44), field_rect, border_radius=28)
-        pygame.draw.rect(surface, (46, 58, 82), field_rect, width=2, border_radius=28)
+        pygame.draw.rect(surface, theme["panel_bg"], field_rect, border_radius=28)
+        pygame.draw.rect(surface, theme["panel_border"], field_rect, width=2, border_radius=28)
 
-    def _draw_side_walls(self, surface: pygame.Surface) -> None:
+    def _draw_side_walls(self, surface: pygame.Surface, theme: dict) -> None:
         left_x = self.cfg.playfield_left
         right_x = self.cfg.playfield_right
         wall_top = 120
         ramp_top_y = self.cfg.layout.floor_y - 180
 
-        pygame.draw.line(surface, (105, 118, 145), (left_x, wall_top), (left_x, ramp_top_y), 6)
-        pygame.draw.line(surface, (105, 118, 145), (right_x, wall_top), (right_x, ramp_top_y), 6)
+        pygame.draw.line(surface, theme["accent"], (left_x, wall_top), (left_x, ramp_top_y), 6)
+        pygame.draw.line(surface, theme["accent"], (right_x, wall_top), (right_x, ramp_top_y), 6)
 
     def _draw_pegs(self, surface: pygame.Surface, snapshot: Optional[dict] = None) -> None:
         left = self.cfg.playfield_left
         right = self.cfg.playfield_right
         clip_rect = pygame.Rect(left, 0, right - left, self.cfg.video.height)
         surface.set_clip(clip_rect)
+
+        theme_key = str(snapshot.get("arena_theme", "default")).strip() or "default" if snapshot else "default"
+        theme = get_arena_theme(theme_key)
 
         peg_draw_data = snapshot.get("peg_draw_data", []) if snapshot else []
         if peg_draw_data:
@@ -196,8 +203,8 @@ class MarbleRaceRenderer:
                 dx, dy = int(x + vib_x), int(y + vib_y)
             else:
                 dx, dy = int(x), int(y)
-            pygame.draw.circle(surface, (10, 14, 22), (dx + 3, dy + 4), self.cfg.physics.peg_radius)
-            pygame.draw.circle(surface, (194, 200, 214), (dx, dy), self.cfg.physics.peg_radius)
+            pygame.draw.circle(surface, theme["peg_shadow"], (dx + 3, dy + 4), self.cfg.physics.peg_radius)
+            pygame.draw.circle(surface, theme["peg_color"], (dx, dy), self.cfg.physics.peg_radius)
             pygame.draw.circle(
                 surface,
                 (228, 232, 240),

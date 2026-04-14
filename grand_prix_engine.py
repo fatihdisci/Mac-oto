@@ -38,8 +38,9 @@ class GrandPrixEngine:
         teams: list[TeamRecord],
         hole_values: list[int],
         round_count: int,
-        random_seed: int,
+        role: str = "grand_prix",
         round_duration_seconds: float = 22.0,
+        vertical: bool = False,
     ) -> None:
         self.cfg = cfg
         self.title = str(title or "Grand Prix")
@@ -56,19 +57,34 @@ class GrandPrixEngine:
         self.summary_duration_seconds = 2.3
         self.action_timeout_seconds = max(8.0, self.round_duration_seconds - self.summary_duration_seconds)
         self.final_duration_seconds = 4.2
+        self.is_vertical = vertical
 
-        self.board_rect = {
-            "x": 78,
-            "y": 46,
-            "width": 1080,
-            "height": 988,
-        }
-        self.side_panel_rect = {
-            "x": 1190,
-            "y": 46,
-            "width": 650,
-            "height": 988,
-        }
+        if self.is_vertical:
+            self.board_rect = {
+                "x": 40,
+                "y": 80,
+                "width": 1000,
+                "height": 1300,
+            }
+            self.side_panel_rect = {
+                "x": 40,
+                "y": 1420,
+                "width": 1000,
+                "height": 450,
+            }
+        else:
+            self.board_rect = {
+                "x": 78,
+                "y": 46,
+                "width": 1080,
+                "height": 988,
+            }
+            self.side_panel_rect = {
+                "x": 1190,
+                "y": 46,
+                "width": 650,
+                "height": 988,
+            }
 
         self.ball_radius = max(13, int(self.cfg.physics.ball_radius * 0.55))
         self.ball_mass = max(0.7, float(self.cfg.physics.ball_mass))
@@ -184,6 +200,7 @@ class GrandPrixEngine:
             "current_round": round_display,
             "round_count": self.round_count,
             "completed_rounds": self.completed_rounds,
+            "is_vertical": getattr(self, "is_vertical", False),
             "board_rect": dict(self.board_rect),
             "side_panel_rect": dict(self.side_panel_rect),
             "peg_positions": list(self.peg_positions),

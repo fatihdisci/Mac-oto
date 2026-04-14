@@ -18,14 +18,15 @@ from team_repository import TeamRepository
 from video_writer import Mp4VideoWriter
 
 
-def build_grand_prix_config():
+def build_grand_prix_config(vertical: bool = False):
     cfg = build_default_config()
+    w, h = (1080, 1920) if vertical else (1920, 1080)
     return replace(
         cfg,
         video=replace(
             cfg.video,
-            width=1920,
-            height=1080,
+            width=w,
+            height=h,
             fps=60,
             output_filename="grand_prix_output.mp4",
             background_color=(13, 18, 29),
@@ -49,8 +50,9 @@ def run_grand_prix(
     grand_prix_id: str | None = None,
     headless: bool = False,
     progress_every: int = 0,
+    vertical: bool = False,
 ) -> Path:
-    cfg = build_grand_prix_config()
+    cfg = build_grand_prix_config(vertical=vertical)
     repo = TeamRepository(cfg.data_dir)
     manager = GrandPrixManager(cfg.data_dir, repo)
 
@@ -90,6 +92,7 @@ def run_grand_prix(
         hole_values=list(state.get("hole_values", [])),
         round_count=int(state.get("round_count", 5)),
         random_seed=int(state.get("random_seed", 0)),
+        vertical=vertical,
     )
     renderer = GrandPrixRenderer(cfg)
 
@@ -201,12 +204,14 @@ def main() -> None:
     parser.add_argument("--grand-prix-id", type=str, default=None)
     parser.add_argument("--headless", action="store_true")
     parser.add_argument("--progress-every", type=int, default=0)
+    parser.add_argument("--vertical", action="store_true")
     args = parser.parse_args()
 
     run_grand_prix(
         grand_prix_id=args.grand_prix_id,
         headless=bool(args.headless),
         progress_every=max(0, int(args.progress_every)),
+        vertical=bool(args.vertical),
     )
 
 
