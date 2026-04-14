@@ -801,8 +801,8 @@ class MarbleRaceRenderer:
         surface.blit(overlay, (0, 0))
 
         # 2) Background color glow based on team colors
-        # Align glow centers with logo centers for perfect symmetry
-        logo_dist = 170
+        # Increase distance between logos as requested
+        logo_dist = 260
         logo_a_x = cx - logo_dist
         logo_b_x = cx + logo_dist
         logo_y = h // 2 + 50
@@ -811,19 +811,18 @@ class MarbleRaceRenderer:
         glow_surface = pygame.Surface((w, h), pygame.SRCALPHA)
         
         # Create gradient glow - Centered on logos
-        pygame.draw.circle(glow_surface, (*color_a[:3], int(70 * glow_strength)), (logo_a_x, logo_y), 450)
-        pygame.draw.circle(glow_surface, (*color_b[:3], int(70 * glow_strength)), (logo_b_x, logo_y), 450)
+        pygame.draw.circle(glow_surface, (*color_a[:3], int(70 * glow_strength)), (logo_a_x, logo_y), 480)
+        pygame.draw.circle(glow_surface, (*color_b[:3], int(70 * glow_strength)), (logo_b_x, logo_y), 480)
         
         surface.blit(glow_surface, (0, 0))
 
         # 3) Sparks (Make them thicker/bigger for dramatic effect)
         self._draw_hook_sparks(surface, progress, content_alpha * (0.6 + 0.4 * glow_intensity))
 
-        # 4) Dynamic title (custom match title or default)
+        # 4) Dynamic title
         raw_title = str(snapshot.get("match_title", "")).strip()
         default_auto_title = f"{team_a.get('name', '')} vs {team_b.get('name', '')}".strip()
         if not raw_title or raw_title.lower() == default_auto_title.lower():
-            # If no title provided, use team names or tournament
             hook_text = "MATCH PREVIEW"
         else:
             hook_text = raw_title.upper()
@@ -847,8 +846,8 @@ class MarbleRaceRenderer:
         surface.blit(shadow, shadow.get_rect(center=(cx + 5, who_y + 6)))
         surface.blit(who, who.get_rect(center=(cx, who_y)))
 
-        # 5) Logos (Much bigger, closer to center)
-        base_logo = 340
+        # 5) Logos (Even bigger, and further apart)
+        base_logo = 360
         logo_a = self._get_logo_surface(team_a["name"], team_a.get("badge_file", ""), base_logo)
         logo_b = self._get_logo_surface(team_b["name"], team_b.get("badge_file", ""), base_logo)
         scaled_size = max(48, int(base_logo * scale))
@@ -1214,7 +1213,8 @@ class MarbleRaceRenderer:
             raise FileNotFoundError(f"Logo bulunamadi: {path}")
 
         image = Image.open(path).convert("RGBA")
-        image.thumbnail((size - 10, size - 10), Image.Resampling.LANCZOS)
+        # Reduce padding (was -10, now -4) to make logo fill more of the circle
+        image.thumbnail((size - 4, size - 4), Image.Resampling.LANCZOS)
         image = image.filter(ImageFilter.UnsharpMask(radius=1.6, percent=165, threshold=2))
 
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
