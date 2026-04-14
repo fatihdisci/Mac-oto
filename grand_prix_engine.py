@@ -54,7 +54,7 @@ class GrandPrixEngine:
         self.hole_count = len(self.hole_values)
 
         self.round_duration_seconds = max(12.0, float(round_duration_seconds))
-        self.intro_duration_seconds = 2.8
+        self.intro_duration_seconds = 3.5
         self.summary_duration_seconds = 2.3
         self.action_timeout_seconds = max(8.0, self.round_duration_seconds - self.summary_duration_seconds)
         self.final_duration_seconds = 4.2
@@ -92,6 +92,11 @@ class GrandPrixEngine:
         self.ball_elasticity = 0.75
         self.ball_friction = 0.30  # Sürtünmeyi 0.30'a ayarladık (kullanıcı talebi)
         self.peg_radius = max(7, int(self.cfg.physics.peg_radius * 0.65))
+
+        # Engine mode (default to normal if not provided)
+        self.engine_mode = "normal"
+        self.gear_mode_enabled = False
+        self.gears: list[Any] = []
 
         self.bottom_row_pegs: list[tuple[float, float]] = []
         self.peg_positions = self._build_peg_positions()
@@ -240,6 +245,8 @@ class GrandPrixEngine:
             "champion_name": self._team_name(champion_key),
             "show_intro_overlay": self.phase == "intro",
             "intro_countdown": max(1, int(math.ceil(intro_remaining))),
+            "intro_remaining": intro_remaining,
+            "intro_duration": self.intro_duration_seconds,
         }
 
     def export_results(self) -> dict[str, Any]:
@@ -305,6 +312,22 @@ class GrandPrixEngine:
 
         if self.phase_elapsed >= self.action_timeout_seconds and not self._all_entries_exited():
             self._force_exit_remaining()
+
+    def _build_gear_draw_data(self) -> list[dict]:
+        if not self.gear_mode_enabled or not self.gears:
+            return []
+        
+        draw_data = []
+        for gear in self.gears:
+            draw_data.append({
+                "gear_id": gear["gear_id"],
+                "x": float(gear["body"].position.x),
+                "y": float(gear["body"].position.y),
+                "angle": float(gear["body"].angle),
+                "radius": gear["radius"],
+                "spoke_count": gear["spoke_count"]
+            })
+        return draw_data
 
     def _handle_spark_collision(self, arbiter: pymunk.Arbiter, _space=None, _data=None) -> None:
         """Herhangi iki cisim arasındaki çarpışmalarda spark verisi toplar."""
@@ -455,14 +478,17 @@ class GrandPrixEngine:
             wall.elasticity = 0.48
             wall.friction = 0.26
 
-        peg_shapes: list[pymunk.Circle] = []
-        for x, y in self.peg_positions:
-            peg = pymunk.Circle(static_body, self.peg_radius, offset=(x, y))
-            peg.elasticity = 0.94
-            peg.friction = 0.62
-            peg_shapes.append(peg)
-
-        self.space.add(left_wall, right_wall, *peg_shapes)
+        if self.gear_mode_enabled:
+            self._build_gears()
+            self.space.add(left_wall, right_wall)
+        else:
+            peg_shapes: list[pymunk.Circle] = []
+            for x, y in self.peg_positions:
+                peg = pymunk.Circle(static_body, self.peg_radius, offset=(x, y))
+                peg.elasticity = 0.94
+                peg.friction = 0.62
+                peg_shapes.append(peg)
+            self.space.add(left_wall, right_wall, *peg_shapes)
         
         # Collision handler for sparks (with fallback for different pymunk versions)
         try:
@@ -473,6 +499,55 @@ class GrandPrixEngine:
                 handler.post_solve = self._handle_spark_collision
         except Exception:
             pass
+
+    def _build_gears(self) -> None:
+        self.gears = []
+        static_body = self.space.static_body
+        
+        # Board rect'e göre cx hesapla
+        board_cx = self.board_rect["x"] + self.board_rect["width"] / 2.0
+        board_top = self.board_rect["y"]
+        board_h = self.board_rect["height"]
+        
+        # Grand Prix board boyutuna göre layout'u uyarla
+        # 2-1-2-1 Zigzag Layout
+        layout = [
+            (board_cx - 240, board_top + board_h * 0.25, 80, 6, 2.2),
+            (board_cx + 240, board_top + board_h * 0.25, 80, 6, -2.2),
+            (board_cx, board_top + board_h * 0.45, 110, 8, 1.8),
+            (board_cx - 240, board_top + board_h * 0.65, 80, 6, 2.2),
+            (board_cx + 240, board_top + board_h * 0.65, 80, 6, -2.2),
+            (board_cx, board_top + board_h * 0.82, 90, 7, 2.0),
+        ]
+
+        for i, (x, y, radius, spokes, rate) in enumerate(layout):
+            body = pymunk.Body(body_type=pymunk.Body.DYNAMIC)
+            body.position = (x, y)
+            
+            hub_shape = pymunk.Circle(body, radius * 0.3)
+            hub_shape.elasticity = 0.5
+            hub_shape.friction = 0.5
+            
+            spoke_shapes = []
+            spoke_width = 8
+            for s in range(spokes):
+                angle = (s / spokes) * math.tau
+                spoke = pymunk.Segment(body, (0, 0), (radius * math.cos(angle), radius * math.sin(angle)), spoke_width)
+                spoke.elasticity = 0.6
+                spoke.friction = 0.5
+                spoke_shapes.append(spoke)
+            
+            pivot = pymunk.PivotJoint(static_body, body, (x, y), (0, 0))
+            motor = pymunk.SimpleMotor(static_body, body, rate)
+            motor.max_force = 1e7
+            
+            self.space.add(body, hub_shape, *spoke_shapes, pivot, motor)
+            self.gears.append({
+                "gear_id": i,
+                "body": body,
+                "radius": radius,
+                "spoke_count": spokes
+            })
 
     def _build_peg_positions(self) -> list[tuple[float, float]]:
         positions: list[tuple[float, float]] = []

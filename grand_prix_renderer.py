@@ -346,14 +346,86 @@ class GrandPrixRenderer:
         display_title = snapshot.get('title')
         if not display_title or str(display_title).strip() == "":
             display_title = "Grand Prix"
-            
-        intro_str = f"{display_title} is starting"
-        title = self.overlay_sub_font.render(intro_str, True, (255, 244, 194))
-        surface.blit(title, title.get_rect(center=(surface.get_width() // 2, 410)))
 
-        countdown = int(snapshot.get("intro_countdown", 1))
-        countdown_text = self.overlay_font.render(str(max(1, countdown)), True, (248, 249, 252))
-        surface.blit(countdown_text, countdown_text.get_rect(center=(surface.get_width() // 2, 510)))
+        w, h = surface.get_width(), surface.get_height()
+        cx = w // 2
+
+        intro_str = f"{display_title}".upper()
+        # Draw shadow
+        title_shadow = self.overlay_font.render(intro_str, True, (0, 0, 0))
+        shadow_rect = title_shadow.get_rect(center=(cx + 4, h // 2 - 316))
+        surface.blit(title_shadow, shadow_rect)
+        
+        # Draw main title
+        title = self.overlay_font.render(intro_str, True, (255, 230, 100))
+        title_rect = title.get_rect(center=(cx, h // 2 - 320))
+        surface.blit(title, title_rect)
+
+        # Teams grid
+        teams = snapshot.get("teams", [])
+        num_teams = len(teams)
+        
+        intro_rem = float(snapshot.get("intro_remaining", 3.5))
+        intro_dur = float(snapshot.get("intro_duration", 3.5))
+        elapsed = max(0.0, intro_dur - intro_rem)
+        
+        if num_teams > 0:
+            import math
+            cols = 4 if num_teams >= 4 else 2
+            rows = math.ceil(num_teams / cols)
+            
+            logo_size = 120 if num_teams > 8 else 160
+            gap_x = logo_size + 40
+            gap_y = logo_size + 60
+            
+            start_x = cx - (cols - 1) * gap_x // 2
+            start_y = h // 2 - (rows - 1) * gap_y // 2 - 20
+            
+            for idx, team in enumerate(teams):
+                delay = idx * 0.15
+                if elapsed < delay:
+                    continue
+                    
+                anim_p = min(1.0, (elapsed - delay) / 0.4)
+                anim_p = 1.0 - (1.0 - anim_p) ** 3  # ease out cubic
+                
+                r = idx // cols
+                c = idx % cols
+                tx = start_x + c * gap_x
+                ty = start_y + r * gap_y
+                
+                logo = self._get_logo_surface(team["name"], team.get("badge_file", ""), logo_size)
+                
+                alpha = int(255 * anim_p)
+                s = max(0.01, anim_p)
+                if abs(s - 1.0) > 0.01:
+                    scaled_logo = pygame.transform.smoothscale(logo, (int(logo_size * s), int(logo_size * s)))
+                else:
+                    scaled_logo = logo
+                scaled_logo.set_alpha(alpha)
+                
+                surface.blit(scaled_logo, scaled_logo.get_rect(center=(tx, ty)))
+
+        # Countdown with pulse
+        countdown_num = int(math.ceil(intro_rem))
+        pulse = intro_rem - math.floor(intro_rem) # goes from 1.0 to 0.0
+        
+        # Scale and alpha for pulse effect
+        scale = 1.0 + 0.5 * pulse
+        alpha = int(120 + 135 * pulse)
+        
+        countdown_text = self.overlay_font.render(str(max(1, countdown_num)), True, (248, 249, 252))
+        cw, ch = countdown_text.get_width(), countdown_text.get_height()
+        scaled_cw = max(1, int(cw * scale))
+        scaled_ch = max(1, int(ch * scale))
+        
+        if abs(scale - 1.0) > 0.01:
+            scaled_cd = pygame.transform.smoothscale(countdown_text, (scaled_cw, scaled_ch))
+        else:
+            scaled_cd = countdown_text
+            
+        scaled_cd.set_alpha(alpha)
+        surface.blit(scaled_cd, scaled_cd.get_rect(center=(cx, h // 2 + 280)))
 
     def _draw_glass_panel(
         self,

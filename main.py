@@ -87,6 +87,7 @@ def _mode_scoring_intensity(engine_mode: str) -> float:
         "football_result_guided_test": 5.8,
         "football_shift": 6.9,
         "football_blink": 6.2,
+        "football_gears": 6.5,
     }
     if mode in explicit:
         return explicit[mode]
@@ -1025,14 +1026,16 @@ def run_simulation(
                     and not is_intro
                     and not is_outro
                     and match_phase in {"regular_time", "extra_time"}
+                    and not getattr(physics, "gear_mode_enabled", False)
                 ):
                     strongest = max(
                         (float(s.get("impulse", 0.0)) for s in frame_sparks), default=0.0
                     )
-                    if strongest >= 0.55 and (video_seconds_elapsed - last_hit_sound_time) >= 0.28:
+                    if strongest >= 0.40 and (video_seconds_elapsed - last_hit_sound_time) >= 0.15:
                         audio_events.append({
                             "type": "ball_hit_peg",
                             "time": round(video_seconds_elapsed, 2),
+                            "impulse": round(strongest, 2)
                         })
                         last_hit_sound_time = video_seconds_elapsed
                 decided_by = "normal_time"

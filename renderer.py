@@ -78,6 +78,7 @@ class MarbleRaceRenderer:
         if self.static_background is not None:
             target_surface.blit(self.static_background, (0, 0))
         self._draw_pegs(target_surface, state_snapshot)
+        self._draw_gears(target_surface, state_snapshot)
         self._draw_power_zones(target_surface, state_snapshot)
 
         self._draw_header(target_surface, state_snapshot)
@@ -178,13 +179,23 @@ class MarbleRaceRenderer:
         theme = get_arena_theme(theme_key)
 
         peg_draw_data = snapshot.get("peg_draw_data", []) if snapshot else []
-        if peg_draw_data:
+        gear_draw_data = snapshot.get("gear_draw_data", []) if snapshot else []
+        
+        # Eğer Gear Mode aktifse (gear_draw_data doluysa), pegleri hiç çizme.
+        # Eğer Gear Mode değilse ama peg_draw_data boşsa (eski snapshotlar için), fallback yap.
+        if gear_draw_data:
+            peg_centers = []
+        elif peg_draw_data:
             peg_centers = [
                 (float(peg.get("x", 0.0)), float(peg.get("y", 0.0)))
                 for peg in peg_draw_data
             ]
         else:
             peg_centers = list(self._iter_peg_centers())
+
+        if not peg_centers:
+            surface.set_clip(None)
+            return
 
         tension_active = bool(snapshot.get("tension_active", False)) if snapshot else False
         tension_progress = float(snapshot.get("tension_progress", 0.0)) if snapshot else 0.0
@@ -209,6 +220,91 @@ class MarbleRaceRenderer:
                 (dx - 2, dy - 2),
                 max(2, self.cfg.physics.peg_radius // 3),
             )
+
+        surface.set_clip(None)
+
+    def _draw_gears(self, surface: pygame.Surface, snapshot: dict) -> None:
+        gears = snapshot.get("gear_draw_data", [])
+        if not gears:
+            return
+
+        left = self.cfg.playfield_left
+        right = self.cfg.playfield_right
+        clip_rect = pygame.Rect(left, 0, right - left, self.cfg.video.height)
+        surface.set_clip(clip_rect)
+
+        theme_key = str(snapshot.get("arena_theme", "default")).strip() or "default"
+        theme = get_arena_theme(theme_key)
+
+        hub_color = theme["peg"]
+        hub_sh_color = theme["peg_sh"]
+        # Kollar biraz daha açık
+        spoke_color = tuple(min(255, max(0, c + 30)) for c in hub_color)
+        rim_color = tuple(min(255, max(0, c + 15)) for c in hub_color)
+
+        for gear in gears:
+            gx = float(gear["x"])
+            gy = float(gear["y"])
+            angle = float(gear["angle"])
+            radius = float(gear["radius"])
+            spokes = int(gear["spoke_count"])
+
+            igx, igy = int(gx), int(gy)
+
+            # Kol kalınlığı radius'a göre
+            sw = max(3, int(radius * 0.045))   # ~4-5px
+
+            # Kollar: merkezden uca (gölge + ana)
+            for s in range(spokes):
+                s_angle = angle + (s / spokes) * math.tau
+                end_x = gx + radius * math.cos(s_angle)
+                end_y = gy + radius * math.sin(s_angle)
+                pygame.draw.line(surface, hub_sh_color,
+                                 (igx + 2, igy + 2), (int(end_x) + 2, int(end_y) + 2), sw + 2)
+                pygame.draw.line(surface, spoke_color,
+                                 (igx, igy), (int(end_x), int(end_y)), sw)
+
+            # Merkez nokta
+            pygame.draw.circle(surface, hub_sh_color, (igx + 1, igy + 1), 6)
+            pygame.draw.circle(surface, hub_color, (igx, igy), 5)
+            pygame.draw.circle(surface, (220, 230, 245), (igx - 1, igy - 1), 2)
+
+        # Bumper çivileri — hit zamanına göre flash
+        bumpers = snapshot.get("gear_bumpers", [])
+        hits = snapshot.get("gear_bumper_hits", [])
+        sim_time = float(snapshot.get("physics_time_seconds", 0.0))
+        # Son hit'leri konuma göre indexle
+        hit_map: dict[tuple, float] = {}
+        for h in hits:
+            key = (round(h["x"]), round(h["y"]))
+            t = float(h.get("time", 0.0))
+            if key not in hit_map or hit_map[key] < t:
+                hit_map[key] = t
+
+        for b in bumpers:
+            bx, by, br = int(b["x"]), int(b["y"]), int(b["r"])
+            key = (bx, by)
+            last_hit = hit_map.get(key, -999.0)
+            age = sim_time - last_hit   # saniye cinsinden ne kadar önce çarptı
+            flash = age < 0.12          # 120ms flash penceresi
+
+            if flash:
+                # Parlak sarı/beyaz dolgu
+                flash_t = 1.0 - (age / 0.12)
+                fc = int(255 * flash_t)
+                flash_color = (min(255, 180 + fc), min(255, 160 + fc), 60)
+                pygame.draw.circle(surface, (0, 0, 0, 0), (bx + 2, by + 2), br + 4)
+                pygame.draw.circle(surface, flash_color, (bx, by), br)
+                # Genişleyen halka
+                ring_r = br + int((0.12 - age) / 0.12 * 22)
+                ring_alpha = int(flash_t * 200)
+                ring_color = (255, 220, 80)
+                pygame.draw.circle(surface, ring_color, (bx, by), ring_r, 3)
+            else:
+                # Normal çizim
+                pygame.draw.circle(surface, hub_sh_color, (bx + 2, by + 2), br)
+                pygame.draw.circle(surface, spoke_color,  (bx,     by    ), br)
+                pygame.draw.circle(surface, (220, 230, 245), (bx - 2, by - 2), max(2, br // 3))
 
         surface.set_clip(None)
 
@@ -671,73 +767,42 @@ class MarbleRaceRenderer:
 
         team_a = next((team for team in teams if team.get("role") == "A"), teams[0])
         team_b = next((team for team in teams if team.get("role") == "B"), teams[1])
-        color_a = (220, 72, 72)
-        color_b = (79, 137, 255)
+        
+        # We can extract dominant colors if available, or fallback to default
+        color_a = team_a.get("color", (220, 72, 72))
+        color_b = team_b.get("color", (79, 137, 255))
+        
+        # Ensure they are tuples of length 3
+        if isinstance(color_a, str): color_a = (220, 72, 72)
+        if isinstance(color_b, str): color_b = (79, 137, 255)
 
         # 1) Dark overlay
         overlay = pygame.Surface((w, h), pygame.SRCALPHA)
         overlay.fill((3, 5, 12, int(140 + 95 * content_alpha)))
         surface.blit(overlay, (0, 0))
 
-        # 2) Background stays clean (no large decorative back effects)
+        # 2) Background color glow based on team colors
+        # Left side Team A dominant color, right side Team B dominant color
         glow_strength = glow_intensity * content_alpha
+        glow_surface = pygame.Surface((w, h), pygame.SRCALPHA)
+        
+        # Create gradient glow
+        # Left glow
+        pygame.draw.circle(glow_surface, (*color_a[:3], int(60 * glow_strength)), (cx - 250, h // 2), 400)
+        # Right glow
+        pygame.draw.circle(glow_surface, (*color_b[:3], int(60 * glow_strength)), (cx + 250, h // 2), 400)
+        
+        surface.blit(glow_surface, (0, 0))
 
-        # 3) Sparks
-        self._draw_hook_sparks(surface, progress, content_alpha * (0.35 + 0.65 * glow_intensity))
+        # 3) Sparks (Make them thicker/bigger for dramatic effect)
+        self._draw_hook_sparks(surface, progress, content_alpha * (0.6 + 0.4 * glow_intensity))
 
-        # 4) Glass panels
-        panel_w = 380
-        panel_h = 520
-        gap = 44
-        left_panel = pygame.Rect(cx - panel_w - gap // 2, 400, panel_w, panel_h)
-        right_panel = pygame.Rect(cx + gap // 2, 400, panel_w, panel_h)
-        panel_alpha = int(220 * content_alpha)
-        border_alpha = int(220 * content_alpha)
-        self._draw_glass_panel(surface, left_panel, (10, 14, 24, panel_alpha), (*color_a, border_alpha), 30)
-        self._draw_glass_panel(surface, right_panel, (10, 14, 24, panel_alpha), (*color_b, border_alpha), 30)
-
-        # 5) Logos + names (ease-out-back scale punch)
-        base_logo = 206
-        logo_a = self._get_logo_surface(team_a["name"], team_a.get("badge_file", ""), base_logo)
-        logo_b = self._get_logo_surface(team_b["name"], team_b.get("badge_file", ""), base_logo)
-        scaled_size = max(48, int(base_logo * scale))
-        logo_a = pygame.transform.smoothscale(logo_a, (scaled_size, scaled_size))
-        logo_b = pygame.transform.smoothscale(logo_b, (scaled_size, scaled_size))
-
-        toss_y = int((1.0 - min(1.2, scale)) * 210)
-        toss_x = int((1.0 - min(1.1, scale)) * 90)
-
-        logo_a.set_alpha(int(255 * content_alpha))
-        logo_b.set_alpha(int(255 * content_alpha))
-        surface.blit(logo_a, logo_a.get_rect(center=(left_panel.centerx - toss_x, left_panel.y + 150 + toss_y)))
-        surface.blit(logo_b, logo_b.get_rect(center=(right_panel.centerx + toss_x, right_panel.y + 150 + toss_y)))
-
-        name_a = self._fit_text(self.hook_team_font, team_a["name"], panel_w - 40, (252, 253, 255))
-        name_b = self._fit_text(self.hook_team_font, team_b["name"], panel_w - 40, (252, 253, 255))
-        name_a_shadow = self._fit_text(self.hook_team_font, team_a["name"], panel_w - 40, (0, 0, 0))
-        name_b_shadow = self._fit_text(self.hook_team_font, team_b["name"], panel_w - 40, (0, 0, 0))
-        if abs(scale - 1.0) > 0.01:
-            s = max(0.3, scale)
-            name_a = pygame.transform.smoothscale(name_a, (max(1, int(name_a.get_width() * s)), max(1, int(name_a.get_height() * s))))
-            name_b = pygame.transform.smoothscale(name_b, (max(1, int(name_b.get_width() * s)), max(1, int(name_b.get_height() * s))))
-            name_a_shadow = pygame.transform.smoothscale(name_a_shadow, (max(1, int(name_a_shadow.get_width() * s)), max(1, int(name_a_shadow.get_height() * s))))
-            name_b_shadow = pygame.transform.smoothscale(name_b_shadow, (max(1, int(name_b_shadow.get_width() * s)), max(1, int(name_b_shadow.get_height() * s))))
-        name_a.set_alpha(int(255 * content_alpha))
-        name_b.set_alpha(int(255 * content_alpha))
-        name_a_shadow.set_alpha(int(130 * content_alpha))
-        name_b_shadow.set_alpha(int(130 * content_alpha))
-        na_pos = (left_panel.centerx - toss_x, left_panel.y + 318 + toss_y)
-        nb_pos = (right_panel.centerx + toss_x, right_panel.y + 318 + toss_y)
-        surface.blit(name_a_shadow, name_a_shadow.get_rect(center=(na_pos[0] + 3, na_pos[1] + 4)))
-        surface.blit(name_b_shadow, name_b_shadow.get_rect(center=(nb_pos[0] + 3, nb_pos[1] + 4)))
-        surface.blit(name_a, name_a.get_rect(center=na_pos))
-        surface.blit(name_b, name_b.get_rect(center=nb_pos))
-
-        # 6) Dynamic title (custom match title or WHO WINS fallback) + VS badge
+        # 4) Dynamic title (custom match title or default)
         raw_title = str(snapshot.get("match_title", "")).strip()
         default_auto_title = f"{team_a.get('name', '')} vs {team_b.get('name', '')}".strip()
         if not raw_title or raw_title.lower() == default_auto_title.lower():
-            hook_text = "WHO WINS?"
+            # If no title provided, use team names or tournament
+            hook_text = "MATCH PREVIEW"
         else:
             hook_text = raw_title.upper()
 
@@ -748,7 +813,7 @@ class MarbleRaceRenderer:
         if rendered_width > max_text_width and rendered_width > 0:
             text_scale = max_text_width / rendered_width
 
-        who_y = 252
+        who_y = 200
         shadow = hook_font.render(hook_text, True, (0, 0, 0))
         shadow.set_alpha(int(185 * content_alpha))
         who = hook_font.render(hook_text, True, (255, 255, 255))
@@ -760,8 +825,30 @@ class MarbleRaceRenderer:
         surface.blit(shadow, shadow.get_rect(center=(cx + 5, who_y + 6)))
         surface.blit(who, who.get_rect(center=(cx, who_y)))
 
-        vs_y = left_panel.y + 170 + toss_y // 2
-        vr = max(36, int(62 * scale))
+        # 5) Logos (Much bigger, closer to center)
+        base_logo = 290
+        logo_a = self._get_logo_surface(team_a["name"], team_a.get("badge_file", ""), base_logo)
+        logo_b = self._get_logo_surface(team_b["name"], team_b.get("badge_file", ""), base_logo)
+        scaled_size = max(48, int(base_logo * scale))
+        logo_a = pygame.transform.smoothscale(logo_a, (scaled_size, scaled_size))
+        logo_b = pygame.transform.smoothscale(logo_b, (scaled_size, scaled_size))
+
+        toss_y = int((1.0 - min(1.2, scale)) * 210)
+        toss_x = int((1.0 - min(1.1, scale)) * 90)
+
+        logo_a.set_alpha(int(255 * content_alpha))
+        logo_b.set_alpha(int(255 * content_alpha))
+        
+        logo_a_x = cx - 180
+        logo_b_x = cx + 180
+        logo_y = h // 2 + 50
+        
+        surface.blit(logo_a, logo_a.get_rect(center=(logo_a_x - toss_x, logo_y + toss_y)))
+        surface.blit(logo_b, logo_b.get_rect(center=(logo_b_x + toss_x, logo_y + toss_y)))
+
+        # VS badge in between
+        vs_y = logo_y + toss_y // 2
+        vr = max(45, int(75 * scale))
         vs_s = pygame.Surface((vr * 4, vr * 4), pygame.SRCALPHA)
         vc = vr * 2
         pygame.draw.circle(vs_s, (255, 220, 100, int(88 * glow_strength)), (vc, vc), int(vr * 1.9))
@@ -772,23 +859,29 @@ class MarbleRaceRenderer:
         vs_t.set_alpha(int(255 * content_alpha))
         surface.blit(vs_t, vs_t.get_rect(center=(cx, vs_y)))
 
-        # 7) Bottom context text (league / tournament context if available)
-        league_a = str(team_a.get("league_name", "")).strip()
-        league_b = str(team_b.get("league_name", "")).strip()
-        if league_a and league_a == league_b:
-            context_text = league_a.upper()
-        elif league_a and league_b:
-            context_text = f"{league_a.upper()} vs {league_b.upper()}"
-        elif league_a:
-            context_text = league_a.upper()
-        elif league_b:
-            context_text = league_b.upper()
-        else:
-            context_text = ""
-        if context_text:
-            ctx = self.info_font.render(context_text, True, (180, 196, 220))
-            ctx.set_alpha(int(200 * content_alpha))
-            surface.blit(ctx, ctx.get_rect(center=(cx, h - 84)))
+        # Logo Names
+        name_w = 380
+        name_a = self._fit_text(self.hook_team_font, team_a["name"], name_w, (252, 253, 255))
+        name_b = self._fit_text(self.hook_team_font, team_b["name"], name_w, (252, 253, 255))
+        name_a_shadow = self._fit_text(self.hook_team_font, team_a["name"], name_w, (0, 0, 0))
+        name_b_shadow = self._fit_text(self.hook_team_font, team_b["name"], name_w, (0, 0, 0))
+        if abs(scale - 1.0) > 0.01:
+            s_name = max(0.3, scale)
+            name_a = pygame.transform.smoothscale(name_a, (max(1, int(name_a.get_width() * s_name)), max(1, int(name_a.get_height() * s_name))))
+            name_b = pygame.transform.smoothscale(name_b, (max(1, int(name_b.get_width() * s_name)), max(1, int(name_b.get_height() * s_name))))
+            name_a_shadow = pygame.transform.smoothscale(name_a_shadow, (max(1, int(name_a_shadow.get_width() * s_name)), max(1, int(name_a_shadow.get_height() * s_name))))
+            name_b_shadow = pygame.transform.smoothscale(name_b_shadow, (max(1, int(name_b_shadow.get_width() * s_name)), max(1, int(name_b_shadow.get_height() * s_name))))
+        name_a.set_alpha(int(255 * content_alpha))
+        name_b.set_alpha(int(255 * content_alpha))
+        name_a_shadow.set_alpha(int(130 * content_alpha))
+        name_b_shadow.set_alpha(int(130 * content_alpha))
+        
+        na_pos = (logo_a_x - toss_x, logo_y + 190 + toss_y)
+        nb_pos = (logo_b_x + toss_x, logo_y + 190 + toss_y)
+        surface.blit(name_a_shadow, name_a_shadow.get_rect(center=(na_pos[0] + 3, na_pos[1] + 4)))
+        surface.blit(name_b_shadow, name_b_shadow.get_rect(center=(nb_pos[0] + 3, nb_pos[1] + 4)))
+        surface.blit(name_a, name_a.get_rect(center=na_pos))
+        surface.blit(name_b, name_b.get_rect(center=nb_pos))
 
     def _hook_anim_values(self, progress: float) -> dict:
         """Timeline: 0.0-0.3 entry, 0.3-0.8 peak pulse, 0.8-1.0 full fade-out."""

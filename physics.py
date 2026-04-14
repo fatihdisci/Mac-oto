@@ -92,14 +92,28 @@ class PegStaticRuntime:
     is_visible: bool = True
 
 
+@dataclass
+class GearRuntime:
+    gear_id: int
+    body: pymunk.Body
+    pivot: pymunk.PivotJoint
+    motor: pymunk.SimpleMotor
+    radius: float
+    spoke_count: int
+    spoke_shapes: List[pymunk.Shape]
+
+
+
 class MarbleRacePhysics:
     COLLISION_TYPE_BALL = 1
     COLLISION_TYPE_POWER_ZONE = 40
+    COLLISION_TYPE_BUMPER = 2
 
     def __init__(self, cfg: SimulationConfig, match_selection: MatchSelection) -> None:
         self.cfg = cfg
         self.match_selection = match_selection
         self.engine_mode = (match_selection.engine_mode or "power_pegs").strip().lower()
+        self.gear_mode_enabled = self.engine_mode == "football_gears"
         self.var_mode_enabled = self.engine_mode == "football_var"
         self.guided_mode_enabled = self.engine_mode == "football_result_guided_test"
         self.shifting_rows_enabled = self.engine_mode in {
@@ -188,6 +202,11 @@ class MarbleRacePhysics:
         # Sıralı spawn: B topu A'dan 0.4s sonra düşer
         self._pending_b_timer: float = -1.0
 
+        self.gears: List[GearRuntime] = []
+        self._gear_deflectors: List[dict] = []  # Kenar deflektör çizgileri (çizim için)
+        self._gear_bumpers: List[dict] = []     # Statik bumper çivileri (çizim için)
+        self._bumper_hits: List[dict] = []      # Bumper flash event listesi
+
         # Alt boşluk tanımları
         self.gaps: List[GapDefinition] = self._build_gap_definitions()
         if self.power_zones_enabled:
@@ -196,6 +215,7 @@ class MarbleRacePhysics:
         # Çarpışma spark verileri (partikül sistemi için)
         self._collision_sparks: List[dict] = []
         self._register_spark_collision_callback()
+        self._register_bumper_collision_callback()
 
         # Dünya kur
         self._build_world()
@@ -364,6 +384,10 @@ class MarbleRacePhysics:
             "shifting_rows_enabled": self.shifting_rows_enabled,
             "blinking_pegs_enabled": self.blinking_pegs_enabled,
             "peg_draw_data": self._build_peg_draw_data(),
+            "gear_draw_data": self._build_gear_draw_data(),
+            "gear_deflectors": self._gear_deflectors if self.gear_mode_enabled else [],
+            "gear_bumpers": self._gear_bumpers if self.gear_mode_enabled else [],
+            "gear_bumper_hits": list(self._bumper_hits) if self.gear_mode_enabled else [],
             "power_zone_draw_data": self._build_power_zone_draw_data(),
             "physics_time_seconds": self._sim_time,
             "finished": self.simulation_finished,
@@ -375,9 +399,127 @@ class MarbleRacePhysics:
     def _build_world(self) -> None:
         self._build_side_walls()
         self._build_bottom_floor_with_gaps()
-        self._build_pegs()
+        if self.gear_mode_enabled:
+            self._build_gears()
+        else:
+            self._build_pegs()
         if self.power_zones_enabled:
             self._build_power_zones()
+
+    def _build_gears(self) -> None:
+        self.gears = []
+        static_body = self.space.static_body
+        cx = self.cfg.playfield_center_x
+        left = self.cfg.playfield_left
+        right = self.cfg.playfield_right
+
+        # Oyun alanı: left=70, right=1010, cx=540, genişlik=940
+        # Top radius=34. Büyük çarklar, brick (tuğla) deseni — boşluk bırakmaz.
+        # Satır A (tek): 3 büyük çark   sütunlarda sol/orta/sağ
+        # Satır B (çift): 2 orta çark   araya girer
+        # 4 katman: A-B-A-B
+
+        rA = 105   # büyük çark kol uzunluğu
+        rB = 95    # ara çark kol uzunluğu (yeterince büyük görünsün)
+
+        # A satırı sütunları — kenar çarkları duvara çakışmasın: rA + top_r + güvenlik
+        # top_r=34, güvenlik=20 → left + rA + 54
+        margin = self.cfg.physics.ball_radius + 20   # 54px
+        cA_l = left  + rA + margin   # ~229
+        cA_c = cx                     # 540
+        cA_r = right - rA - margin    # ~851
+
+        # B satırı sütunları: A boşluklarının ortası
+        cB_l = (cA_l + cA_c) // 2  # ~384
+        cB_r = (cA_c + cA_r) // 2  # ~695
+
+        # y koordinatları — HUD alt kenarı ~390px, ilk çark merkezi 390+rA+65 = 560
+        y1 = 560
+        y2 = 880
+        y3 = 1190
+        y4 = 1490
+
+        # Komşu çarklar her zaman zıt yönde döner — kaotik saçılma sağlar
+        # Aynı satırda yanyana = zıt, üst-alt = zıt → hiçbir yön baskın olmaz
+        # Hızlar da hafif farklı (1.6-2.2 arası)
+        # (x, y, radius, spokes, motor_rate)
+        layout = [
+            # Satır 1 — A (3 büyük): sol+, orta-, sağ+
+            (cA_l, y1, rA, 6,  1.7),
+            (cA_c, y1, rA, 6, -2.1),
+            (cA_r, y1, rA, 6,  1.9),
+            # Satır 2 — B (2 orta): zıt satır 1'e
+            (cB_l, y2, rB, 6, -1.8),
+            (cB_r, y2, rB, 6,  2.0),
+            # Satır 3 — A (3 büyük): satır 1'e zıt
+            (cA_l, y3, rA, 6, -2.0),
+            (cA_c, y3, rA, 6,  1.7),
+            (cA_r, y3, rA, 6, -1.9),
+            # Satır 4 — B (2 orta): zıt satır 2'ye
+            (cB_l, y4, rB, 6,  2.1),
+            (cB_r, y4, rB, 6, -1.8),
+        ]
+
+        for i, (x, y, radius, spokes, rate) in enumerate(layout):
+            mass = 8.0
+            moment = pymunk.moment_for_circle(mass, 0, radius)
+            body = pymunk.Body(mass, moment)
+            body.position = (x, y)
+
+            # Sadece kollar — merkezden uca, hub yok
+            spoke_shapes = []
+            for s in range(spokes):
+                angle = (s / spokes) * math.tau
+                spoke = pymunk.Segment(
+                    body,
+                    (0, 0),
+                    (radius * math.cos(angle), radius * math.sin(angle)),
+                    4,
+                )
+                spoke.elasticity = 0.4
+                spoke.friction = 0.65
+                spoke_shapes.append(spoke)
+
+            pivot = pymunk.PivotJoint(static_body, body, (x, y), (0, 0))
+            motor = pymunk.SimpleMotor(static_body, body, rate)
+            motor.max_force = 8e6
+
+            self.space.add(body, *spoke_shapes, pivot, motor)
+
+            self.gears.append(
+                GearRuntime(
+                    gear_id=i,
+                    body=body,
+                    pivot=pivot,
+                    motor=motor,
+                    radius=radius,
+                    spoke_count=spokes,
+                    spoke_shapes=spoke_shapes,
+                )
+            )
+
+        self._gear_deflectors = []
+
+        # Bumper çivileri — sadece kritik boşluklara, az sayıda
+        # A-B aralarına birer tane, soldaki ve sağdaki boşluğa
+        br = 20   # bumper yarıçapı
+        bumper_positions = [
+            # Satır 1-2 arası boşluklar (B'nin yokluğu)
+            (cA_l,                (y1 + y2) // 2),   # sol sütun ortası
+            (cA_r,                (y1 + y2) // 2),   # sağ sütun ortası
+            # Satır 2-3 arası boşluklar (A'nın olmadığı B sütunları arası)
+            (cA_c,                (y2 + y3) // 2),   # tam orta
+            # Satır 3-4 arası
+            (cA_l,                (y3 + y4) // 2),
+            (cA_r,                (y3 + y4) // 2),
+        ]
+        self._gear_bumpers = [{"x": x, "y": y, "r": br} for x, y in bumper_positions]
+        for bx, by in bumper_positions:
+            shape = pymunk.Circle(static_body, br, offset=(bx, by))
+            shape.elasticity = 1.1   # sert sekme
+            shape.friction = 0.1
+            shape.collision_type = self.COLLISION_TYPE_BUMPER
+            self.space.add(shape)
 
     def _build_side_walls(self) -> None:
         static_body = self.space.static_body
@@ -643,6 +785,9 @@ class MarbleRacePhysics:
             peg.shape.sensor = not is_visible
 
     def _build_peg_draw_data(self) -> List[dict]:
+        if self.gear_mode_enabled:
+            return []
+        
         if self._static_pegs:
             return [
                 {"x": peg.x, "y": peg.y}
@@ -664,6 +809,22 @@ class MarbleRacePhysics:
                 if left_visible <= x <= right_visible:
                     draw_data.append({"x": x, "y": row.y})
 
+        return draw_data
+
+    def _build_gear_draw_data(self) -> List[dict]:
+        if not self.gear_mode_enabled or not self.gears:
+            return []
+
+        draw_data = []
+        for gear in self.gears:
+            draw_data.append({
+                "gear_id": gear.gear_id,
+                "x": float(gear.body.position.x),
+                "y": float(gear.body.position.y),
+                "angle": float(gear.body.angle),
+                "radius": gear.radius,
+                "spoke_count": gear.spoke_count
+            })
         return draw_data
 
     def _register_power_collision_callbacks(self) -> None:
@@ -689,6 +850,39 @@ class MarbleRacePhysics:
                 return
             handler = self.space.add_default_collision_handler()
             handler.post_solve = self._handle_spark_collision
+        except Exception:
+            pass
+
+    def _register_bumper_collision_callback(self) -> None:
+        """Bumper'a top çarpınca flash event üretir."""
+        try:
+            handler = self.space.add_collision_handler(
+                self.COLLISION_TYPE_BALL, self.COLLISION_TYPE_BUMPER
+            )
+            handler.post_solve = self._handle_bumper_collision
+        except Exception:
+            pass
+
+    def _handle_bumper_collision(self, arbiter, _space=None, _data=None) -> None:
+        try:
+            impulse_mag = float((arbiter.total_impulse.x**2 + arbiter.total_impulse.y**2)**0.5)
+            if impulse_mag < 80.0:
+                return
+            # Bumper shape'i bul, merkez koordinatını al
+            for shape in arbiter.shapes:
+                if getattr(shape, "collision_type", 0) == self.COLLISION_TYPE_BUMPER:
+                    offset = shape.offset
+                    bx = float(shape.body.position.x + offset.x)
+                    by = float(shape.body.position.y + offset.y)
+                    self._bumper_hits.append({
+                        "x": bx, "y": by,
+                        "time": float(self._sim_time),
+                        "impulse": min(1.0, impulse_mag / 600.0),
+                    })
+                    break
+            # Flash listesini kısa tut
+            if len(self._bumper_hits) > 32:
+                self._bumper_hits = self._bumper_hits[-24:]
         except Exception:
             pass
 
