@@ -101,6 +101,7 @@ class GearRuntime:
     radius: float
     spoke_count: int
     spoke_shapes: List[pymunk.Shape]
+    is_alternating: bool = False
 
 
 
@@ -439,25 +440,25 @@ class MarbleRacePhysics:
         y3 = 1190
         y4 = 1490
 
-        # Komşu çarklar her zaman zıt yönde döner — kaotik saçılma sağlar
-        # Aynı satırda yanyana = zıt, üst-alt = zıt → hiçbir yön baskın olmaz
-        # Hızlar da hafif farklı (1.6-2.2 arası)
-        # (x, y, radius, spokes, motor_rate)
+        # (x, y, radius, spokes, motor_rate, is_alternating)
         layout = [
-            # Satır 1 — A (3 büyük): sol+, orta-, sağ+
-            (cA_l, y1, rA, 6,  1.7),
-            (cA_c, y1, rA, 6, -2.1),
-            (cA_r, y1, rA, 6,  1.9),
-            # Satır 2 — B (2 orta): zıt satır 1'e
-            (cB_l, y2, rB, 6, -1.8),
-            (cB_r, y2, rB, 6,  2.0),
-            # Satır 3 — A (3 büyük): satır 1'e zıt
-            (cA_l, y3, rA, 6, -2.0),
-            (cA_c, y3, rA, 6,  1.7),
-            (cA_r, y3, rA, 6, -1.9),
+            # Satır 1 — A (3 büyük):
+            (cA_l, y1, rA, 6,  1.7, False), # 1. satır sol -> saat yönü (pozitif)
+            (cA_c, y1, rA, 6,  2.1, True),  # 1. satır orta -> değişen
+            (cA_r, y1, rA, 6, -1.9, False), # 1. satır sağ -> saat yönünün tersi (negatif)
+            # Satır 2 — B (2 orta):
+            (cB_l, y2, rB, 6,  1.8, True),  # 2. satır sol -> değişen
+            (cB_r, y2, rB, 6,  2.0, True),  # 2. satır sağ -> değişen
+            # Satır 3 — A (3 büyük):
+            (cA_l, y3, rA, 6,  2.0, False), # 3. satır sol -> saat yönü (pozitif)
+            (cA_c, y3, rA, 6,  1.7, True),  # 3. satır orta -> değişen
+            (cA_r, y3, rA, 6, -1.9, False), # 3. satır sağ -> saat yönünün tersi (negatif)
         ]
 
-        for i, (x, y, radius, spokes, rate) in enumerate(layout):
+        for i, (x, y, radius, spokes, rate, is_alternating) in enumerate(layout):
+            if is_alternating:
+                rate = rate * self.rng.choice([1.0, -1.0])
+
             mass = 8.0
             moment = pymunk.moment_for_circle(mass, 0, radius)
             body = pymunk.Body(mass, moment)
@@ -492,6 +493,7 @@ class MarbleRacePhysics:
                     radius=radius,
                     spoke_count=spokes,
                     spoke_shapes=spoke_shapes,
+                    is_alternating=is_alternating,
                 )
             )
 
@@ -1168,6 +1170,11 @@ class MarbleRacePhysics:
         self.latest_round_events = []
         if self.power_zones_enabled:
             self._reposition_power_pegs()
+
+        if self.gear_mode_enabled and self.current_round > 1:
+            for gear in self.gears:
+                if gear.is_alternating:
+                    gear.motor.rate = -gear.motor.rate
 
         self._spawn_ball_for_team(self.team_a, self.team_a_key)
         self._pending_b_timer = 0.4
