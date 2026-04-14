@@ -443,16 +443,16 @@ class MarbleRacePhysics:
         # (x, y, radius, spokes, motor_rate, is_alternating)
         layout = [
             # Satır 1 — A (3 büyük):
-            (cA_l, y1, rA, 6,  1.7, False), # 1. satır sol -> saat yönü (pozitif)
+            (cA_l, y1, rA, 6, -1.7, False), # 1. satır sol -> saat yönü (negatif)
             (cA_c, y1, rA, 6,  2.1, True),  # 1. satır orta -> değişen
-            (cA_r, y1, rA, 6, -1.9, False), # 1. satır sağ -> saat yönünün tersi (negatif)
+            (cA_r, y1, rA, 6,  1.9, False), # 1. satır sağ -> saat yönünün tersi (pozitif)
             # Satır 2 — B (2 orta):
             (cB_l, y2, rB, 6,  1.8, True),  # 2. satır sol -> değişen
             (cB_r, y2, rB, 6,  2.0, True),  # 2. satır sağ -> değişen
             # Satır 3 — A (3 büyük):
-            (cA_l, y3, rA, 6,  2.0, False), # 3. satır sol -> saat yönü (pozitif)
+            (cA_l, y3, rA, 6, -2.0, False), # 3. satır sol -> saat yönü (negatif)
             (cA_c, y3, rA, 6,  1.7, True),  # 3. satır orta -> değişen
-            (cA_r, y3, rA, 6, -1.9, False), # 3. satır sağ -> saat yönünün tersi (negatif)
+            (cA_r, y3, rA, 6,  1.9, False), # 3. satır sağ -> saat yönünün tersi (pozitif)
         ]
 
         for i, (x, y, radius, spokes, rate, is_alternating) in enumerate(layout):
