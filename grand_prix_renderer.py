@@ -472,17 +472,44 @@ class GrandPrixRenderer:
         if not path.exists():
             raise FileNotFoundError(path)
         image = Image.open(path).convert("RGBA")
-        image.thumbnail((size, size), Image.Resampling.LANCZOS)
+        
+        # 1) Auto-crop
+        bbox = image.getbbox()
+        if bbox:
+            image = image.crop(bbox)
+            
+        # 2) Calculate smart scale
+        orig_w, orig_h = image.size
+        aspect = orig_w / orig_h
+        target_inner = size - 4
+        
+        if 0.85 <= aspect <= 1.15:
+            draw_w, draw_h = target_inner, target_inner
+        elif aspect < 0.85:
+            draw_h = target_inner
+            draw_w = int(draw_h * aspect)
+        else:
+            draw_w = target_inner
+            draw_h = int(draw_w / aspect)
+
+        image.thumbnail((draw_w, draw_h), Image.Resampling.LANCZOS)
         image = image.filter(ImageFilter.UnsharpMask(radius=1.2, percent=160, threshold=2))
+        
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         canvas.paste(image, ((size - image.width) // 2, (size - image.height) // 2), image)
+        
         surface = pygame.image.fromstring(canvas.tobytes(), canvas.size, canvas.mode).convert_alpha()
+        
+        center = (size // 2, size // 2)
+        radius = size // 2 - 2
         mask = pygame.Surface((size, size), pygame.SRCALPHA)
-        pygame.draw.circle(mask, (255, 255, 255, 255), (size // 2, size // 2), size // 2)
+        pygame.draw.circle(mask, (255, 255, 255, 255), center, radius)
+        
         cropped = pygame.Surface((size, size), pygame.SRCALPHA)
         cropped.blit(surface, (0, 0))
         cropped.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-        pygame.draw.circle(cropped, (247, 249, 252, 220), (size // 2, size // 2), size // 2, width=2)
+        
+        pygame.draw.circle(cropped, (247, 249, 252, 220), center, radius, width=2)
         return cropped
 
     def _build_placeholder_logo(self, team_name: str, size: int) -> pygame.Surface:

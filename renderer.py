@@ -801,8 +801,8 @@ class MarbleRaceRenderer:
         surface.blit(overlay, (0, 0))
 
         # 2) Background color glow based on team colors
-        # Increase distance between logos as requested
-        logo_dist = 260
+        # Increase distance between logos even further as requested
+        logo_dist = 340
         logo_a_x = cx - logo_dist
         logo_b_x = cx + logo_dist
         logo_y = h // 2 + 50
@@ -811,8 +811,8 @@ class MarbleRaceRenderer:
         glow_surface = pygame.Surface((w, h), pygame.SRCALPHA)
         
         # Create gradient glow - Centered on logos
-        pygame.draw.circle(glow_surface, (*color_a[:3], int(70 * glow_strength)), (logo_a_x, logo_y), 480)
-        pygame.draw.circle(glow_surface, (*color_b[:3], int(70 * glow_strength)), (logo_b_x, logo_y), 480)
+        pygame.draw.circle(glow_surface, (*color_a[:3], int(70 * glow_strength)), (logo_a_x, logo_y), 500)
+        pygame.draw.circle(glow_surface, (*color_b[:3], int(70 * glow_strength)), (logo_b_x, logo_y), 500)
         
         surface.blit(glow_surface, (0, 0))
 
@@ -1213,8 +1213,34 @@ class MarbleRaceRenderer:
             raise FileNotFoundError(f"Logo bulunamadi: {path}")
 
         image = Image.open(path).convert("RGBA")
-        # Reduce padding (was -10, now -4) to make logo fill more of the circle
-        image.thumbnail((size - 4, size - 4), Image.Resampling.LANCZOS)
+        
+        # 1) Auto-crop transparent borders
+        bbox = image.getbbox()
+        if bbox:
+            image = image.crop(bbox)
+            
+        # 2) Calculate smart scale
+        # We want to fit the logo inside a circle of radius R = size/2 - 3
+        # Standard thumbnail preserves aspect ratio.
+        # For non-square logos (like crests), thumbnail makes them look small.
+        orig_w, orig_h = image.size
+        aspect = orig_w / orig_h
+        
+        target_inner = size - 6 # Leave a tiny bit of breath
+        
+        if 0.85 <= aspect <= 1.15:
+            # Nearly square: standard fit
+            draw_w, draw_h = target_inner, target_inner
+        elif aspect < 0.85:
+            # Narrow/Tall (Liverpool etc.): Fit to height, but allow slight width expansion
+            draw_h = target_inner
+            draw_w = int(draw_h * aspect)
+        else:
+            # Wide: Fit to width
+            draw_w = target_inner
+            draw_h = int(draw_w / aspect)
+            
+        image.thumbnail((draw_w, draw_h), Image.Resampling.LANCZOS)
         image = image.filter(ImageFilter.UnsharpMask(radius=1.6, percent=165, threshold=2))
 
         canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
