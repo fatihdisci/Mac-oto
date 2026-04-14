@@ -10,7 +10,7 @@ from team_repository import TeamRepository
 
 
 class GrandPrixManager:
-    SUPPORTED_TEAM_COUNTS = {4, 8, 16, 32}
+    SUPPORTED_TEAM_COUNTS = {2, 4, 8, 12, 16, 18, 20, 24, 32}
     SUPPORTED_ROUND_COUNTS = {5, 10, 15, 20, 25, 30}
     HOLE_COUNT = 12
     HOLE_VALUE_TEMPLATE = (-5, -3, -2, -1, 0, 1, 2, 3, 4, 5, 7, 10)
@@ -41,7 +41,7 @@ class GrandPrixManager:
             unique_team_keys.append(clean_key)
 
         if len(unique_team_keys) not in self.SUPPORTED_TEAM_COUNTS:
-            raise ValueError("Grand Prix 4, 8, 16 veya 32 takimla baslatilabilir.")
+            raise ValueError(f"Grand Prix {sorted(list(self.SUPPORTED_TEAM_COUNTS))} takimla baslatilabilir.")
 
         missing = [key for key in unique_team_keys if self.repository.get_team_by_key(key) is None]
         if missing:

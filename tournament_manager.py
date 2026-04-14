@@ -12,7 +12,7 @@ from team_repository import TeamRepository
 
 
 class TournamentManager:
-    SUPPORTED_SIZES = {4, 8, 16, 32, 48}
+    SUPPORTED_SIZES = {2, 4, 8, 16, 32, 48}
     SUPPORTED_MODES = {"elimination", "playoff"}
 
     def __init__(self, data_dir: Path, repository: TeamRepository) -> None:
@@ -31,7 +31,7 @@ class TournamentManager:
     ) -> dict[str, Any]:
         clean_name = (name or "").strip() or "Untitled Tournament"
         if format_size not in self.SUPPORTED_SIZES:
-            raise ValueError("Desteklenmeyen format. Sadece 4, 8, 16, 32 veya 48 secilebilir.")
+            raise ValueError(f"Desteklenmeyen format. Sadece {sorted(list(self.SUPPORTED_SIZES))} secilebilir.")
         if tournament_mode not in self.SUPPORTED_MODES:
             raise ValueError("Desteklenmeyen turnuva modu.")
 
@@ -405,7 +405,7 @@ class TournamentManager:
             state["champion_team_key"] = finals[0].get("winner_team_key")
 
     def _build_matches(self, format_size: int, ordered_team_keys: list[str], wins_needed: int) -> list[dict[str, Any]]:
-        if format_size in {4, 8, 16, 32}:
+        if format_size in {2, 4, 8, 16, 32}:
             return self._build_power_two_knockout(
                 ordered_team_keys=ordered_team_keys,
                 wins_needed=wins_needed,

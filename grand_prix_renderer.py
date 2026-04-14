@@ -342,9 +342,28 @@ class GrandPrixRenderer:
         surface.blit(sub, sub.get_rect(center=(box_rect.centerx, box_rect.y + 194)))
 
     def _draw_intro_overlay(self, surface: pygame.Surface, snapshot: dict[str, Any]) -> None:
-        panel = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-        panel.fill((6, 10, 20, 128))
-        surface.blit(panel, (0, 0))
+        intro_rem = float(snapshot.get("intro_remaining", 3.5))
+        intro_dur = float(snapshot.get("intro_duration", 3.5))
+        elapsed = max(0.0, intro_dur - intro_rem)
+        
+        # Fade out phase (last 0.8 seconds of intro)
+        fade_out_start = intro_dur - 0.8
+        element_alpha = 255
+        bg_darkness = 180 # Initial darkness
+        
+        if elapsed > fade_out_start:
+            # Transition from intro to action
+            progress = (elapsed - fade_out_start) / 0.8
+            element_alpha = int(255 * (1.0 - progress))
+            bg_darkness = int(180 * (1.0 - progress))
+            
+        if bg_darkness > 0:
+            panel = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+            panel.fill((6, 10, 20, bg_darkness))
+            surface.blit(panel, (0, 0))
+
+        if element_alpha <= 0:
+            return
 
         display_title = snapshot.get('title')
         if not display_title or str(display_title).strip() == "":
@@ -356,21 +375,19 @@ class GrandPrixRenderer:
         intro_str = f"{display_title}".upper()
         # Draw shadow
         title_shadow = self.overlay_font.render(intro_str, True, (0, 0, 0))
+        title_shadow.set_alpha(element_alpha)
         shadow_rect = title_shadow.get_rect(center=(cx + 4, h // 2 - 316))
         surface.blit(title_shadow, shadow_rect)
         
         # Draw main title
         title = self.overlay_font.render(intro_str, True, (255, 230, 100))
+        title.set_alpha(element_alpha)
         title_rect = title.get_rect(center=(cx, h // 2 - 320))
         surface.blit(title, title_rect)
 
         # Teams grid
         teams = snapshot.get("teams", [])
         num_teams = len(teams)
-        
-        intro_rem = float(snapshot.get("intro_remaining", 3.5))
-        intro_dur = float(snapshot.get("intro_duration", 3.5))
-        elapsed = max(0.0, intro_dur - intro_rem)
         
         if num_teams > 0:
             import math
@@ -399,13 +416,13 @@ class GrandPrixRenderer:
                 
                 logo = self._get_logo_surface(team["name"], team.get("badge_file", ""), logo_size)
                 
-                alpha = int(255 * anim_p)
+                logo_alpha = int(element_alpha * anim_p)
                 s = max(0.01, anim_p)
                 if abs(s - 1.0) > 0.01:
                     scaled_logo = pygame.transform.smoothscale(logo, (int(logo_size * s), int(logo_size * s)))
                 else:
                     scaled_logo = logo
-                scaled_logo.set_alpha(alpha)
+                scaled_logo.set_alpha(logo_alpha)
                 
                 surface.blit(scaled_logo, scaled_logo.get_rect(center=(tx, ty)))
 
@@ -415,7 +432,7 @@ class GrandPrixRenderer:
         
         # Scale and alpha for pulse effect
         scale = 1.0 + 0.5 * pulse
-        alpha = int(120 + 135 * pulse)
+        cd_alpha = int((120 + 135 * pulse) * (element_alpha / 255.0))
         
         countdown_text = self.overlay_font.render(str(max(1, countdown_num)), True, (248, 249, 252))
         cw, ch = countdown_text.get_width(), countdown_text.get_height()
@@ -427,7 +444,7 @@ class GrandPrixRenderer:
         else:
             scaled_cd = countdown_text
             
-        scaled_cd.set_alpha(alpha)
+        scaled_cd.set_alpha(cd_alpha)
         surface.blit(scaled_cd, scaled_cd.get_rect(center=(cx, h // 2 + 280)))
 
     def _draw_glass_panel(

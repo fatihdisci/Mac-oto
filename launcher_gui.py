@@ -70,12 +70,12 @@ POP_ENGINE_MODE_ITEMS: list[tuple[str, str]] = [
     if value.startswith("pop_") or value == "pop_shift"
 ]
 
-TOURNAMENT_FORMAT_VALUES = ["4", "8", "16", "32", "48"]
+TOURNAMENT_FORMAT_VALUES = ["2", "4", "8", "16", "32", "48"]
 TOURNAMENT_MODE_LABEL_TO_VALUE = {
     "Eleme Usulu": "elimination",
     "Playoff (Tek Ayak + ET/PEN)": "playoff",
 }
-GRAND_PRIX_TEAM_COUNT_VALUES = ["2", "4", "8", "16", "18", "20", "24", "32"]
+GRAND_PRIX_TEAM_COUNT_VALUES = ["2", "4", "8", "12", "16", "18", "20", "24", "32"]
 GRAND_PRIX_ROUND_COUNT_VALUES = ["5", "10", "15", "20", "25", "30"]
 
 
