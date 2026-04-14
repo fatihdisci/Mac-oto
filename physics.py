@@ -502,23 +502,25 @@ class MarbleRacePhysics:
         # Bumper çivileri — sadece kritik boşluklara, az sayıda
         br = 20   # normal bumper yarıçapı
         bumper_positions = [
-            # Satır 1 (A) ve 2 (B) arası -> A'nın boşluk hizası (çarklar topu ezmesin diye y aşağı kaydırıldı)
-            (cA_l, 770, br, 1.1),
-            (cA_c, 770, br, 1.1),
-            (cA_r, 770, br, 1.1),
+            # Satır 1 (A) ve 2 (B) arası -> A'nın boşluk hizası
+            (cA_l, 770, br, 1.1, False),
+            (cA_c, 770, br, 1.1, False),
+            (cA_r, 770, br, 1.1, False),
             # Satır 2 (B) ve 3 (A) arası -> B'nin boşluk hizası
-            (cB_l, 1070, br, 1.1),
-            (cB_r, 1070, br, 1.1),
+            (cB_l, 1070, br, 1.1, False),
+            (cB_r, 1070, br, 1.1, False),
             # Satır 3 (A) ve 4 (B) arası -> A'nın boşluk hizası
-            (cA_l, 1388, br, 1.1),
-            (cA_c, 1388, br, 1.1),
-            (cA_r, 1388, br, 1.1),
-            # Alt satırdaki iptal edilen 2 çarkın yerine normal boyutta, biraz daha aşağıda sekme sağlayan çiviler
-            (cB_l, y4 + 35, br, 1.55),
-            (cB_r, y4 + 35, br, 1.55),
+            (cA_l, 1388, br, 1.1, False),
+            (cA_c, 1388, br, 1.1, False),
+            (cA_r, 1388, br, 1.1, False),
+            # Alt satırdaki özel yüksek sekme sağlayan çiviler
+            (cB_l, y4 + 35, br, 1.55, True),
+            (cB_r, y4 + 35, br, 1.55, True),
         ]
-        self._gear_bumpers = [{"x": x, "y": y, "r": r} for x, y, r, e in bumper_positions]
-        for bx, by, r, e in bumper_positions:
+        self._gear_bumpers = []
+        for bx, by, r, e, hb in bumper_positions:
+            self._gear_bumpers.append({"x": bx, "y": by, "r": r, "high_bounce": hb})
+            
             shape = pymunk.Circle(static_body, r, offset=(bx, by))
             shape.elasticity = e   # yüksek sekme
             shape.friction = 0.1

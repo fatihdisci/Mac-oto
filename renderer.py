@@ -283,28 +283,47 @@ class MarbleRaceRenderer:
 
         for b in bumpers:
             bx, by, br = int(b["x"]), int(b["y"]), int(b["r"])
+            is_special = b.get("high_bounce", False)
             key = (bx, by)
             last_hit = hit_map.get(key, -999.0)
-            age = sim_time - last_hit   # saniye cinsinden ne kadar önce çarptı
-            flash = age < 0.12          # 120ms flash penceresi
+            age = sim_time - last_hit
+            flash = age < 0.12
 
-            if flash:
-                # Parlak sarı/beyaz dolgu
-                flash_t = 1.0 - (age / 0.12)
-                fc = int(255 * flash_t)
-                flash_color = (min(255, 180 + fc), min(255, 160 + fc), 60)
-                pygame.draw.circle(surface, (0, 0, 0, 0), (bx + 2, by + 2), br + 4)
-                pygame.draw.circle(surface, flash_color, (bx, by), br)
-                # Genişleyen halka
-                ring_r = br + int((0.12 - age) / 0.12 * 22)
-                ring_alpha = int(flash_t * 200)
-                ring_color = (255, 220, 80)
-                pygame.draw.circle(surface, ring_color, (bx, by), ring_r, 3)
+            if is_special:
+                # Özel çivi: Neon Turuncu/Sarı ve Glow
+                base_color = (255, 140, 0)
+                pulse = 0.5 + 0.5 * math.sin(sim_time * 8.0)
+                glow_r = br + 4 + int(6 * pulse)
+                
+                # Sabit Glow
+                glow_surf = pygame.Surface((glow_r * 2, glow_r * 2), pygame.SRCALPHA)
+                pygame.draw.circle(glow_surf, (255, 180, 0, int(60 + 40 * pulse)), (glow_r, glow_r), glow_r)
+                surface.blit(glow_surf, glow_surf.get_rect(center=(bx, by)))
+
+                if flash:
+                    flash_t = 1.0 - (age / 0.12)
+                    fc = int(255 * flash_t)
+                    # Çok daha şiddetli beyaz/turuncu parlama
+                    pygame.draw.circle(surface, (255, 255, 200), (bx, by), br + 2)
+                    ring_r = br + int((0.12 - age) / 0.12 * 45) # Daha büyük halka
+                    pygame.draw.circle(surface, (255, 200, 50), (bx, by), ring_r, 4)
+                else:
+                    pygame.draw.circle(surface, (40, 20, 0), (bx + 2, by + 2), br) # Gölge
+                    pygame.draw.circle(surface, base_color, (bx, by), br)
+                    pygame.draw.circle(surface, (255, 230, 150), (bx - 2, by - 2), br // 2) # Parlama noktası
             else:
-                # Normal çizim
-                pygame.draw.circle(surface, hub_sh_color, (bx + 2, by + 2), br)
-                pygame.draw.circle(surface, spoke_color,  (bx,     by    ), br)
-                pygame.draw.circle(surface, (220, 230, 245), (bx - 2, by - 2), max(2, br // 3))
+                # Normal Bumper
+                if flash:
+                    flash_t = 1.0 - (age / 0.12)
+                    fc = int(255 * flash_t)
+                    flash_color = (min(255, 180 + fc), min(255, 160 + fc), 60)
+                    pygame.draw.circle(surface, flash_color, (bx, by), br)
+                    ring_r = br + int((0.12 - age) / 0.12 * 22)
+                    pygame.draw.circle(surface, (255, 220, 80), (bx, by), ring_r, 3)
+                else:
+                    pygame.draw.circle(surface, hub_sh_color, (bx + 2, by + 2), br)
+                    pygame.draw.circle(surface, spoke_color,  (bx,     by    ), br)
+                    pygame.draw.circle(surface, (220, 230, 245), (bx - 2, by - 2), max(2, br // 3))
 
         surface.set_clip(None)
 
