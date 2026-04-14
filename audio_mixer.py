@@ -57,7 +57,7 @@ VOLUME = {
     "pop_end": 0.50,
     "background_music": 0.60,
     "crowd_ambient": 0.15,
-    "ball_hit_peg": 0.08,
+    "ball_hit_peg": 0.45,
 }
 
 # Fade ayarları (saniye)
