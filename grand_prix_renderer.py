@@ -208,12 +208,19 @@ class GrandPrixRenderer:
 
         # Takım sayısına göre layout parametreleri
         if is_vertical:
-            if team_count <= 8:
-                # 2, 4 veya 8 takım için dikey modda çok daha büyük fontlar ve satırlar
-                row_h = 80 if team_count <= 4 else 60
-                logo_size = 54 if team_count <= 4 else 42
-                name_font = self.section_font # 28px
-                pts_font = self.section_font # 28px
+            if team_count <= 4:
+                # 2-4 takım: dikey modda büyük fontlar ve satırlar
+                row_h = 80
+                logo_size = 54
+                name_font = self.section_font  # 28px
+                pts_font = self.section_font  # 28px
+                columns, show_round_result = 1, False
+            elif team_count <= 8:
+                # 5-8 takım: panele sığması için daraltılmış satırlar
+                row_h = 46
+                logo_size = 34
+                name_font = self.team_font  # 24px
+                pts_font = self.team_font  # 24px
                 columns, show_round_result = 1, False
             else: # 16 or 32 takim
                 row_h, logo_size = 34, 22

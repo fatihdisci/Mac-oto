@@ -277,6 +277,10 @@ def mix_audio_into_video(
         )
         overlay_labels.append(f"[{label}]")
 
+    # Hit sesleri için MP3 encoder delay'ini kesmek için atrim ekle (yaklaşık 25ms sessizlik)
+    HIT_TYPES = {"ball_hit_peg", "hit"}
+    HIT_TRIM = "atrim=start=0.025,asetpts=PTS-STARTPTS,"
+
     # Event ses efektleri (her unique inputu ihtiyac kadar split et)
     sfx_total_count = 0
     for p in unique_sfx_paths:
@@ -294,6 +298,7 @@ def mix_audio_into_video(
                 
                 delay_ms = int(evt["time"] * 1000)
                 vol = evt["volume"]
+                trim_prefix = HIT_TRIM if evt["type"] in HIT_TYPES else ""
                 
                 if evt["type"] in {"goal", "pop_point", "pop_end"}:
                     filter_parts.append(
@@ -302,7 +307,7 @@ def mix_audio_into_video(
                     )
                 else:
                     filter_parts.append(
-                        f"[{in_label}]volume={vol},"
+                        f"[{in_label}]{trim_prefix}volume={vol},"
                         f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{out_label}]"
                     )
                 overlay_labels.append(f"[{out_label}]")
@@ -314,9 +319,10 @@ def mix_audio_into_video(
             
             delay_ms = int(evt["time"] * 1000)
             vol = evt["volume"]
+            trim_prefix = HIT_TRIM if evt["type"] in HIT_TYPES else ""
             
             filter_parts.append(
-                f"[{idx}:a]volume={vol},"
+                f"[{idx}:a]{trim_prefix}volume={vol},"
                 f"adelay={delay_ms}|{delay_ms},apad=whole_dur={video_duration}[{out_label}]"
             )
             overlay_labels.append(f"[{out_label}]")
