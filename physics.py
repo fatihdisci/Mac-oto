@@ -592,7 +592,9 @@ class MarbleRacePhysics:
             pymunk.Segment(static_body, (right_gap.end_x, floor_y), (right_edge, floor_y - ramp_rise), thickness),
         ]
 
-        post_h = self.cfg.layout.gap_post_height
+        # Post'lar exit_line_y'nin altına kadar uzanmalı ki top gap'e girdikten
+        # sonra yana kayıp yanlış sınıflandırılmasın.
+        post_bottom = self.cfg.layout.exit_line_y + 60
         x_posts = [
             left_gap.start_x,
             left_gap.end_x,
@@ -603,7 +605,7 @@ class MarbleRacePhysics:
         ]
 
         post_segments = [
-            pymunk.Segment(static_body, (x, floor_y), (x, floor_y + post_h), thickness)
+            pymunk.Segment(static_body, (x, floor_y), (x, post_bottom), thickness)
             for x in x_posts
         ]
 
