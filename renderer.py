@@ -802,7 +802,7 @@ class MarbleRaceRenderer:
 
         # 2) Background color glow based on team colors
         # Increase distance between logos even further as requested
-        logo_dist = 340
+        logo_dist = 260
         logo_a_x = cx - logo_dist
         logo_b_x = cx + logo_dist
         logo_y = h // 2 + 50
@@ -893,8 +893,8 @@ class MarbleRaceRenderer:
         name_a_shadow.set_alpha(int(130 * content_alpha))
         name_b_shadow.set_alpha(int(130 * content_alpha))
         
-        na_pos = (logo_a_x - toss_x, logo_y + 190 + toss_y)
-        nb_pos = (logo_b_x + toss_x, logo_y + 190 + toss_y)
+        na_pos = (logo_a_x - toss_x, logo_y + 240 + toss_y)
+        nb_pos = (logo_b_x + toss_x, logo_y + 240 + toss_y)
         surface.blit(name_a_shadow, name_a_shadow.get_rect(center=(na_pos[0] + 3, na_pos[1] + 4)))
         surface.blit(name_b_shadow, name_b_shadow.get_rect(center=(nb_pos[0] + 3, nb_pos[1] + 4)))
         surface.blit(name_a, name_a.get_rect(center=na_pos))
