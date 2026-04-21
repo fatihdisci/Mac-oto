@@ -1,67 +1,89 @@
-# Mac-oto: Marble Race & Pop Culture Battle Simulation
+# ⚽ Mac-oto: Profesyonel Misket Futbolu & Yarış Simülatörü
 
-Bu proje, markaların, futbol takımlarının veya popüler kültür ikonlarının yarıştığı 2D fizik tabanlı bir misket yarışı simülatörüdür. TikTok, Reels ve Shorts gibi kısa formlu video platformları için yüksek kaliteli, dinamik ve heyecan verici içerikler üretmek üzere tasarlanmıştır.
+Mac-oto, TikTok, Reels ve YouTube Shorts gibi dikey video platformları için optimize edilmiş, Pymunk fizik motoru tabanlı gelişmiş bir 2D misket yarışı simülatörüdür. Gerçekçi fizik kuralları, dinamik skor sistemleri ve otomatik video prodüksiyon hattı ile yüksek kaliteli içerik üretimi sağlar.
 
-## 🚀 Temel Özellikler
+---
 
-- **Çoklu Motor Modları:** 
-  - **Football Mode:** VAR incelemeleri, devre arası sistemleri ve klasik futbol atmosferi.
-  - **Pop Culture Mode:** Marka savaşları, "Glitch" efektleri ve modern görsel stil.
-  - **Dinamik Engeller:** Shifting (kayan) ve Blinking (yanıp sönen) çivilerle zamanlama odaklı yarışlar.
-- **🏆 Grand Prix Sistemi:** 
-  - Puan tabloları, eleme turları ve dinamik turnuva isimleri ile profesyonel bir şampiyona deneyimi.
-- **🎵 Gelişmiş Ses Miksajı:** 
-  - Arka plan müzikleri (`fade-in/out`), ıslık sesleri, gol efektleri ve glitch seslerinin otomatik olarak videoya gömülmesi.
-- **🎨 Görsel Kalite:** 
-  - 1080x1920 (Dikey) çözünürlük, 60 FPS akıcılık.
-  - Cam (Glassmorphism) arayüz panelleri ve dinamik ışıklandırma.
-- **⚙️ Fizik Motoru:** 
-  - `Pymunk` tabanlı gerçek zamanlı fizik simülasyonu. Topların sıkışmasını engelleyen optimize edilmiş sürtünme ve zıplama ayarları.
+## 🌟 Öne Çıkan Özellikler
+
+*   **Gelişmiş Fizik Motoru:** Pymunk ile güçlendirilmiş, takılmaları önleyen (auto-recovery) akıllı top fiziği.
+*   **Çoklu Oyun Modu:** Standart lig maçlarından, kaotik çarklı arenalara ve büyük turnuvalara kadar geniş yelpaze.
+*   **Merkezi Prodüksiyon Hattı:** Ses miksajı, arka plan müziği ve Greenscreen (Like & Bell) efektlerini tek bir FFmpeg geçişinde birleştiren "Unified Post-Processing" sistemi.
+*   **Dinamik HUD & UI:** Glassmorphism etkili modern arayüz, 90 dakikalık maç saati simülasyonu ve canlı istatistikler.
+*   **VAR Sistemi:** Gol pozisyonlarını rastgele inceleyen ve iptal/onay kararı veren görsel VAR mekanizması.
+*   **Tension (Gerilim) Modu:** Maç sonuna doğru skor yakınsa devreye giren slow-motion ve ekran titreme efektleri.
+
+---
+
+## 🎮 Oyun Modları
+
+1.  **Standard & Guided:** Saf fizik deneyimi veya önceden belirlenen hedef skora (Guided) akıllıca yönlendiren profesyonel modlar.
+2.  **Rotating Arena (YENİ):** Pürüzsüz poligon çizimli, dönen bir çember içinde geçen, 90 dakikalık maç simülasyonuna sahip en yeni ve dinamik mod.
+3.  **Football VAR:** Gollerden sonra VAR incelemesi heyecanı katan mod.
+4.  **Football Gears:** Sahada dönen çarkların ve bumperların olduğu yüksek tempolu mod.
+5.  **Grand Prix:** Çoklu takımların (8+) yarıştığı, puan tabanlı turnuva serileri.
+6.  **Power Pegs:** Toplara hız veren veya yavaşlatan özel bölgelerin olduğu mod.
+
+---
 
 ## 🛠️ Kurulum
 
-Proje Windows ortamında kolayca kurulabilir:
+### Gereksinimler
+*   **Python 3.10+**
+*   **FFmpeg:** (Ses ve video birleştirme için zorunludur)
+    *   Windows: `winget install ffmpeg`
+    *   macOS: `brew install ffmpeg`
 
-1. **Python Kurulumu:** Bilgisayarınızda [Python 3.12+](https://www.python.org/downloads/) kurulu olduğundan emin olun.
-2. **Bağımlılıklar:** `kurum.bat` dosyasını çalıştırın. Bu script otomatik olarak bir sanal ortam oluşturacak ve gerekli tüm kütüphaneleri (`pygame`, `pymunk`, `customtkinter`, `moviepy` vb.) kuracaktır.
-3. **FFmpeg:** Ses miksajı için sisteminizde `ffmpeg` yüklü ve PATH'e ekli olmalıdır.
-
-## 🎮 Kullanım
-
-1. `00_Launcher.bat` dosyasını çalıştırarak ana kontrol panelini açın.
-2. **Mod Seçimi:** Sol panelden "Normal Match" veya "Grand Prix" sekmelerinden birini seçin.
-3. **Ayarlar:** 
-   - Takımları seçin veya rastgele atayın.
-   - Motor tipini (Normal, VAR, Shifting vb.) belirleyin.
-   - Turnuva veya maç ismini girin.
-4. **Başlat:** "START" veya "RUN" butonuna tıklayarak simülasyonu ve video üretimini başlatın.
-5. **Sonuç:** İşlem bittiğinde `output_sim_final.mp4` dosyası proje ana dizininde hazır olacaktır.
-
-## 🏗️ Proje Mimarisi ve Ayarlar
-
-### 1. Fizik ve Görüntü (`config.py`)
-Tüm sistem ayarları bu dosyada merkezi olarak tutulur:
-- `gravity_y`: Yerçekimi gücü (Varsayılan: 1850.0).
-- `ball_friction`: Top sürtünmesi (Varsayılan: 0.95).
-- `total_duration_seconds`: Üretilecek videonun uzunluğu (Varsayılan: 55sn).
-
-### 2. Ses Sistemi (`audio_mixer.py`)
-Ses seviyeleri (Volume) `VOLUME` sözlüğü üzerinden yönetilir:
-- `whistle_start`: 0.15 (Maç başlangıç ıslığı).
-- `bg_music`: 0.60 (Arka plan müziği).
-- `ambient`: 0.15 (Seyirci/Ortam sesi).
-
-### 3. Render Motorları
-- `renderer.py`: Standart maçların görselleştirilmesi.
-- `grand_prix_renderer.py`: Turnuva turlarının ve puan tablolarının görselleştirilmesi.
-
-## 📁 Dosya Yapısı
-- `launcher_gui.py`: Ana GUI kontrolcü.
-- `main.py`: Tekil maç yönetim scripti.
-- `run_grand_prix.py`: Turnuva yönetim scripti.
-- `physics_engine.py`: Fizik dünyasının kurallarını tanımlar.
-- `audio_mixer.py`: Ses kanallarını birleştiren FFmpeg köprüsü.
-- `data/`: Takım bilgileri, logolar ve ses dosyalarının bulunduğu dizin.
+### Adımlar
+1.  Depoyu klonlayın:
+    ```bash
+    git clone https://github.com/fatihdisci/Mac-oto.git
+    cd Mac-oto
+    ```
+2.  Bağımlılıkları yükleyin:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ---
-*Geliştirici Notu: Bu proje eğlence ve yüksek kaliteli sosyal medya içeriği üretimi için optimize edilmiştir.*
+
+## 🚀 Kullanım
+
+### Masaüstü Arayüzü (Önerilen)
+Tüm ayarları görsel olarak yapmak ve önizleme ile çalışmak için:
+```bash
+python launcher_gui.py
+```
+
+### Headless (Sunucu) Modu
+Sadece video üretmek için:
+```bash
+python main.py --headless
+```
+
+### Grand Prix (Turnuva) Çalıştırma
+```bash
+python run_grand_prix.py --vertical
+```
+
+---
+
+## 🎬 Otomatik Prodüksiyon Detayları
+
+Sistem, render işlemi bittikten sonra otomatik olarak şu işlemleri yapar:
+*   **Ses Miksajı:** Başlangıç/bitiş düdüğü, seyirci ambiyansı ve top çarpma sesleri (`ball_hit.mp3`) gecikmesiz (zero-latency) olarak eklenir.
+*   **Greenscreen Overlay:** Her videonun **20. saniyesinde** otomatik olarak `likebell.mp4` dosyası maskelenerek videoya eklenir ve bitince temiz bir şekilde kaldırılır.
+*   **GPU Hızlandırma:** NVIDIA ekran kartınız varsa, FFmpeg otomatik olarak `h264_nvenc` encoder'ını kullanarak işlem süresini 5 kat hızlandırır.
+
+---
+
+## 📁 Proje Yapısı
+*   `rotating_arena.py`: Dönen arena modu motoru ve render'ı.
+*   `audio_mixer.py`: Merkezi ses ve video birleştirme birimi.
+*   `physics.py`: Ana fizik motoru ve kural tanımları.
+*   `renderer.py`: Ana Pygame render motoru (Glass UI).
+*   `data/logos/`: Takım logolarının (PNG) bulunduğu dizin.
+*   `data/sounds/`: Ses efektlerinin bulunduğu dizin.
+
+---
+*Geliştirici Notu: Bu proje, sosyal medya içerik üreticileri için profesyonel ve otomatize bir çözüm sunmak üzere optimize edilmiştir.*
