@@ -335,9 +335,58 @@ def run_simulation(
     match_selection = repository.load_selected_match()
     if match_selection is None:
         raise FileNotFoundError(
-            "SeÃ§ili maÃ§ bulunamadÄ±.\n"
-            "Ã–nce match_selector.py Ã¼zerinden iki takÄ±m seÃ§ip kaydetmelisin."
+            "Seçili maç bulunamadı.\n"
+            "Önce match_selector.py üzerinden iki takım seçip kaydetmelisin."
         )
+
+    if getattr(match_selection, "engine_mode", None) == "rotating_arena":
+        import rotating_arena
+        cfg = build_default_config()
+        if fps_override is not None and int(fps_override) > 0:
+            cfg = replace(cfg, video=replace(cfg.video, fps=int(fps_override)))
+        video_preset = get_video_preset(getattr(match_selection, "video_preset", None))
+        
+        output_dir = cfg.base_dir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        video_filename = generate_output_filename(match_selection)
+        video_output_path = output_dir / video_filename
+        
+        # Build the config dictionary for rotating_arena.run:
+        ra_config = {
+            "width": cfg.video.width,
+            "height": cfg.video.height,
+            "fps": cfg.video.fps,
+            "duration_seconds": video_preset.total_duration_seconds,
+            "intro_seconds": video_preset.intro_seconds,
+            "outro_seconds": video_preset.outro_seconds,
+            "headless": headless,
+            "team_a": {
+                "name": match_selection.team_a.name,
+                "short_name": match_selection.team_a.short_name,
+                "score": 0,
+                "color": (220, 72, 72),
+                "badge_file": match_selection.team_a.badge_file or "",
+                "role": "A"
+            },
+            "team_b": {
+                "name": match_selection.team_b.name,
+                "short_name": match_selection.team_b.short_name,
+                "score": 0,
+                "color": (79, 137, 255),
+                "badge_file": match_selection.team_b.badge_file or "",
+                "role": "B"
+            },
+            "output_path": str(video_output_path),
+            "background_music_path": str(Path(__file__).resolve().parent / "data" / "sounds" / "normalbg.mp3")
+        }
+        
+        print("=" * 60)
+        print("ROTATING ARENA EXPORT BASLADI")
+        print(f"Eslesme              : {match_selection.title}")
+        print(f"Cikti                : {video_output_path}")
+        print("=" * 60)
+        final_path = rotating_arena.run(ra_config)
+        return Path(final_path)
 
     video_preset = get_video_preset(getattr(match_selection, "video_preset", None))
     cfg = replace(cfg, video=replace(cfg.video, total_duration_seconds=video_preset.total_duration_seconds))
@@ -1147,17 +1196,23 @@ def run_simulation(
 
     final_path = video_output_path.with_name(video_output_path.stem + "_final.mp4")
     try:
+        # Tek geçişte hem ses hem de 20. saniyedeki greenscreen'i işle
         result_path = mix_audio_into_video(
             video_path=video_output_path,
             event_timeline=audio_events,
             output_path=final_path,
             background_music_path=Path(__file__).resolve().parent / "data" / "sounds" / "normalbg.mp3",
+            overlay_video_path=Path(__file__).resolve().parent / "likebell.mp4",
+            overlay_start_time=20.0
         )
         print("=" * 60)
-        print("SES MIKSAJI TAMAMLANDI")
+        print("VIDEO ISLEME TAMAMLANDI (SES + GREENSCREEN)")
         print(f"Final video          : {result_path}")
         print("=" * 60)
         return result_path
+    except Exception as exc:
+        print(f"[AudioMixer] Hata: {exc}")
+        return video_output_path
     except Exception as exc:
         print(f"[AudioMixer] Ses miksaji basarisiz: {exc}")
         print(f"[AudioMixer] Sessiz video korunuyor: {video_output_path}")

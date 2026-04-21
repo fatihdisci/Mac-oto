@@ -218,6 +218,8 @@ def run_grand_prix(
             event_timeline=audio_events,
             output_path=final_path,
             background_music_path=cfg.data_dir / "sounds" / "grandprixbg.mp3",
+            overlay_video_path=cfg.base_dir / "likebell.mp4",
+            overlay_start_time=20.0
         )
     except Exception as exc:
         _safe_print(f"GRAND_PRIX_AUDIO_WARN:{exc}")
