@@ -360,6 +360,7 @@ def run_simulation(
             "intro_seconds": video_preset.intro_seconds,
             "outro_seconds": video_preset.outro_seconds,
             "headless": headless,
+            "title": match_selection.title,
             "team_a": {
                 "name": match_selection.team_a.name,
                 "short_name": match_selection.team_a.short_name,

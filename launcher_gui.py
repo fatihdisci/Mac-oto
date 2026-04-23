@@ -41,6 +41,7 @@ ENGINE_MODE_LABEL_TO_VALUE: dict[str, str] = {
     "5) Football Shifting (1st/2nd Half HUD, SlowFast Yok)": "football_shift",
     "6) Football Blinking (Sadece Blinking Pegs)": "football_blink",
     "7) Football Gears (Dişli Modu)": "football_gears",
+    "8) Football Rotating (Dönen Arena)": "rotating_arena",
 }
 ENGINE_MODE_VALUE_TO_LABEL: dict[str, str] = {value: label for label, value in ENGINE_MODE_LABEL_TO_VALUE.items()}
 ENGINE_MODE_VALUE_TO_LABEL.update(

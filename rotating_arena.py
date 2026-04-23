@@ -41,6 +41,7 @@ class RotatingArenaRenderer:
         self.team_font = pygame.font.SysFont("arial", 26, bold=True)
         self.info_font = pygame.font.SysFont("arial", 28, bold=False)
         self.micro_font = pygame.font.SysFont("arial", 20, bold=True)
+        self.title_font = pygame.font.SysFont("arial", 30, bold=True)
         self.clock_font = pygame.font.SysFont("arial", 52, bold=True)
         self.overlay_font = pygame.font.SysFont("arial", 84, bold=True)
         self.overlay_sub_font = pygame.font.SysFont("arial", 52, bold=True)
@@ -303,7 +304,12 @@ class RotatingArenaRenderer:
         pygame.draw.circle(glow_surface, (*color_b[:3], int(70 * glow_strength)), (logo_b_x, logo_y), 500)
         surface.blit(glow_surface, (0, 0))
         self._draw_hook_sparks(surface, progress, content_alpha * (0.6 + 0.4 * glow_intensity))
-        hook_text = "MATCH PREVIEW"
+        raw_title = str(snapshot.get("title", "")).strip()
+        if not raw_title:
+            hook_text = "MATCH PREVIEW"
+        else:
+            hook_text = raw_title.upper()
+
         max_text_width = w - 160
         hook_font = self.hook_mega_font
         rendered_width = hook_font.size(hook_text)[0]
@@ -466,6 +472,31 @@ class RotatingArenaRenderer:
         self.goal_flash_event = {"team_name": team_name, "color": color, "flash_text": "GOAL!"}
         self._spawn_confetti(color)
 
+    def _draw_header(self, surface: pygame.Surface, snapshot: dict) -> None:
+        cx = self.w // 2
+        panel_w = 480
+        panel_h = 52
+        panel_x = cx - panel_w // 2
+        panel_y = 28
+
+        self._draw_glass_panel(
+            surface,
+            pygame.Rect(panel_x, panel_y, panel_w, panel_h),
+            (9, 14, 22, 180),
+            (60, 78, 114, 200),
+            26,
+        )
+
+        raw_title = snapshot.get("title")
+        if not raw_title or str(raw_title).strip() == "":
+            title_text = "FOOTBALL RACE"
+        else:
+            title_text = str(raw_title).upper()
+            
+        title = self.title_font.render(title_text, True, (200, 208, 224))
+        title_rect = title.get_rect(center=(cx, panel_y + panel_h // 2))
+        surface.blit(title, title_rect)
+
     def draw_football_scoreboard(self, surface: pygame.Surface, snapshot: dict) -> None:
         teams = snapshot.get("teams", [])
         if len(teams) < 2: return
@@ -583,6 +614,7 @@ def run(config: dict) -> Path:
     
     output_path = Path(config.get("output_path", "output_arena.mp4"))
     bg_music = config.get("background_music_path", None)
+    match_title = config.get("title", "")
     
     space = pymunk.Space()
     space.gravity = (0, 0)
@@ -777,7 +809,8 @@ def run(config: dict) -> Path:
                 "teams": [team_a, team_b],
                 "match_clock_text": f"{sim_mins:02d}:{sim_secs:02d}",
                 "match_progress": match_progress,
-                "win_probabilities": {"team_a": max(0.1, team_a["score"]), "team_b": max(0.1, team_b["score"]), "draw": 0.5}
+                "win_probabilities": {"team_a": max(0.1, team_a["score"]), "team_b": max(0.1, team_b["score"]), "draw": 0.5},
+                "title": match_title
             }
             
             if time_sec < intro_seconds:
@@ -789,6 +822,7 @@ def run(config: dict) -> Path:
                 snapshot["final_result_progress"] = (time_sec - (duration_seconds - outro_seconds)) / outro_seconds
                 renderer._draw_finish_overlay(surface, snapshot)
             else:
+                renderer._draw_header(surface, snapshot)
                 renderer.draw_football_scoreboard(surface, snapshot)
 
             if not headless and screen is not None:
