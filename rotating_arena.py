@@ -30,12 +30,35 @@ class ConfettiParticle:
     angle: float = 0.0
     angular_vel: float = 0.0
 
+@dataclass
+class BallTailParticle:
+    x: float
+    y: float
+    vx: float
+    vy: float
+    color: Tuple[int, int, int]
+    size: float
+    lifetime: float
+    age: float = 0.0
+
+@dataclass
+class CollisionParticle:
+    x: float
+    y: float
+    vx: float
+    vy: float
+    color: Tuple[int, int, int]
+    size: float
+    lifetime: float
+    age: float = 0.0
+
 class RotatingArenaRenderer:
     def __init__(self, w: int, h: int, fps: int):
         self.w = w
         self.h = h
         self.fps = fps
         pygame.font.init()
+        # ... (fonts initialization)
         self.match_font = pygame.font.SysFont("arial", 32, bold=True)
         self.score_font = pygame.font.SysFont("arial", 72, bold=True)
         self.team_font = pygame.font.SysFont("arial", 26, bold=True)
@@ -57,6 +80,8 @@ class RotatingArenaRenderer:
         self.goal_flash_timer: float = 0.0
         self.goal_flash_event: dict | None = None
         self.confetti_particles: List[ConfettiParticle] = []
+        self.ball_tail_particles: List[BallTailParticle] = []
+        self.collision_particles: List[CollisionParticle] = []
         self._confetti_rng = random.Random()
         self._hook_sparks: List[dict] = []
         self._hook_sparks_ready = False
@@ -450,6 +475,95 @@ class RotatingArenaRenderer:
             alive.append(p)
         self.confetti_particles = alive
 
+    def _spawn_ball_particle(self, x: float, y: float, vx: float, vy: float, color: Tuple[int, int, int], radius: float):
+        rng = self._confetti_rng
+        dist = math.hypot(vx, vy)
+        if dist > 0.1:
+            nx = vx / dist
+            ny = vy / dist
+        else:
+            nx, ny = 0, 0
+        
+        # Start at the trailing edge (opposite to velocity)
+        start_x = x - nx * (radius * 0.85)
+        start_y = y - ny * (radius * 0.85)
+        
+        # Sadece ara sıra (yoğunluğu azaltmak için) partikül üret
+        if rng.random() > 0.4:
+            return
+
+        # Soft, subtle dust/trail effect (forced to white)
+        self.ball_tail_particles.append(BallTailParticle(
+            x=start_x + rng.uniform(-3, 3),
+            y=start_y + rng.uniform(-3, 3),
+            vx=-nx * rng.uniform(5, 10) + rng.uniform(-3, 3),
+            vy=-ny * rng.uniform(5, 10) + rng.uniform(-3, 3),
+            color=(255, 255, 255),
+            size=radius * rng.uniform(0.1, 0.2),
+            lifetime=rng.uniform(0.2, 0.4)
+        ))
+
+    def _draw_ball_particles(self, surface: pygame.Surface, dt: float):
+        alive = []
+        for p in self.ball_tail_particles:
+            p.age += dt
+            if p.age >= p.lifetime:
+                continue
+            p.x += p.vx * dt
+            p.y += p.vy * dt
+            
+            progress = p.age / p.lifetime
+            # Lower opacity for a more subtle, non-glowing look (azaltıldı)
+            alpha = int(70 * (1.0 - progress))
+            # Slightly expand to simulate dissipating smoke/trail
+            size = int(p.size * (1.0 + progress * 0.3))
+            if size < 1: size = 1
+            
+            p_surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
+            pygame.draw.circle(p_surf, (*p.color, alpha), (size, size), size)
+            
+            # Standard alpha blending (no BLEND_ADD)
+            surface.blit(p_surf, (int(p.x) - size, int(p.y) - size))
+            alive.append(p)
+        self.ball_tail_particles = alive
+
+    def _spawn_collision_particles(self, x: float, y: float, intensity: float):
+        rng = self._confetti_rng
+        # Çok daha yoğun, patlamalı çarpışma efekti
+        count = max(15, int(rng.uniform(40, 80) * intensity))
+        for _ in range(count):
+            color = rng.choice([(255, 255, 255), (255, 230, 100), (0, 230, 255), (255, 100, 100)])
+            self.collision_particles.append(CollisionParticle(
+                x=x,
+                y=y,
+                vx=rng.uniform(-800, 800) * intensity,
+                vy=rng.uniform(-800, 800) * intensity,
+                color=color,
+                size=rng.uniform(4, 12) * intensity,
+                lifetime=rng.uniform(0.4, 0.9)
+            ))
+
+    def _draw_collision_particles(self, surface: pygame.Surface, dt: float):
+        alive = []
+        for p in self.collision_particles:
+            p.age += dt
+            if p.age >= p.lifetime:
+                continue
+            p.x += p.vx * dt
+            p.y += p.vy * dt
+            p.vx *= 0.94
+            p.vy *= 0.94
+            
+            progress = p.age / p.lifetime
+            alpha = int(255 * (1.0 - progress))
+            size = max(1, int(p.size * (1.0 - progress)))
+            
+            p_surf = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)
+            pygame.draw.circle(p_surf, (*p.color, alpha), (size, size), size)
+            surface.blit(p_surf, (int(p.x) - size, int(p.y) - size))
+            alive.append(p)
+        self.collision_particles = alive
+
     def _draw_goal_flash(self, surface: pygame.Surface) -> None:
         if self.goal_flash_timer <= 0.0 or not self.goal_flash_event: return
         progress = min(1.0, self.goal_flash_timer / 0.95)
@@ -671,13 +785,19 @@ def run(config: dict) -> Path:
     
     event_timeline = [{"type": "whistle_start", "time": intro_seconds}]
     
-    collision_vols = []
+    collision_events = []
     def handle_collision(arbiter, space, data):
         if arbiter.is_first_contact:
             impulse = arbiter.total_impulse.length
             if impulse > 50:
                 vol = max(0.1, min(1.0, impulse / 1000.0))
-                collision_vols.append(vol)
+                pts = arbiter.contact_point_set.points
+                if pts:
+                    p = pts[0].point_a
+                    collision_events.append({"vol": vol, "x": p.x, "y": p.y})
+                else:
+                    # Fallback if point is not available
+                    collision_events.append({"vol": vol, "x": cx, "y": cy})
         return True
     
     handler = None
@@ -702,11 +822,13 @@ def run(config: dict) -> Path:
             
             time_sec = frame * dt
             
-            collision_vols.clear()
+            collision_events.clear()
             space.step(dt)
             
-            for vol in collision_vols:
-                event_timeline.append({"type": "ball_hit", "time": time_sec, "volume": vol})
+            for c_data in collision_events:
+                event_timeline.append({"type": "ball_hit", "time": time_sec, "volume": c_data["vol"]})
+                # Spawn visual particles on collision
+                renderer._spawn_collision_particles(c_data["x"], c_data["y"], c_data["vol"])
             
             for b_info in balls:
                 v = b_info["body"].velocity
@@ -739,8 +861,23 @@ def run(config: dict) -> Path:
             # Goal visual
             renderer.draw_goal_visual(surface, cx, cy, arena_radius, current_rotation, gap_degrees, wall_thickness)
 
-            # Smooth Arena Drawing: Draw each segment as a filled polygon to avoid gaps (notches)
-            wall_color = (180, 180, 190)
+            # Smooth Arena Drawing: Neon glow effect
+            wall_base_color = (0, 230, 255)
+            glow_surf = pygame.Surface((width, height), pygame.SRCALPHA)
+            
+            for shp in arena_shapes:
+                p1 = shp.a
+                p2 = shp.b
+                dx = p2.x - p1.x
+                dy = p2.y - p1.y
+                dist = math.hypot(dx, dy)
+                if dist == 0: continue
+                # Outer glows
+                pygame.draw.line(glow_surf, (*wall_base_color, 45), (p1.x, p1.y), (p2.x, p2.y), int(wall_thickness + 20))
+                pygame.draw.line(glow_surf, (*wall_base_color, 90), (p1.x, p1.y), (p2.x, p2.y), int(wall_thickness + 8))
+            
+            surface.blit(glow_surf, (0, 0))
+
             for shp in arena_shapes:
                 p1 = shp.a
                 p2 = shp.b
@@ -761,9 +898,20 @@ def run(config: dict) -> Path:
                     (p2.x - nx, p2.y - ny),
                     (p1.x - nx, p1.y - ny)
                 ]
-                pygame.draw.polygon(surface, wall_color, pts)
-                # Overdraw with a line to ensure even better anti-aliasing
-                pygame.draw.line(surface, wall_color, (p1.x, p1.y), (p2.x, p2.y), int(wall_thickness))
+                pygame.draw.polygon(surface, wall_base_color, pts)
+                pygame.draw.line(surface, wall_base_color, (p1.x, p1.y), (p2.x, p2.y), int(wall_thickness))
+                
+                # Inner bright core
+                nx_core = -dy / dist * (wall_thickness / 5.0)
+                ny_core = dx / dist * (wall_thickness / 5.0)
+                pts_core = [
+                    (p1.x + nx_core, p1.y + ny_core),
+                    (p2.x + nx_core, p2.y + ny_core),
+                    (p2.x - nx_core, p2.y - ny_core),
+                    (p1.x - nx_core, p1.y - ny_core)
+                ]
+                pygame.draw.polygon(surface, (255, 255, 255), pts_core)
+                pygame.draw.line(surface, (255, 255, 255), (p1.x, p1.y), (p2.x, p2.y), max(1, int(wall_thickness * 0.4)))
             
             a1 = math.radians(current_rotation - gap_degrees/2)
             a2 = math.radians(current_rotation + gap_degrees/2)
@@ -773,6 +921,21 @@ def run(config: dict) -> Path:
                 pin_p1 = (px - 15*math.cos(a), py - 15*math.sin(a))
                 pin_p2 = (px + 15*math.cos(a), py + 15*math.sin(a))
                 pygame.draw.line(surface, (255, 220, 50), pin_p1, pin_p2, int(wall_thickness + 4))
+
+            # Draw collision particles
+            renderer._draw_collision_particles(surface, dt)
+
+            # Ball tail particles
+            for b_info in balls:
+                renderer._spawn_ball_particle(
+                    b_info["body"].position.x,
+                    b_info["body"].position.y,
+                    b_info["body"].velocity.x,
+                    b_info["body"].velocity.y,
+                    b_info["team"].get("color", (255, 255, 255)),
+                    ball_radius
+                )
+            renderer._draw_ball_particles(surface, dt)
 
             for b_info in balls:
                 renderer._draw_ball(surface, {
@@ -847,7 +1010,7 @@ def run(config: dict) -> Path:
             output_path=final_output_path,
             background_music_path=bg_music,
             overlay_video_path=Path(__file__).resolve().parent / "likebell.mp4",
-            overlay_start_time=20.0
+            overlay_start_time=13.0
         )
         print(f"[RotatingArena] Done: {final_video}")
         return final_video

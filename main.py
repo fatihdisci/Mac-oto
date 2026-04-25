@@ -1204,7 +1204,7 @@ def run_simulation(
             output_path=final_path,
             background_music_path=Path(__file__).resolve().parent / "data" / "sounds" / "normalbg.mp3",
             overlay_video_path=Path(__file__).resolve().parent / "likebell.mp4",
-            overlay_start_time=20.0
+            overlay_start_time=13.0
         )
         print("=" * 60)
         print("VIDEO ISLEME TAMAMLANDI (SES + GREENSCREEN)")

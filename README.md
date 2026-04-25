@@ -72,7 +72,7 @@ python run_grand_prix.py --vertical
 
 Sistem, render işlemi bittikten sonra otomatik olarak şu işlemleri yapar:
 *   **Ses Miksajı:** Başlangıç/bitiş düdüğü, seyirci ambiyansı ve top çarpma sesleri (`ball_hit.mp3`) gecikmesiz (zero-latency) olarak eklenir.
-*   **Greenscreen Overlay:** Her videonun **20. saniyesinde** otomatik olarak `likebell.mp4` dosyası maskelenerek videoya eklenir ve bitince temiz bir şekilde kaldırılır.
+*   **Greenscreen Overlay:** Her videonun **13. saniyesinde** otomatik olarak `likebell.mp4` dosyası maskelenerek videoya eklenir ve bitince temiz bir şekilde kaldırılır.
 *   **GPU Hızlandırma:** NVIDIA ekran kartınız varsa, FFmpeg otomatik olarak `h264_nvenc` encoder'ını kullanarak işlem süresini 5 kat hızlandırır.
 
 ---

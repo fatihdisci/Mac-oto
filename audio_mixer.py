@@ -160,7 +160,7 @@ def mix_audio_into_video(
     output_path: str | Path | None = None,
     background_music_path: str | Path | None = None,
     overlay_video_path: str | Path | None = None,
-    overlay_start_time: float = 20.0,
+    overlay_start_time: float = 13.0,
 ) -> Path:
     """
     Sessiz MP4 videoya ses efektleri, müzik ve opsiyonel greenscreen overlay ekler.
