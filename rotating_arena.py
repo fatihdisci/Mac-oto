@@ -821,37 +821,48 @@ def run(config: dict) -> Path:
                 break
             
             time_sec = frame * dt
-            
+            is_intro_phase = time_sec < intro_seconds
+            is_outro_phase = time_sec > duration_seconds - outro_seconds
+            is_gameplay_phase = not is_intro_phase and not is_outro_phase
+
             collision_events.clear()
-            space.step(dt)
-            
-            for c_data in collision_events:
-                event_timeline.append({"type": "ball_hit", "time": time_sec, "volume": c_data["vol"]})
-                # Spawn visual particles on collision
-                renderer._spawn_collision_particles(c_data["x"], c_data["y"], c_data["vol"])
-            
-            for b_info in balls:
-                v = b_info["body"].velocity
-                if v.length > 0.01:
-                    b_info["body"].velocity = v.normalized() * target_speed
-                else:
-                    a = random.uniform(0, 2*math.pi)
-                    b_info["body"].velocity = pymunk.Vec2d(math.cos(a), math.sin(a)) * target_speed
-            
-            for b_info in balls:
-                dist = math.hypot(b_info["body"].position.x - cx, b_info["body"].position.y - cy)
-                if dist > arena_radius + ball_radius + 5:
-                    b_info["team"]["score"] += 1
+            if is_gameplay_phase:
+                space.step(dt)
+
+            if is_gameplay_phase:
+                for c_data in collision_events:
+                    event_timeline.append({"type": "ball_hit", "time": time_sec, "volume": c_data["vol"]})
+                    # Spawn visual particles on collision
+                    renderer._spawn_collision_particles(c_data["x"], c_data["y"], c_data["vol"])
+
+                for b_info in balls:
+                    v = b_info["body"].velocity
+                    if v.length > 0.01:
+                        b_info["body"].velocity = v.normalized() * target_speed
+                    else:
+                        a = random.uniform(0, 2*math.pi)
+                        b_info["body"].velocity = pymunk.Vec2d(math.cos(a), math.sin(a)) * target_speed
+
+                for b_info in balls:
+                    dist = math.hypot(b_info["body"].position.x - cx, b_info["body"].position.y - cy)
+                    if dist > arena_radius + ball_radius + 5:
+                        b_info["team"]["score"] += 1
+                        b_info["body"].position = (cx, cy)
+                        a = random.uniform(0, 2*math.pi)
+                        b_info["body"].velocity = pymunk.Vec2d(math.cos(a), math.sin(a)) * target_speed
+                        event_timeline.append({"type": "goal", "time": time_sec, "volume": 1.0})
+                        renderer.trigger_goal(b_info["team"]["name"], b_info["team"].get("color", (255,255,255)))
+            else:
+                # Intro/outro: toplari merkezde sabit tut, hareket etmesin
+                for b_info in balls:
                     b_info["body"].position = (cx, cy)
-                    a = random.uniform(0, 2*math.pi)
-                    b_info["body"].velocity = pymunk.Vec2d(math.cos(a), math.sin(a)) * target_speed
-                    event_timeline.append({"type": "goal", "time": time_sec, "volume": 1.0})
-                    renderer.trigger_goal(b_info["team"]["name"], b_info["team"].get("color", (255,255,255)))
-            
-            current_rotation += rotation_speed * dt
+                    b_info["body"].velocity = pymunk.Vec2d(0, 0)
+
+            if is_gameplay_phase:
+                current_rotation += rotation_speed * dt
             arena_shapes = build_arena_walls(space, cx, cy, arena_radius, wall_thickness, wall_elast, wall_fric, current_rotation, gap_degrees, arena_shapes)
-            
-            if time_sec > next_turn_time:
+
+            if is_gameplay_phase and time_sec > next_turn_time:
                 next_turn_time = time_sec + random.uniform(5, 9)
                 rotation_speed = random.choice([-1, 1]) * random.uniform(25, 55)
 
