@@ -446,6 +446,7 @@ def run_simulation(
     knockout_resolution: dict | None = None
     knockout_final_resolution: dict | None = None
     frozen_snapshot: dict | None = None
+    intro_frozen_snapshot: dict | None = None
     extra_time_frozen_snapshot: dict | None = None
     penalty_frozen_snapshot: dict | None = None
     var_rng = random.Random(cfg.gameplay.random_seed)
@@ -601,7 +602,12 @@ def run_simulation(
                     current_match_seconds = 120.0 * 60.0
                 current_match_clock = format_match_clock(current_match_seconds)
 
-                if is_outro:
+                if is_intro:
+                    if intro_frozen_snapshot is None:
+                        intro_frozen_snapshot = physics.get_state_snapshot()
+                    snapshot = dict(intro_frozen_snapshot)
+                    active_balls = []
+                elif is_outro:
                     if frozen_snapshot is None:
                         frozen_snapshot = physics.get_state_snapshot()
                         # BitiÅŸ dÃ¼dÃ¼ÄŸÃ¼ â€” outro baÅŸladÄ±ÄŸÄ±nda
@@ -632,7 +638,8 @@ def run_simulation(
                 scoring_gap_label = str(snapshot.get("scoring_gap_label", "GOAL"))
                 confirmed_scoring_events: list[dict] = []
 
-                for evt in snapshot.get("latest_round_events", []):
+                events_iter = [] if (is_intro or is_outro) else snapshot.get("latest_round_events", [])
+                for evt in events_iter:
                     evt_key = (
                         int(evt.get("round_index", 0)),
                         str(evt.get("team_key", "")),
